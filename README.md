@@ -24,10 +24,11 @@ Exodus |---| Must be built from source, upon both [HDF5](https://support.hdfgrou
 
  Don't panic! Most of these popular packages (except Exodus) may be handily installed with free package management software, such as [Homebrew](http://brew.sh/) for Mac OS X and [Linuxbrew](http://linuxbrew.sh/) for common Linux distributions. Here we provide a Brew-based wizard for Mac OS X and Linux users.
 
-* Install Brew
+* Install Brew:
     * [Homebrew](http://brew.sh/) for Mac OS X
-    * [Linuxbrew](http://linuxbrew.sh/) for Linux
-* Edit the first few lines in `axisem3d_depends.sh` and run it. 
+    * [Linuxbrew](http://linuxbrew.sh/) for Linux (Finish all the three steps!)
+* Edit the first few lines in `axisem3d_depends.sh`.
+* Run it. Depending on what you need and your network speed, this may take a long time (mainly for open-mpi and hdf5) to finish. 
 * Check `~/.bash_profile` (or `~/.bashrc`) and `~/.axisem3d_roots`. You are done!
     
 
@@ -101,4 +102,15 @@ Exodus |---| Must be built from source, upon both [HDF5](https://support.hdfgrou
         # check the outputs
         ls output
         ```
+
+## 4 The MESHER
+In the above examples, we use the mesh file `prem_ani_one_crust_spherical_2D_50s.e` (anisotropic PREM model with one crustal layer and a 50 s period), located at `SOLVER/template/input`. To generate an AxiSEM3D mesh like this, you will need the `salvus_mesher`, a python-based command-line tool to generate several types of 2-D and 3-D finite element meshes. 
+
+Currently, the `salvus_mesher` is not published. Here we provide a stable version for AxiSEM3D:
+* Install [pyexodus](https://github.com/SalvusHub/pyexodus) (mainly by Lion Krischer at ETH Zurich)
+* Install [salvus_mesher](https://github.com/kuangdai/salvus_mesher_axisem3d) (mainly by van Driel Martin at ETH Zurich)
+
+These two packages have their own requirements and manual. 
+
+
 

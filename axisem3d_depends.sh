@@ -67,7 +67,7 @@ fi
 
 ##### METIS #####
 if [ $MY_METIS_READY == false ]; then
-    brew install metis
+    brew install homebrew/science/metis
     export MY_METIS_DIR=$MY_BREW_INSTALL_DIR
     export MY_METIS_READY=true
 fi
@@ -86,14 +86,14 @@ fi
 
 ##### HDF5 #####
 if [ $MY_HDF5_READY == false ]; then
-    brew install hdf5
+    brew install homebrew/science/hdf5
     export MY_HDF5_DIR=$MY_BREW_INSTALL_DIR
     export MY_HDF5_READY=true
 fi
 
 ##### NetCDF #####
 if [ $MY_NETCDF_READY == false ]; then
-    brew install netcdf
+    brew install homebrew/science/netcdf
     export MY_NETCDF_DIR=$MY_BREW_INSTALL_DIR
     export MY_NETCDF_READY=true
 fi
