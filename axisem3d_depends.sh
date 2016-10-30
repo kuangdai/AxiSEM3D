@@ -5,11 +5,15 @@
 
 ############################## edit within this box ##############################
 # installa path of brew
+# Mac OS X default
 export MY_BREW_INSTALL_DIR=/usr/local/
+# Linux default
 # export MY_BREW_INSTALL_DIR=$HOME/.linuxbrew/
 
 # your bash_profile
+# Mac OS X default
 export MY_BASH_PROFILE=$HOME/.bash_profile
+# Linux default
 # export MY_BASH_PROFILE=$HOME/.bashrc
 
 # What do you have already? And where are they?
