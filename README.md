@@ -4,7 +4,13 @@ I look ugly to you? I am a Markdown file. If you do not have a Markdown reader, 
 
 Report issues to kuangdal@earth.ox.ac.uk.
 
-## 1 Installing dependencies
+## 1 Get AxiSEM3D
+```sh
+git clone https://github.com/kuangdai/AxiSEM3D
+export CURRENT_WORK_DIR=$PWD
+```
+
+## 2 Installing dependencies
 AxiSEM3D has been built upon a few modern numerical packages for its performance and sustainability, as listed below (newer versions are acceptable):
 
 name | version | build-from-source instructions
@@ -25,13 +31,7 @@ Exodus |---| Must be built from source, upon both [HDF5](https://support.hdfgrou
 * Check `~/.bash_profile` (or `~/.bashrc`) and `~/.axisem3d_roots`. You are done!
     
 
-## 2 Building AxiSEM3D
-* Get the source
-
-    ```sh
-    git clone https://github.com/kuangdai/AxiSEM3D
-    export CURRENT_WORK_DIR=$PWD
-    ```
+## 3 Building AxiSEM3D
 * Edit `$AxiSEM3D_SOURCE/SOLVER/CMakeLists.txt` if needed (normally not), including
 
     to-be-edited | notes
@@ -40,12 +40,12 @@ Exodus |---| Must be built from source, upon both [HDF5](https://support.hdfgrou
     dependency roots | No need if you have used `axisem3d_depends.sh` to install the dependencies.
     FFTW_WISDOM_DIR | Just specify any directory you like, or leave it as it. 
  
-* Build AxiSEM3D
+* Build AxiSEM3D (go step by step to see what's happening)
 
     * Style 1: work under source 
 
         ```sh
-        cd AxiSEM3D
+        cd $CURRENT_WORK_DIR/AxiSEM3D
         # make a simulation directory
         mkdir my_first_run
         cd my_first_run
@@ -86,6 +86,7 @@ Exodus |---| Must be built from source, upon both [HDF5](https://support.hdfgrou
         
         ########## run ##########
         # make a simulation directory
+        cd $CURRENT_WORK_DIR
         mkdir my_second_run
         cd my_second_run
         # copy the executable 
@@ -100,8 +101,4 @@ Exodus |---| Must be built from source, upon both [HDF5](https://support.hdfgrou
         # check the outputs
         ls output
         ```
-        
-
-
-
 
