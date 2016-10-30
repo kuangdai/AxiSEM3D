@@ -27,9 +27,13 @@ Exodus |---| Must be built from source, upon both [HDF5](https://support.hdfgrou
 * Install Brew:
     * [Homebrew](http://brew.sh/) for Mac OS X
     * [Linuxbrew](http://linuxbrew.sh/) for Linux (Finish all the three steps!)
-* Edit the first few lines in `axisem3d_depends.sh`.
-* Run it. Depending on what you need and your network speed, this may take a long time (mainly for open-mpi and hdf5) to finish. 
+* Edit the first few lines in `axisem3d_depends.sh` and run it.
 * Check `~/.bash_profile` (or `~/.bashrc`) and `~/.axisem3d_roots`. You are done!
+
+
+Some notes:
+* Depending on what you need and your network speed, `axisem3d_depends.sh` may take long time (especially for open-mpi and hdf5) to finish.
+* Installing HDF5 and NetCDF4 might be problematic on some systems. If Brew fails, install them from source, update `axisem3d_depends.sh` and run it again. 
     
 
 ## 3 Building AxiSEM3D
