@@ -32,7 +32,7 @@ Exodus |---| Must be built from source, upon both [HDF5](https://support.hdfgrou
 
 
 Some notes:
-* Depending on what you need and your network speed, `axisem3d_depends.sh` may take long time (especially for open-mpi and hdf5) to finish.
+* Depending on what you need and your network speed, `axisem3d_depends.sh` may take long time (especially for open-mpi and HDF5) to finish.
 * Installing HDF5 and NetCDF4 might be problematic on some systems. If Brew fails, install them from source, update `axisem3d_depends.sh` and run it again. 
     
 
