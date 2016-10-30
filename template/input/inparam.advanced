@@ -1,0 +1,82 @@
+# inparam.advanced
+# created by Kuangdai on 28-Jun-2016 
+# advanced simulation parameters for AxiSEM3D
+# NOTE:
+# a) angles are measured in degrees and distances in kilometers
+# b) string-typed parameters (except file names) are case insensitive
+# c) bool-typed parameters can be specified by 1/0, true/false, yes/no and on/off
+# d) the prefix of input files is path_of_executable/input/, similar for output
+
+
+
+# ================================= attenuation ==================================
+# use coarse-grained attenuation or not
+# always turn this on unless you are using polynomial orders other than 4
+ATTENUATION_CG4                             true
+
+# use SPECFEM legacy model or not
+# turn this on only when benchmarking SPECFEM solutions
+ATTENUATION_SPECFEM_LEGACY                  true
+
+# consider Q_Kappa or not
+# cannot be turned on if ATTENUATION_SPECFEM_LEGACY = true
+ATTENUATION_QKAPPA                          false
+
+
+
+# ========================= stations and output options ==========================
+# coordinate system used in file "STATIONS" [geographic / source_centered]
+# geographic:       name network latitude longitude depth
+# source_centered:  name network theta phi depth
+#                   where theta and phi are geocentric coordinates, with 
+#                   the source located beneath the north pole (theta = 0)
+# To keep compatible with SPECFEM "STATIONS", if six entities are 
+# presented in each row, we always ignore the LAST SECOND column, i.e., 
+# the "elevation" column. Elevations are determined by geometric models. 
+OUT_STATIONS_SYSTEM                         geographic
+
+# seismogram format [ascii / binary]
+OUT_SEISMOGRAM_FORMAT                       ascii
+
+# seismogram components [RTZ / ENZ / SPZ]
+# RTZ: radial, transverse, vertical (source centered)
+# ENZ: east, north, vertical (geographic)
+# SPZ: s, phi, z (solver inherent)
+OUT_SEISMOGRAM_COMPONENTS                   RTZ
+
+# interval for seismogram sampling 
+OUT_RECORD_INTERVAL                         1
+
+# interval to dump buffers to files
+OUT_DUMP_INTERVAL                           100
+
+
+
+# ============================= domain decomposition =============================
+# balance elemental and point-wise operations individually
+DD_BALANCE_ELEMENT_POINT                    true
+
+# number of candidate partitionings that metis will compute
+DD_NPART_METIS                              50
+
+# horoning communication volume or not
+DD_COMM_VOL_METIS                           false
+
+# plot domain decomposition (Mathematica .nb)
+DD_PLOT_DOMAIN_DECOMPOSITION                false
+
+# report cost measurements of elements and points
+DD_REPORT_COST_MEASUREMENTS                 true
+
+
+
+# ============================== simulation options ==============================
+# verbose level [none / essential / detailed]
+OPTION_VERBOSE_LEVEL                        detailed
+
+# interval for stability check
+OPTION_STABILITY_INTERVAL                   100
+
+# interval for time-loop info display
+OPTION_LOOP_INFO_INTERVAL                   100
+

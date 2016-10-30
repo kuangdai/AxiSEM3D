@@ -1,0 +1,75 @@
+# inparam.basic
+# created by Kuangdai on 28-Jun-2016 
+# basic simulation parameters for AxiSEM3D
+# NOTE:
+# a) angles are measured in degrees and distances in kilometers
+# b) string-typed parameters (except file names) are case insensitive
+# c) bool-typed parameters can be specified by 1/0, true/false, yes/no and on/off
+# d) the prefix of input files is path_of_executable/input/, similar for output
+
+
+
+# ================================ mesh and model ================================
+# exodus file created by MESHER (mesh + 1D reference model)
+MODEL_EXODUS_MESH_FILE                      prem_ani_one_crust_spherical_2D_50s.e
+
+# number of volumetric 3D models
+MODEL_VOLUMETRIC_3D_NUM                     0
+
+# list of volumetric 3D models
+# Only the first MODEL_VOLUMETRIC_3D_NUM models will be used.
+# A volumetric model may fall into one of the following four types: 
+#   Absolute:       absolute vs, vp and rho values 
+#   Reference1D:    perturbations w.r.t. the 1D reference model (MODEL_EXODUS_MESH_FILE)
+#   Reference3D:    perturbations w.r.t. the current 3D model
+#   ReferenceDiff:  perturbations w.r.t. the current 3D perturbations
+# Absolute and Reference1D models overwrites the previous models if they overlap in space,
+# while Reference3D and ReferenceDiff are based on the previous models. 
+# Therefore, the order of this list DOES matter.
+MODEL_VOLUMETRIC_3D_LIST                    s40rts crust1
+
+# number of geometric 3D models
+MODEL_GEOMETRIC_3D_NUM                      0
+
+# names of geometric 3D models
+# Only the first MODEL_GEOMETRIC_3D_NUM models will be used.
+# All geometric models superpose, so the order of this list is not important.
+MODEL_GEOMETRIC_3D_LIST                     crust1
+
+# ellipticity mode [off / geographic / full]
+# off:        no ellipticity at all
+# geographic: ellipticity is considered only in coordinate transformations
+#             between geographic (lat, lon, depth) and geocentric (r, theta, phi),
+#             e.g., wehen locating the source and receviers  
+# full:       beside geographic, the mesh will be "stretched" (expensive)
+MODEL_ELLIPTICITY_MODE                      geographic
+
+# inverse flattening on the surface, e.g., 299.8 in Dahlen and Tromp (1998)
+MODEL_ELLIPTICITY_INVF                      299.8
+
+# ocean load [none / constant / 3d_model]
+# none:     no ocean
+# constant: constant ocean depth. The PREM value (3 km) is used by default.
+#           Specify any other constant values by constant$value
+# 3d_model: specify a 3d ocean model, such as "crust1"
+# In AxiSEM3D, we model ocean by means of additional surface mass, which becomes  
+# inaccurate at very short periods, typically below roughly 5s, as tested by 
+# Komatitsch and Tromp, Geophys. J. Int. (2002) 150 (1): 303-318. 
+MODEL_OCEAN_LOAD                            none
+
+
+
+# ================================ time ================================
+# enforced time step 
+# dt will be computed automatically from mesh and model if TIME_DELTA_T <= 0.0
+TIME_DELTA_T                                0.0
+
+# record length (s)
+TIME_RECORD_LENGTH                          3600.0  
+
+
+
+# ================================= attenuation ==================================
+# attenuation on-off 
+ATTENUATION                                 true
+ 
