@@ -1,6 +1,6 @@
 # AxiSEM3D - A Quickstart Guide
 
-I look ugly to you? I am a Markdown file. If you do not have a Markdown reader, read me on [github](https://github.com/kuangdai/AxiSEM3D), or paste me [here](dillinger.io/).
+I look ugly to you? I am a Markdown file. If you do not have a Markdown reader, read me on [github](https://github.com/kuangdai/AxiSEM3D), or paste me [here](http://dillinger.io/).
 
 Report issues to kuangdal@earth.ox.ac.uk.
 
@@ -15,7 +15,7 @@ AxiSEM3D has been built upon a few modern numerical packages for its performance
 
 name | version | build-from-source instructions
 --- | --- | --- 
-mpi | --- | Common implementations such as [open-mpi](https://www.open-mpi.org/) or [mpich2](www.mpich.org/) are recommended.
+mpi | --- | Common implementations such as [open-mpi](https://www.open-mpi.org/) or [mpich2](http://www.mpich.org/) are recommended.
 boost | 1.60 | Install [Boost C++ Libraries](http://www.boost.org/) with _boost::mpi_, following [here](http://www.boost.org/doc/libs/1_62_0/doc/html/mpi/getting_started.html).
 eigen3 | 3.3-rc1 | Simply [download](http://bitbucket.org/eigen/eigen/get/3.3-rc1.tar.bz2) and unzip to your path of treasures.
 fftw | 3.3 | Install both double- and single-precision (with _--enable-float_) versions to the same path. See [here](http://www.fftw.org/fftw2_doc/fftw_6.html).
