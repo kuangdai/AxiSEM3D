@@ -1,19 +1,23 @@
+#!/bin/bash
 # axisem3d_depends.sh
 # created by Kuangdai on 30-Oct-2016 
 # one-click installation of AxiSEM3D dependencies
 
 
 ############################## edit within this box ##############################
-# installa path of brew
+# installation path of brew
 # Mac OS X default
 export MY_BREW_INSTALL_DIR=/usr/local/
 # Linux default
 # export MY_BREW_INSTALL_DIR=$HOME/.linuxbrew/
 
+# installation path of conda
+export MY_CONDA_INSTALL_DIR=$HOME/anaconda
+
 # your bash_profile
 # Mac OS X default
 export MY_BASH_PROFILE=$HOME/.bash_profile
-# Linux default
+# Ubuntu default
 # export MY_BASH_PROFILE=$HOME/.bashrc
 
 # What do you have already? And where are they?
@@ -41,11 +45,15 @@ export MY_NETCDF_DIR=""
 export MY_EXODUS_READY=false
 export MY_EXODUS_DIR=""
 
-# specify where you want to install eigen3 and exodus
+# where you would like to install eigen3 and exodus
 export EIGEN3_INSTALL_DIR=$HOME/axisem3d_depends/eigen3 
-export EXODUS_INSTALL_DIR=$HOME/axisem3d_depends/exodus 
-############################## edit within this box ##############################
+export EXODUS_INSTALL_DIR=$HOME/axisem3d_depends/exodus
 
+# specify your preferred way for HDF5 and NetCDF
+# true for brew and false for conda
+export BREW_HDF5=true
+export BREW_NETCDF=true
+############################## edit within this box ##############################
 
 ##### cmake #####
 brew install cmake
@@ -84,21 +92,31 @@ if [ $MY_EIGEN3_READY == false ]; then
         wget -P $EIGEN3_INSTALL_DIR http://bitbucket.org/eigen/eigen/get/3.3-rc1.tar.bz2
     fi
     tar -jxvf $EIGEN3_INSTALL_DIR/3.3-rc1.tar.bz2 --strip 1 -C $EIGEN3_INSTALL_DIR
-    export MY_EIGEN3_READY=true
     export MY_EIGEN3_DIR=$EIGEN3_INSTALL_DIR
+    export MY_EIGEN3_READY=true
 fi
 
 ##### HDF5 #####
 if [ $MY_HDF5_READY == false ]; then
-    brew install homebrew/science/hdf5
-    export MY_HDF5_DIR=$MY_BREW_INSTALL_DIR
+    if [ BREW_HDF5 ]; then
+        brew install homebrew/science/hdf5
+        export MY_HDF5_DIR=$MY_BREW_INSTALL_DIR
+    else
+        conda install -c anaconda hdf5=1.8.17
+        export MY_HDF5_DIR=$MY_CONDA_INSTALL_DIR
+    fi
     export MY_HDF5_READY=true
 fi
 
 ##### NetCDF #####
 if [ $MY_NETCDF_READY == false ]; then
-    brew install homebrew/science/netcdf
-    export MY_NETCDF_DIR=$MY_BREW_INSTALL_DIR
+    if [ BREW_NETCDF ]; then
+        brew install homebrew/science/netcdf
+        export MY_NETCDF_DIR=$MY_BREW_INSTALL_DIR
+    else
+        conda install -c ngraymon netcdf=4.3.2
+        export MY_NETCDF_DIR=$MY_CONDA_INSTALL_DIR
+    fi
     export MY_NETCDF_READY=true
 fi
 
@@ -119,8 +137,8 @@ if [ $MY_EXODUS_READY == false ]; then
     make -j4
     make install
     cd $my_start_point
-    export MY_EXODUS_READY=true
     export MY_EXODUS_DIR=$EXODUS_INSTALL_DIR/seacas-exodus
+    export MY_EXODUS_READY=true
 fi
 
 ############### add ROOTs for cmake of AxiSEM3D ###############
