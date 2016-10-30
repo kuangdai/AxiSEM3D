@@ -121,7 +121,9 @@ fi
 
 ############### add ROOTs for cmake of AxiSEM3D ###############
 export MY_AXISEM_ROOTS=$HOME/.axisem3d_roots
-rm $MY_AXISEM_ROOTS
+if [ -f $MY_AXISEM_ROOTS ]; then
+    rm $MY_AXISEM_ROOTS
+fi
 echo "export BOOST_ROOT=$MY_BOOST_DIR" >> $MY_AXISEM_ROOTS
 echo "export FFTW_ROOT=$MY_FFTW_DIR" >> $MY_AXISEM_ROOTS
 echo "export METIS_ROOT=$MY_METIS_DIR" >> $MY_AXISEM_ROOTS
