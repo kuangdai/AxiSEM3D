@@ -98,11 +98,11 @@ fi
 
 ##### HDF5 #####
 if [ $MY_HDF5_READY == false ]; then
-    if [ BREW_HDF5 ]; then
+    if [ $BREW_HDF5 == true ]; then
         brew install homebrew/science/hdf5
         export MY_HDF5_DIR=$MY_BREW_INSTALL_DIR
     else
-        conda install -c anaconda hdf5=1.8.17
+        conda install -c -y anaconda hdf5=1.8.17
         export MY_HDF5_DIR=$MY_CONDA_INSTALL_DIR
     fi
     export MY_HDF5_READY=true
@@ -110,11 +110,11 @@ fi
 
 ##### NetCDF #####
 if [ $MY_NETCDF_READY == false ]; then
-    if [ BREW_NETCDF ]; then
+    if [ $BREW_NETCDF == true ]; then
         brew install homebrew/science/netcdf
         export MY_NETCDF_DIR=$MY_BREW_INSTALL_DIR
     else
-        conda install -c ngraymon netcdf=4.3.2
+        conda install -c -y ngraymon netcdf=4.3.2
         export MY_NETCDF_DIR=$MY_CONDA_INSTALL_DIR
     fi
     export MY_NETCDF_READY=true
