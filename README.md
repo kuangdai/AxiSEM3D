@@ -22,12 +22,12 @@ fftw | 3.3 | Install both double- and single-precision (with _--enable-float_) v
 metis | 5.1 | [Download](http://glaros.dtc.umn.edu/gkhome/metis/metis/download) and install following `Install.txt`. Skip step 3 in `Install.txt` to use the 32-bit build. 
 Exodus |---| Must be built from source, upon both [HDF5](https://support.hdfgroup.org/HDF5/) and [NetCDF4](http://www.unidata.ucar.edu/blogs/news/entry/netcdf-4-4-1). Refer to `axisem3d_depends.sh`.
 
- Don't panic! Most of these popular packages (except Exodus) may be handily installed with free package management software, such as [Homebrew](http://brew.sh/) for Mac OS X, [Linuxbrew](http://linuxbrew.sh/) for common Linux distributions, and [Conda](conda.pydata.org/) for both. Here we introduce the wizard `axisem3d_depends.sh`. 
+ Don't panic! Most of these popular packages (except Exodus) may be handily installed with free package management software, such as [Homebrew](http://brew.sh/) for Mac OS X, [Linuxbrew](http://linuxbrew.sh/) for common Linux distributions, and [Conda](http://conda.pydata.org/docs/) for both. Here we introduce the wizard `axisem3d_depends.sh`. 
 
 * Get Brew (required)
     * [Homebrew](http://brew.sh/) for Mac OS X
     * [Linuxbrew](http://linuxbrew.sh/) for Linux (Finish all the three steps!)
-* Get [Conda](conda.pydata.org/) (optional)  
+* Get [Conda](http://conda.pydata.org/docs/) (optional)  
 * Edit the first few lines in `axisem3d_depends.sh` and run it.
 * Check your `~/.bash_profile` (or `~/.bashrc`) and `~/.axisem3d_roots`. Grats, you are done!
 
