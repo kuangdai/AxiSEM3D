@@ -37,7 +37,7 @@ Some notes:
     
 
 ## 3 Building AxiSEM3D
-* Edit `$AxiSEM3D_SOURCE/SOLVER/CMakeLists.txt` if needed (normally not), including
+* Edit `SOLVER/CMakeLists.txt` if needed (normally not), including
 
     to-be-edited | notes
     ---|---
@@ -71,7 +71,7 @@ Some notes:
       ```sh
       -- Configuring done
       -- Generating done
-      -- Build files have been written to: $AxiSEM3D_BUILD
+      -- Build files have been written to: ...
       ```
     
     * Style 2: keep source clean (suggested)
