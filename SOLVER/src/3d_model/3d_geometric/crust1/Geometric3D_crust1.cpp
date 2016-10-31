@@ -145,7 +145,7 @@ void Geometric3D_crust1::initialize(const std::vector<double> &params) {
 }
 
 double Geometric3D_crust1::getDeltaR(double r, double theta, double phi, double rElemCenter) const {
-    if (rElemCenter > mRSurf || rElemCenter < mRMoho) { 
+    if (rElemCenter > mRSurf || rElemCenter < mRBase) { 
         return 0.;
     }    
     
