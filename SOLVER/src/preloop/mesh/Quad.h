@@ -38,7 +38,7 @@ public:
     bool stiffRelabelling() const;
     
     // get new deltaT
-    double getDeltaT(int denseFactor = 11) const;
+    double getDeltaT() const;
     
     // setup gll points 
     void setupGLLPoints(std::vector<GLLPoint *> &gllPoints, const IMatPP &myPointTags, double distTol);

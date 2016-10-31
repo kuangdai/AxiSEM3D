@@ -227,7 +227,7 @@ bool Quad::stiffRelabelling() const {
     return !mRelabelling->isZeroStiff();
 }
 
-double Quad::getDeltaT(int denseFactor) const {
+double Quad::getDeltaT() const {
     // courant number
     double courant = getCourant();
     
@@ -241,6 +241,7 @@ double Quad::getDeltaT(int denseFactor) const {
     RDColX dt_slices = courant * hmin.schur(vmax.array().pow(-1.).matrix());
     double dt_min_org = dt_slices.minCoeff();
     
+    int denseFactor = 11;
     // check minimum on densed sampling slices
     double dt_min_all = XMath::trigonResampling(denseFactor * dt_slices.rows(), dt_slices).minCoeff();
     if (dt_min_all < .0) {
