@@ -223,9 +223,15 @@ void XMath::gaussianSmoothing(RDMatXX &data,
 bool XMath::isLuckyNumber(int n, bool forceOdd)
 {
     int num = n;
-    // TODO: We always hope to use even numbers that are generally faster,
-    //       but a bug related to Nyquist frequency persists.
+    
+    // We always hope to use even numbers that are generally faster,
+    // but the Nyquist frequency sometimes causes trouble.
+    // force odd
     if (forceOdd && num % 2 == 0) return false;
+    
+    // use even
+    if (!forceOdd && num % 2 != 0) return false;
+    
     for (int i = 2; i <= num; i++) {  
         while(num % i == 0) {
             num /= i;
