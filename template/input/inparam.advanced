@@ -80,3 +80,14 @@ OPTION_STABILITY_INTERVAL                   100
 # interval for time-loop info display
 OPTION_LOOP_INFO_INTERVAL                   100
 
+
+
+# ============================== development ==============================
+# maximum number of time steps (usually for performance test)
+# set to zero or negative to determine it by record length and deltaT
+DEVELOP_MAX_TIME_STEPS                      0
+
+# non-source mode (only for scaling test)
+# if turned on, no source will be added 
+DEVELOP_NON_SOURCE_MODE                     false
+

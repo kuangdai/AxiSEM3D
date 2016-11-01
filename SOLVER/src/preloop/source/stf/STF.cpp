@@ -18,6 +18,11 @@ void STF::release(Domain &domain) const {
 
 void STF::buildInparam(STF *&stf, const Parameters &par, double dt, int verbose) {
     if (stf) delete stf;
+    // max total steps
+    int maxTotalSteps = MAX_INT;
+    int enforceMaxSteps = par.getValue<int>("DEVELOP_MAX_TIME_STEPS");
+    if (enforceMaxSteps > 0) maxTotalSteps = enforceMaxSteps;
+    
     // read half duration
     std::string cmtfile = Parameters::sInputDirectory + "/CMTSOLUTION";
     double hdur;
@@ -47,7 +52,7 @@ void STF::buildInparam(STF *&stf, const Parameters &par, double dt, int verbose)
     if (hdur < 5. * dt) hdur = 5. * dt;
     double decay = 1.628;
     double duration = par.getValue<double>("TIME_RECORD_LENGTH");
-    stf = new ErfSTF(dt, duration, hdur, decay);
+    stf = new ErfSTF(dt, duration, hdur, decay, maxTotalSteps);
     // verbose 
     if (verbose == 2) XMPI::cout << stf->verbose();
 }

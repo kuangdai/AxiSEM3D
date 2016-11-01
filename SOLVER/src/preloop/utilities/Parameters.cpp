@@ -38,24 +38,6 @@ void Parameters::registerAll() {
     registerPar("TIME_RECORD_LENGTH");
     registerPar("ATTENUATION");
     
-    // inparam.advanced
-    registerPar("ATTENUATION_CG4");
-    registerPar("ATTENUATION_SPECFEM_LEGACY");
-    registerPar("ATTENUATION_QKAPPA");
-    registerPar("OUT_STATIONS_SYSTEM");
-    registerPar("OUT_SEISMOGRAM_FORMAT");
-    registerPar("OUT_SEISMOGRAM_COMPONENTS");
-    registerPar("OUT_RECORD_INTERVAL");
-    registerPar("OUT_DUMP_INTERVAL");
-    registerPar("DD_BALANCE_ELEMENT_POINT");
-    registerPar("DD_NPART_METIS");
-    registerPar("DD_COMM_VOL_METIS");
-    registerPar("DD_PLOT_DOMAIN_DECOMPOSITION");
-    registerPar("DD_REPORT_COST_MEASUREMENTS");
-    registerPar("OPTION_VERBOSE_LEVEL");
-    registerPar("OPTION_STABILITY_INTERVAL");
-    registerPar("OPTION_LOOP_INFO_INTERVAL");
-    
     // inparam.nu
     registerPar("NU_TYPE");
     registerPar("NU_FFTW_LUCKY_NUMBER");
@@ -78,6 +60,26 @@ void Parameters::registerAll() {
     registerPar("NU_WISDOM_LEARN_OUTPUT");
     registerPar("NU_WISDOM_REUSE_INPUT");
     registerPar("NU_WISDOM_REUSE_FACTOR");
+    
+    // inparam.advanced
+    registerPar("ATTENUATION_CG4");
+    registerPar("ATTENUATION_SPECFEM_LEGACY");
+    registerPar("ATTENUATION_QKAPPA");
+    registerPar("OUT_STATIONS_SYSTEM");
+    registerPar("OUT_SEISMOGRAM_FORMAT");
+    registerPar("OUT_SEISMOGRAM_COMPONENTS");
+    registerPar("OUT_RECORD_INTERVAL");
+    registerPar("OUT_DUMP_INTERVAL");
+    registerPar("DD_BALANCE_ELEMENT_POINT");
+    registerPar("DD_NPART_METIS");
+    registerPar("DD_COMM_VOL_METIS");
+    registerPar("DD_PLOT_DOMAIN_DECOMPOSITION");
+    registerPar("DD_REPORT_COST_MEASUREMENTS");
+    registerPar("OPTION_VERBOSE_LEVEL");
+    registerPar("OPTION_STABILITY_INTERVAL");
+    registerPar("OPTION_LOOP_INFO_INTERVAL");
+    registerPar("DEVELOP_MAX_TIME_STEPS");
+    registerPar("DEVELOP_NON_SOURCE_MODE");
     
 }
 
