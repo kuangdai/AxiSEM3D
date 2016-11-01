@@ -19,11 +19,14 @@ void Volumetric3D_s20rts::initialize() {
 }
 
 void Volumetric3D_s20rts::initialize(const std::vector<double> &params) {
-    if (params.size() >= 1) mScaleRho = params[0];
-    if (params.size() >= 4) {
-        mRCMB = params[1];
-        mRMoho = params[2];
-        mRSurf = params[3];
+    try {
+        int ipar = 0;
+        mScaleRho = params.at(ipar++);
+        mRCMB = params.at(ipar++) * 1e3;
+        mRMoho = params.at(ipar++) * 1e3;
+        mRSurf = params.at(ipar++) * 1e3;
+    } catch (std::out_of_range) {
+        // nothing
     }
     initialize();
 }

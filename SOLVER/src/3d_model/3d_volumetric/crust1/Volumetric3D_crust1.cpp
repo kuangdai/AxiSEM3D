@@ -95,18 +95,17 @@ void Volumetric3D_crust1::initialize() {
 }
 
 void Volumetric3D_crust1::initialize(const std::vector<double> &params) {
-    if (params.size() >= 2) {
-        mIncludeSediment = (params[0] > 0.);
-        mMinimumSedimentThickness = params[1] * 1e3;
+    try {
+        int ipar = 0;
+        mIncludeSediment = (params.at(ipar++) > 0.);
+        mMinimumSedimentThickness = params.at(ipar++) * 1e3;
+        mNPointInterp = round(params.at(ipar++));
+        mGeographic = (params.at(ipar++) > 0.);
+        mRMoho = params.at(ipar++) * 1e3;
+        mRSurf = params.at(ipar++) * 1e3;
+    } catch (std::out_of_range) {
+        // nothing
     }
-    if (params.size() >= 3) 
-        mNPointInterp = (int)params[2];
-    if (params.size() >= 5) {
-        mRMoho = params[3];
-        mRSurf = params[4];
-    }
-    if (params.size() >= 6) 
-        mGeographic = (params[5] > 0.);
     initialize();
 }
 

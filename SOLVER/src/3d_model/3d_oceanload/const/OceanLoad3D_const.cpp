@@ -10,7 +10,7 @@
 #include <sstream>
 
 void OceanLoad3D_const::initialize(const std::vector<double> &params) {
-    if (params.size() >= 1) mDepth = params[0];
+    if (params.size() >= 1) mDepth = params[0] * 1e3;
 }
 
 std::string OceanLoad3D_const::verbose() const {

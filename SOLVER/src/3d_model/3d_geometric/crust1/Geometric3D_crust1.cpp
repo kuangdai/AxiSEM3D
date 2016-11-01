@@ -120,27 +120,21 @@ void Geometric3D_crust1::initialize() {
 }
 
 void Geometric3D_crust1::initialize(const std::vector<double> &params) {
-    if (params.size() >= 1) {
-        mIncludeSediment = (params[0] > 0.);
+    try {
+        int ipar = 0;
+        mIncludeSediment = (params.at(ipar++) > 0.);
+        mSurfFactor = params.at(ipar++);
+        mMohoFactor = params.at(ipar++);
+        mGaussianOrder = round(params.at(ipar++));
+        mGaussianDev = params.at(ipar++);
+        mNPointInterp = round(params.at(ipar++));
+        mGeographic = (params.at(ipar++) > 0.);
+        mRBase = params.at(ipar++) * 1e3;
+        mRMoho = params.at(ipar++) * 1e3;
+        mRSurf = params.at(ipar++) * 1e3;
+    } catch (std::out_of_range) {
+        // nothing
     }
-    if (params.size() >= 3) {
-        mSurfFactor = params[1];
-        mMohoFactor = params[2];
-    }
-    if (params.size() >= 5) { 
-        mGaussianOrder = (int)params[3];
-        mGaussianDev = params[4];
-    }  
-    if (params.size() >= 6) {
-        mNPointInterp = (int)params[5];
-    }
-    if (params.size() >= 9) {
-        mRBase = params[6];
-        mRMoho = params[7];
-        mRSurf = params[8];
-    } 
-    if (params.size() >= 10) 
-        mGeographic = (params[9] > 0.);
     initialize();
 }
 

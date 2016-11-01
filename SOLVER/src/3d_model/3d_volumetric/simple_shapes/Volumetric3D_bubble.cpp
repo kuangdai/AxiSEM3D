@@ -30,10 +30,14 @@ void Volumetric3D_bubble::initialize(const std::vector<double> &params) {
     else 
         mReferenceType = ReferenceTypes::ReferenceDiff;    
         
-    // initialize optional flags    
-    if (params.size() >= 7) mChangeVp = (params[6] > 0.);
-    if (params.size() >= 8) mChangeVs = (params[7] > 0.);
-    if (params.size() >= 9) mChangeRho = (params[8] > 0.);
+    try {
+        int ipar = 6;
+        mChangeVp = (params.at(ipar++) > 0.);
+        mChangeVs = (params.at(ipar++) > 0.);
+        mChangeRho = (params.at(ipar++) > 0.);
+    } catch (std::out_of_range) {
+        // nothing
+    }    
 }
 
 bool Volumetric3D_bubble::get3dProperties(double r, double theta, double phi, double rElemCenter,

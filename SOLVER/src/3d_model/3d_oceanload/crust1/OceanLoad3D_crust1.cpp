@@ -69,14 +69,15 @@ void OceanLoad3D_crust1::initialize() {
 }
 
 void OceanLoad3D_crust1::initialize(const std::vector<double> &params) {
-    if (params.size() >= 2) { 
-        mGaussianOrder = (int)params[0];
-        mGaussianDev = params[1];
-    }  
-    if (params.size() >= 3) 
-        mNPointInterp = (int)params[2];
-    if (params.size() >= 4) 
-        mGeographic = (params[3] > 0.);
+    try {
+        int ipar = 0;
+        mGaussianOrder = round(params.at(ipar++));
+        mGaussianDev = params.at(ipar++);
+        mNPointInterp = round(params.at(ipar++));
+        mGeographic = (params.at(ipar++) > 0.);
+    } catch (std::out_of_range) {
+        // nothing
+    }
     initialize();
 }
 
