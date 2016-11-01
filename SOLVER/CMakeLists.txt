@@ -261,6 +261,7 @@ add_executable(
     
     src/preloop/source/Source.cpp
     src/preloop/source/Earthquake.cpp
+    src/preloop/source/NullSource.cpp
     src/preloop/source/stf/STF.cpp
     src/preloop/source/stf/ErfSTF.cpp
     src/preloop/source/stf/FileSTF.cpp

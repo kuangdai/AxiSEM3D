@@ -15,7 +15,7 @@ class Parameters;
 
 class Source {
 public:
-    Source(double depth = 0., double lat = 0., double lon = 0.);
+    Source(double depth = 0., double lat = 90., double lon = 0.);
     
     virtual ~Source() {};
     

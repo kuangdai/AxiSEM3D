@@ -77,9 +77,18 @@ bool Source::locate(const Mesh &mesh, int &locTag, RDColP &interpFactZ) const {
 
 #include "Parameters.h"
 #include "Earthquake.h"
+#include "NullSource.h"
 #include <fstream>
 void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
     if (src) delete src;
+    
+    // null source
+    if (par.getValue<bool>("DEVELOP_NON_SOURCE_MODE")) {
+        src = new NullSource();
+        if (verbose) XMPI::cout << src->verbose();
+        return;
+    }
+    
     std::string cmtfile = Parameters::sInputDirectory + "/CMTSOLUTION";    
     double depth, lat, lon;
     double Mrr, Mtt, Mpp, Mrt, Mrp, Mtp;

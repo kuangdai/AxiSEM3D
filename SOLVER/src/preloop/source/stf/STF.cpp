@@ -19,7 +19,7 @@ void STF::release(Domain &domain) const {
 void STF::buildInparam(STF *&stf, const Parameters &par, double dt, int verbose) {
     if (stf) delete stf;
     // max total steps
-    int maxTotalSteps = MAX_INT;
+    int maxTotalSteps = INT_MAX;
     int enforceMaxSteps = par.getValue<int>("DEVELOP_MAX_TIME_STEPS");
     if (enforceMaxSteps > 0) maxTotalSteps = enforceMaxSteps;
     
