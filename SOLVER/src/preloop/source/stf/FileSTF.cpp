@@ -8,17 +8,23 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include "XMPI.h"
 
 FileSTF::FileSTF(const std::string &fname): 
 mFileName(fname) {
-    std::fstream fs(fname, std::fstream::in);
-    if (!fs) throw std::runtime_error("FileSTF::FileSTF || "
-        "Error opening STF data file: ||" + fname);
-    fs >> mDeltaT;
-    fs >> mShift;
-    double x;
-    while (fs >> x) mSTF.push_back(x);
-    fs.close();
+    if (XMPI::root()) {
+        std::fstream fs(fname, std::fstream::in);
+        if (!fs) throw std::runtime_error("FileSTF::FileSTF || "
+            "Error opening STF data file: ||" + fname);
+        fs >> mDeltaT;
+        fs >> mShift;
+        double x;
+        while (fs >> x) mSTF.push_back(x);
+        fs.close();
+    }
+    XMPI::bcast(mDeltaT);
+    XMPI::bcast(mShift);
+    XMPI::bcast(mSTF);
 }
 
 std::string FileSTF::verbose() const {
