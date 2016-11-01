@@ -71,6 +71,17 @@ void Volumetric3D_crust1::initialize() {
     mVs *= 1e3;
     mRh *= 1e3;
     mRl *= 1e3;
+    
+    // check sediment thickness to avoid too thin sediment layers
+    for (int row = 0; row < mRl.rows(); row++) {
+        double sed = mRl(row, 2) - mRl(row, 5);
+        if (sed < mMinimumSedimentThickness) {
+            mVp(row, 2) = mVp(row, 3) = mVp(row, 4) = mVp(row, 5);
+            mVs(row, 2) = mVs(row, 3) = mVs(row, 4) = mVs(row, 5);
+            mRh(row, 2) = mRh(row, 3) = mRh(row, 4) = mRh(row, 5); 
+        }
+    }
+
     // linear mapping to sphere
     int colMoho = 8;
     int colSurf = mIncludeSediment ? 2 : 5; 
@@ -84,16 +95,18 @@ void Volumetric3D_crust1::initialize() {
 }
 
 void Volumetric3D_crust1::initialize(const std::vector<double> &params) {
-    if (params.size() >= 1)
+    if (params.size() >= 2) {
         mIncludeSediment = (params[0] > 0.);
-    if (params.size() >= 2) 
-        mNPointInterp = (int)params[1];
-    if (params.size() >= 4) {
-        mRMoho = params[2];
-        mRSurf = params[3];
+        mMinimumSedimentThickness = params[1] * 1e3;
     }
-    if (params.size() >= 5) 
-        mGeographic = (params[4] > 0.);
+    if (params.size() >= 3) 
+        mNPointInterp = (int)params[2];
+    if (params.size() >= 5) {
+        mRMoho = params[3];
+        mRSurf = params[4];
+    }
+    if (params.size() >= 6) 
+        mGeographic = (params[5] > 0.);
     initialize();
 }
 
@@ -161,6 +174,7 @@ std::string Volumetric3D_crust1::verbose() const {
     ss << "  Max. Fourier Order    =   180" << std::endl;
     ss << "  Anisotropic           =   NO" << std::endl;
     ss << "  Include Sediment      =   " << (mIncludeSediment ? "YES" : "NO") << std::endl;
+    ss << "  Min. Sediment / km    =   " << mMinimumSedimentThickness / 1e3 << std::endl;
     ss << "  Num. Interp. Points   =   " << mNPointInterp << std::endl;
     ss << "  Use Geographic        =   " << (mGeographic ? "YES" : "NO") << std::endl;
     ss << "======================= 3D Volumetric ======================\n" << std::endl;

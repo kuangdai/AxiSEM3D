@@ -44,6 +44,7 @@ private:
     // options
     // include sediment or not
     bool mIncludeSediment = true;
+    double mMinimumSedimentThickness = 2000.0;
     // number of interpolation points 
     int mNPointInterp = 2;
     // use geocentric or geographic
