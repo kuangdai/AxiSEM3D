@@ -98,19 +98,15 @@ void Geometric3D_crust1::initialize() {
     
     //////////// plot computed data ////////////  
     // std::fstream fsdr;
-    // fsdr.open("/Users/kuangdai/Desktop/crust1/dr.txt", std::fstream::out);
+    // fsdr.open("/Users/kuangdai/Desktop/crust1/drmoho1.txt", std::fstream::out);
     // double r = mRMoho; // double r = mRSurf;
-    // int intGrid = 1;
-    // for (int i = 0; i < 180 + intGrid; i++) {
-    //     double theta = i * degree;
-    //     if (!intGrid) theta += .5 * degree;
-    //     for (int j = -180; j < 180 + intGrid; j++) {
-    //         double phi = j * degree;
-    //         if (!intGrid) phi += .5 * degree;
+    // int intGrid = 4;
+    // for (int i = 0; i <= 180 * intGrid; i++) {
+    //     double theta = i * degree / intGrid;
+    //     for (int j = -180 * intGrid; j <= 180 * intGrid; j++) {
+    //         double phi = j * degree / intGrid;
     //         if (phi < 0) phi += 2. * pi;
-    //         double deltaR_r, deltaR_theta, deltaR_phi, dr;
-    //         getDeltaR(r, theta, phi, r, dr);   
-    //         fsdr << dr << " ";
+    //         fsdr << getDeltaR(r, theta, phi, r) << " ";
     //     }
     //     fsdr << std::endl;
     // }   
