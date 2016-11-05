@@ -87,7 +87,7 @@ void Relabelling::checkHmin() {
         }
         // compute hmin
         RDColX hmin = mMyQuad->getHminSlices();
-        double hmin_all = XMath::trigonResampling(11 * Nr, hmin).minCoeff();
+        double hmin_all = XMath::trigonResampling(5 * Nr, hmin).minCoeff();
         if (hmin_all >= hmin.minCoeff() * .8) {
             // if (order >= 2) {
             //     std::cout << order << " " << Nr << std::endl;
@@ -167,10 +167,10 @@ void Relabelling::formMassUndulation() {
         for (int jpol = 0; jpol <= nPol; jpol++) {
             int ipnt = ipol * nPntEdge + jpol;
             int nr_mass = mMyQuad->getPointNr(ipol, jpol);
-            mMass_dZ[ipnt] = XMath::trigonResampling(nr_mass, mStiff_dZ.col(ipnt));
-            mMass_dZdR[ipnt] = XMath::trigonResampling(nr_mass, mStiff_dZdR.col(ipnt));
-            mMass_dZdT[ipnt] = XMath::trigonResampling(nr_mass, mStiff_dZdT.col(ipnt));
-            mMass_dZdZ[ipnt] = XMath::trigonResampling(nr_mass, mStiff_dZdZ.col(ipnt));
+            mMass_dZ[ipnt] = XMath::linearResampling(nr_mass, mStiff_dZ.col(ipnt));
+            mMass_dZdR[ipnt] = XMath::linearResampling(nr_mass, mStiff_dZdR.col(ipnt));
+            mMass_dZdT[ipnt] = XMath::linearResampling(nr_mass, mStiff_dZdT.col(ipnt));
+            mMass_dZdZ[ipnt] = XMath::linearResampling(nr_mass, mStiff_dZdZ.col(ipnt));
         }
     }
 }
