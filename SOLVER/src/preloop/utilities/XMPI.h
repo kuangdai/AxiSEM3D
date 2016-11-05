@@ -168,6 +168,18 @@ public:
             value = total;
         #endif
     };
+    
+    ////////////////////////////// gather //////////////////////////////
+    template<typename Type>
+    static std::vector<Type> all_gather(const Type &value) {
+        #ifndef _SERIAL_BUILD
+            std::vector<Type> total;
+            boost::mpi::all_gather(*sWorld, value, total);
+            return total;
+        #else 
+            return std::vector<Type>(value, 1);
+        #endif
+    };
         
     ////////////////////////////// stream on root //////////////////////////////
     struct root_cout {

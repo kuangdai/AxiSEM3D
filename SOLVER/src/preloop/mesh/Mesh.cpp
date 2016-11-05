@@ -320,16 +320,15 @@ void Mesh::measure(DecomposeOption &measured) {
     
     // uniform measurements across procs
     XTimer::begin("Bcast Element Costs", 2);
+    std::vector<std::map<std::string, double>> all_elemCostLibrary = XMPI::all_gather(elemCostLibrary);
     std::map<std::string, double> elemCostLibraryGlobal;
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
-        if (iproc == XMPI::rank()) {
-            for (auto it = elemCostLibrary.begin(); it != elemCostLibrary.end(); it++) {
-                elemCostLibraryGlobal.insert(*it);
-                elemCostLibraryGlobal.at(it->first) = std::min(it->second,
-                    elemCostLibraryGlobal.at(it->first));
-            }
+        const std::map<std::string, double> &iproc_lib = all_elemCostLibrary[iproc];
+        for (auto it = iproc_lib.begin(); it != iproc_lib.end(); it++) {
+            elemCostLibraryGlobal.insert(*it);
+            elemCostLibraryGlobal.at(it->first) = std::min(it->second,
+                elemCostLibraryGlobal.at(it->first));
         }
-        XMPI::bcastFromProc(elemCostLibraryGlobal, iproc);
     }
     // read library
     for (int iloc = 0; iloc < getNumQuads(); iloc++) {
@@ -363,7 +362,7 @@ void Mesh::measure(DecomposeOption &measured) {
         if (pointCostLibrary.at(coststr) < 0.) {
             // find how may steps are needed to use USER clock
             double wall = point->measure(minStep, false);
-            int nstep = std::max(minStep, (int)(clockResolution * clockFactor / wall) + 1);
+            int nstep = std::max(minStep, (int)(clockResolution * clockFactor / 10. / wall) + 1);
             pointCostLibrary.at(coststr) = point->measure(nstep, useClockUser);
             // find points with the same signature
             int sameKindFound = 0;
@@ -381,16 +380,15 @@ void Mesh::measure(DecomposeOption &measured) {
     
     // uniform measurements across procs
     XTimer::begin("Bcast Point Costs", 2);
+    std::vector<std::map<std::string, double>> all_pointCostLibrary = XMPI::all_gather(pointCostLibrary);
     std::map<std::string, double> pointCostLibraryGlobal;
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
-        if (iproc == XMPI::rank()) {
-            for (auto it = pointCostLibrary.begin(); it != pointCostLibrary.end(); it++) {
-                pointCostLibraryGlobal.insert(*it);
-                pointCostLibraryGlobal.at(it->first) = std::min(it->second,
-                    pointCostLibraryGlobal.at(it->first));
-            }
+        const std::map<std::string, double> &iproc_lib = all_pointCostLibrary[iproc];
+        for (auto it = iproc_lib.begin(); it != iproc_lib.end(); it++) {
+            pointCostLibraryGlobal.insert(*it);
+            pointCostLibraryGlobal.at(it->first) = std::min(it->second,
+                pointCostLibraryGlobal.at(it->first));
         }
-        XMPI::bcastFromProc(pointCostLibraryGlobal, iproc);
     }
     // read library
     for (int ip = 0; ip < ngll; ip++) {

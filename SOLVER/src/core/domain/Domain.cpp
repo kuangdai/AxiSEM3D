@@ -241,29 +241,39 @@ std::string Domain::verbose() const {
     // elements
     int nele = XMPI::sum(mElements.size());
     std::map<std::string, int> eles;
+    for (const auto &elem: mElements) {
+        std::string estr = elem->verbose();
+        eles.insert(std::pair<std::string, int>(estr, 0));
+        eles.at(estr) += 1;
+    }
+    
+    std::vector<std::map<std::string, int>> all_eles = XMPI::all_gather(eles);
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
-        if (iproc == XMPI::rank()) {
-            for (const auto &elem: mElements) {
-                std::string estr = elem->verbose();
-                eles.insert(std::pair<std::string, int>(estr, 0));
-                eles.at(estr) += 1;
-            }
+        if (iproc == XMPI::rank()) continue;
+        for (auto it = all_eles[iproc].begin(); it != all_eles[iproc].end(); it++) {
+            std::string estr = it->first;
+            eles.insert(std::pair<std::string, int>(estr, 0));
+            eles.at(estr) += it->second;
         }
-        XMPI::bcastFromProc(eles, iproc);
     }
     
     // points 
     int npoint = XMPI::sum(mPoints.size());
     std::map<std::string, int> points;
+    for (const auto &point: mPoints) {
+        std::string estr = point->verbose();
+        points.insert(std::pair<std::string, int>(estr, 0));
+        points.at(estr) += 1;
+    }
+    
+    std::vector<std::map<std::string, int>> all_points = XMPI::all_gather(points);
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
-        if (iproc == XMPI::rank()) {
-            for (const auto &point: mPoints) {
-                std::string estr = point->verbose();
-                points.insert(std::pair<std::string, int>(estr, 0));
-                points.at(estr) += 1;
-            }
+        if (iproc == XMPI::rank()) continue;
+        for (auto it = all_points[iproc].begin(); it != all_points[iproc].end(); it++) {
+            std::string estr = it->first;
+            points.insert(std::pair<std::string, int>(estr, 0));
+            points.at(estr) += it->second;
         }
-        XMPI::bcastFromProc(points, iproc);
     }
     
     std::stringstream ss;
@@ -306,13 +316,11 @@ std::string Domain::reportCost() const {
         ss << std::setw(10) << std::left << costA - costW << "      ";
         ss << std::setw(10) << std::left << costW << "  ";
         ss << std::setw(10) << std::left << costO << std::endl;
+        std::vector<std::string> all_s = XMPI::all_gather(ss.str());
         
         std::string s = "\n-------------------------------------- MPI COST MEASUREMENTS --------------------------------------\n";
         s += "PROCESSOR    WALLTIME    ELEMENT-WISE    POINT_WISE    MPI_ASSEMBLE    MPI_WAIT    MISCELLANEOUS\n";
-        for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
-            if (iproc == XMPI::rank()) s += ss.str();
-            XMPI::bcastFromProc(s, iproc);
-        }
+        for (int iproc = 0; iproc < XMPI::nproc(); iproc++) s += all_s[iproc]; 
         s += "\n\n";
         return s;
     #else 
@@ -345,18 +353,19 @@ void Domain::dumpWisdom() const {
     #endif
     
     std::vector<double> buffer;
-    for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
-        if (iproc == XMPI::rank()) {
-            for (const auto &point: mPoints) {
-                if (!pointInPreviousRank(point->getDomainTag())) {
-                    buffer.push_back(point->getCoords()(0));
-                    buffer.push_back(point->getCoords()(1));
-                    buffer.push_back(point->getNuWisdom());
-                    buffer.push_back(point->getNu());
-                }
-            }
+    for (const auto &point: mPoints) {
+        if (!pointInPreviousRank(point->getDomainTag())) {
+            buffer.push_back(point->getCoords()(0));
+            buffer.push_back(point->getCoords()(1));
+            buffer.push_back(point->getNuWisdom());
+            buffer.push_back(point->getNu());
         }
-        XMPI::bcastFromProc(buffer, iproc);
+    }
+    
+    std::vector<std::vector<double>> all_buffer = XMPI::all_gather(buffer);
+    for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
+        if (iproc == XMPI::rank()) continue;
+        buffer.insert(buffer.end(), all_buffer[iproc].begin(), all_buffer[iproc].end());
     }
     
     if (XMPI::root()) {
