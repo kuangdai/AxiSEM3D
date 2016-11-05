@@ -91,3 +91,6 @@ DEVELOP_MAX_TIME_STEPS                      0
 # if turned on, no source will be added 
 DEVELOP_NON_SOURCE_MODE                     false
 
+# diagnose preprocessing time
+# see results in output/preloop_timer.txt
+DEVELOP_DIAGNOSE_PRELOOP                    false
