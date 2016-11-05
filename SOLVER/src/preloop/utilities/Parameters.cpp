@@ -80,6 +80,7 @@ void Parameters::registerAll() {
     registerPar("OPTION_LOOP_INFO_INTERVAL");
     registerPar("DEVELOP_MAX_TIME_STEPS");
     registerPar("DEVELOP_NON_SOURCE_MODE");
+    registerPar("DEVELOP_DIAGNOSE_PRELOOP");
     
 }
 

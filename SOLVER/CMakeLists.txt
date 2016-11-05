@@ -231,6 +231,7 @@ add_executable(
     src/preloop/utilities/Parameters.cpp
     src/preloop/utilities/PreloopGradient.cpp
     src/preloop/utilities/PreloopFFTW.cpp
+    src/preloop/utilities/XTimer.cpp
     
     src/preloop/spectral/SpectralConstants.cpp
     src/preloop/spectral/mapping/Mapping.cpp
