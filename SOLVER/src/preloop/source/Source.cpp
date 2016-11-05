@@ -28,30 +28,28 @@ mDepth(depth), mLatitude(lat), mLongitude(lon) {
 }
 
 void Source::release(Domain &domain, const Mesh &mesh) const {
-    bool found = false;
-    // serialization
-    for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
-        if (iproc == XMPI::rank() && !found) {
-            // locate source in mesh
-            int locTag;
-            RDColP interpFactZ;
-            found = locate(mesh, locTag, interpFactZ);
-            if (found) {
-                // compute source term
-                arPP_CMatX3 fouriers;
-                const Quad *myQuad = mesh.getQuad(locTag);
-                computeSourceFourier(*myQuad, interpFactZ, fouriers);
-                // add to domain
-                Element *myElem = domain.getElement(myQuad->getElementTag());
-                domain.addSourceTerm(new SourceTerm(myElem, fouriers));
-            }
-        }
-        // tell other procs if source is found in me
-        XMPI::bcastFromProc(found, iproc);
-        if (found) break;
-    }
-    if (XMPI::sum(domain.getNumSources()) != 1) 
+    // locate local
+    int myrank = XMPI::nproc();
+    int locTag;
+    RDColP interpFactZ;
+    if (locate(mesh, locTag, interpFactZ)) myrank = XMPI::rank();
+    
+    // min recRank 
+    int myrank_min = XMPI::min(myrank);
+    if (myrank_min == XMPI::nproc()) {
         throw std::runtime_error("Source::release || Error locating source.");
+    }
+    
+    // release to me
+    if (myrank_min == XMPI::rank()) {
+        // compute source term
+        arPP_CMatX3 fouriers;
+        const Quad *myQuad = mesh.getQuad(locTag);
+        computeSourceFourier(*myQuad, interpFactZ, fouriers);
+        // add to domain
+        Element *myElem = domain.getElement(myQuad->getElementTag());
+        domain.addSourceTerm(new SourceTerm(myElem, fouriers));
+    }
 }
 
 bool Source::locate(const Mesh &mesh, int &locTag, RDColP &interpFactZ) const {

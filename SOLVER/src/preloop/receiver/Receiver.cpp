@@ -47,44 +47,30 @@ mName(name), mNetwork(network), mDepth(depth) {
 
 void Receiver::release(Domain &domain, const Mesh &mesh, 
     int recordInterval, int component,
-    const std::string &path, bool binary, bool append, int bufferSize) {
-    
-    bool found = false;
-    // serialization
-    for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
-        if (iproc == XMPI::rank() && !found) {
-            // locate in mesh
-            int elemTag;
-            RDMatPP interpFact;
-            found = locate(mesh, elemTag, interpFact);
-            if (found) {
-                Element *myElem = domain.getElement(elemTag);
+    const std::string &path, bool binary, bool append, int bufferSize,
+    int elemTag, const RDMatPP &interpFact) {
                     
-                // seismometer
-                Seismometer *seis;
-                if (component == 0) 
-                    seis = new SeismometerRTZ(mPhi, interpFact.cast<Real>(), myElem, mTheta);
-                else if (component == 1)
-                    seis = new SeismometerENZ(mPhi, interpFact.cast<Real>(), myElem, mTheta, mBackAzimuth * degree);
-                else 
-                    seis = new Seismometer(mPhi, interpFact.cast<Real>(), myElem);
+    Element *myElem = domain.getElement(elemTag);
+                    
+    // seismometer
+    Seismometer *seis;
+    if (component == 0) 
+        seis = new SeismometerRTZ(mPhi, interpFact.cast<Real>(), myElem, mTheta);
+    else if (component == 1)
+        seis = new SeismometerENZ(mPhi, interpFact.cast<Real>(), myElem, mTheta, mBackAzimuth * degree);
+    else 
+        seis = new Seismometer(mPhi, interpFact.cast<Real>(), myElem);
                 
-                // recorder
-                Recorder *rec;
-                std::string fname = path + "/" + mNetwork + "_" + mName;
-                if (binary) 
-                    rec = new RecorderBinary(bufferSize, fname, append);
-                else 
-                    rec = new RecorderAscii(bufferSize, fname, append);
-                
-                // station    
-                domain.addStation(new Station(recordInterval, seis, rec));
-            }
-        }
-        // tell other procs if source is found in me
-        XMPI::bcastFromProc(found, iproc);
-        if (found) break;
-    }
+    // recorder
+    Recorder *rec;
+    std::string fname = path + "/" + mNetwork + "_" + mName;
+    if (binary) 
+        rec = new RecorderBinary(bufferSize, fname, append);
+    else 
+        rec = new RecorderAscii(bufferSize, fname, append);
+    
+    // station    
+    domain.addStation(new Station(recordInterval, seis, rec));
 }
 
 bool Receiver::locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const {

@@ -63,12 +63,25 @@ ReceiverCollection::~ReceiverCollection() {
 }
 
 void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
-    for (const auto &rec: mReceivers) 
-        rec->release(domain, mesh, mRecordInterval, mComponent, 
-            mOutputDir, mBinary, mAppend, mBufferSize);
-    int found = XMPI::sum(domain.getNumStations()); 
-    if (found != mReceivers.size()) 
-        throw std::runtime_error("ReceiverCollection::release || Error locating receivers.");
+    std::vector<int> recRank(mReceivers.size(), XMPI::nproc());
+    std::vector<int> recETag(mReceivers.size(), -1);
+    std::vector<RDMatPP> recInterpFact(mReceivers.size(), RDMatPP::Zero());
+    for (int irec = 0; irec < mReceivers.size(); irec++) {
+        bool found = mReceivers[irec]->locate(mesh, recETag[irec], recInterpFact[irec]);
+        if (found) recRank[irec] = XMPI::rank();
+    }
+    for (int irec = 0; irec < mReceivers.size(); irec++) {
+        int recRankMin = XMPI::min(recRank[irec]);
+        if (recRankMin == XMPI::nproc()) {
+            throw std::runtime_error("ReceiverCollection::release || Error locating receiver " + 
+                boost::lexical_cast<std::string>(irec));
+        }
+        if (recRankMin == XMPI::rank()) {
+            mReceivers[irec]->release(domain, mesh, mRecordInterval, mComponent, 
+                mOutputDir, mBinary, mAppend, mBufferSize, 
+                recETag[irec], recInterpFact[irec]);
+        }
+    }
 }
 
 std::string ReceiverCollection::verbose() const {
