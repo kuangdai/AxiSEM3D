@@ -40,4 +40,11 @@ void XTimer::end(std::string name, int level) {
     mFile << name << " finishes. Elapsed seconds = " << mTimers[level].elapsed().wall / 1e9 << std::endl;
 }
 
+void XTimer::pause(int level) {
+    mTimers[level].stop();
+}
+
+void XTimer::resume(int level) {
+    mTimers[level].resume();
+}
 
