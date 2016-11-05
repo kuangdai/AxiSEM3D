@@ -42,12 +42,11 @@ Connectivity::Connectivity(const Connectivity &super, const IColX &mask) {
     }
 }
 
-void Connectivity::formElemToGLL(int &ngll, std::vector<IMatPP> &elemToGLL) const {
+void Connectivity::formElemToGLL(int &ngll, std::vector<IMatPP> &elemToGLL, std::vector<IColX> &neighbours) const {
     // form static
     if (sNodeIJPol[0].size() == 0) formNodeEdge();
     
     // get neighbours from metis
-    std::vector<IColX> neighbours;
     DualGraph::formNeighbourhood(mConnectivity, 1, neighbours);
 
     // build local to global mapping
@@ -95,26 +94,21 @@ void Connectivity::decompose(const DecomposeOption &option,
     // domain decomposition
     XTimer::begin("Metis Part", 3);
     IColX elemToProc;
-    if (XMPI::root()) DualGraph::decompose(mConnectivity, option, XMPI::nproc(), elemToProc);
-    XMPI::bcastEigen(elemToProc);
+    DualGraph::decompose(mConnectivity, option, XMPI::nproc(), elemToProc);
     XTimer::end("Metis Part", 3);
     
     // global element-gll mapping
-    XTimer::begin("global element-gll", 3);
-    int nElemGlobal = size();
-    int nGllGlobal = 0;
-    std::vector<IMatPP> elemToGllGlobal;
-    formElemToGLL(nGllGlobal, elemToGllGlobal);
-    XTimer::end("global element-gll", 3);
-    
     // neighbourhood with ncommon = 1 (NOT 2)
     // NOTE: Though we decompose with ncommon = 2, metis may still (but rarely) yields 
     //       a decomposition where two processors only share one single point. 
     //       This could happen when a large nproc is used on a relatively small mesh.
-    XTimer::begin("global neighbours", 3);
+    XTimer::begin("global element-gll", 3);
+    int nElemGlobal = size();
+    int nGllGlobal = 0;
+    std::vector<IMatPP> elemToGllGlobal;
     std::vector<IColX> neighbours;
-    DualGraph::formNeighbourhood(mConnectivity, 1, neighbours);
-    XTimer::end("global neighbours", 3);
+    formElemToGLL(nGllGlobal, elemToGllGlobal, neighbours);
+    XTimer::end("global element-gll", 3);
     
     // map of to-be-communicated global gll points 
     XTimer::begin("to-be-communicated global", 3);
@@ -179,7 +173,7 @@ void Connectivity::decompose(const DecomposeOption &option,
     
     // local element-gll mapping
     XTimer::begin("local element-gll", 3);
-    Connectivity(*this, procMask).formElemToGLL(nGllLocal, elemToGllLocal);
+    Connectivity(*this, procMask).formElemToGLL(nGllLocal, elemToGllLocal, neighbours);
     XTimer::end("local element-gll", 3);
     
     // form local messaging

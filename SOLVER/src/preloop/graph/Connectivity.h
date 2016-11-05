@@ -23,9 +23,6 @@ public:
     // size, nelem
     int size() const {return mGlobalQuadID.rows();};
     
-    // form element-to-gll mapping 
-    void formElemToGLL(int &ngll, std::vector<IMatPP> &elemToGLL) const;
-    
     // domain decomposition
     void decompose(const DecomposeOption &option, 
         int &nlocalGLL, std::vector<IMatPP> &localElemToGLL, 
@@ -36,6 +33,8 @@ private:
     IMatX4 mConnectivity;
     
 private:
+    // form element-to-gll mapping 
+    void formElemToGLL(int &ngll, std::vector<IMatPP> &elemToGLL, std::vector<IColX> &neighbours) const;
     static void get_shared_DOF_quad(const IRow4 &connectivity1, const IRow4 &connectivity2, 
         std::vector<IRow2> &map1, std::vector<IRow2> &map2, int ielem);
     static void common_nodes(const IRow4 &a, const IRow4 &b, 
