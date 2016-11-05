@@ -241,19 +241,22 @@ double Quad::getDeltaT() const {
     RDColX dt_slices = courant * hmin.schur(vmax.array().pow(-1.).matrix());
     double dt_min_org = dt_slices.minCoeff();
     
-    int denseFactor = 11;
-    // check minimum on densed sampling slices
-    double dt_min_all = XMath::trigonResampling(denseFactor * dt_slices.rows(), dt_slices).minCoeff();
-    if (dt_min_all < .0) {
-        throw std::runtime_error("Quad::getDeltaT || Strong Gibbs phenomenon detected. ||"
-            "This exception means your 3-D models (usually of Geometric type, e.g., Moho undulation) ||"
-            "contain very strong and sharp gradients such as a spike. The Gibbs phenomenon is too ||"
-            "strong to be handled by AxiSEM3D and will definitely cause instability. ||"
-            "Please try to smooth the problematic model externally.");
-    }
+    // we have checked this in relabelling
+    return dt_min_org;
     
-    // return average of the two
-    return (dt_min_org + dt_min_all) / 2.;
+    // int denseFactor = 11;
+    // // check minimum on densed sampling slices
+    // double dt_min_all = XMath::trigonResampling(denseFactor * dt_slices.rows(), dt_slices).minCoeff();
+    // if (dt_min_all < .0) {
+    //     throw std::runtime_error("Quad::getDeltaT || Strong Gibbs phenomenon detected. ||"
+    //         "This exception means your 3-D models (usually of Geometric type, e.g., Moho undulation) ||"
+    //         "contain very strong and sharp gradients such as a spike. The Gibbs phenomenon is too ||"
+    //         "strong to be handled by AxiSEM3D and will definitely cause instability. ||"
+    //         "Please try to smooth the problematic model externally.");
+    // }
+    // 
+    // // return average of the two
+    // return (dt_min_org + dt_min_all) / 2.;
 }
 
 void Quad::setupGLLPoints(std::vector<GLLPoint *> &gllPoints, const IMatPP &myPointTags, double distTol) {
