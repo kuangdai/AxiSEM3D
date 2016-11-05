@@ -73,9 +73,8 @@ int axisem_main(int argc, char *argv[]) {
         
         //////// dt
         XTimer::begin("DT", 0);
-        double dt_mesh = pl.mMesh->getDeltaT();
-        double dt_user = pl.mParameters->getValue<double>("TIME_DELTA_T");
-        double dt = (dt_user > 0.) ? dt_user : dt_mesh;
+        double dt = pl.mParameters->getValue<double>("TIME_DELTA_T");
+        if (dt < tinyDouble) dt = pl.mMesh->getDeltaT();
         XTimer::end("DT", 0);
         
         //////// attenuation
