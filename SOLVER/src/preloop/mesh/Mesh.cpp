@@ -357,7 +357,7 @@ void Mesh::measure(DecomposeOption &measured) {
     ////////// measure points //////////
     XTimer::begin("Measure Points", 2);
     // initialize with zero weights
-    double ngll = mGLLPoints.size();
+    int ngll = mGLLPoints.size();
     RDColX pWgt = RDColX::Zero(ngll);
     // create library
     std::map<std::string, double> pointCostLibrary;
