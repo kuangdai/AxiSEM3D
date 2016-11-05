@@ -24,6 +24,7 @@
 
 #include <fstream>
 
+#include <XTimer.h>
 
 Mesh::~Mesh() {
     destroy(); // local build
@@ -51,7 +52,9 @@ void Mesh::buildUnweighted() {
         else 
             option.mElemWeights1[iquad] = 1.; // solid
     }
+    XTimer::begin("Build Local", 1);
     buildLocal(option);
+    XTimer::end("Build Local", 1);
     if (mDDPar->mPlotDD) plotLocalBuild(Parameters::sOutputDirectory + "/unweighted.nb");
 }
 
@@ -68,17 +71,28 @@ void Mesh::setAttBuilder(const AttBuilder *attBuild) {
 
 void Mesh::buildWeighted() {
     DecomposeOption measured;
+    XTimer::begin("Measure", 1);
     measure(measured);
+    XTimer::end("Measure", 1);
+    
+    XTimer::begin("Build Local", 1);
     buildLocal(measured);
+    XTimer::end("Build Local", 1);
+    
     if (mDDPar->mPlotDD) plotLocalBuild(Parameters::sOutputDirectory + "/weighted.nb");
 }
 
 void Mesh::release(Domain &domain) {
+    XTimer::begin("Release Points", 2);
     for (const auto &point: mGLLPoints) point->release(domain);
+    XTimer::end("Release Points", 2);
+    
+    XTimer::begin("Release Elements", 2);
     for (int iloc = 0; iloc < getNumQuads(); iloc++) {
         int etag = mQuads[iloc]->release(domain, mLocalElemToGLL[iloc], mAttBuilder);
         mQuads[iloc]->setElementTag(etag);
     }
+    XTimer::end("Release Elements", 2);
     
     // set messaging 
     MessagingBuffer *buf = new MessagingBuffer();
@@ -143,18 +157,23 @@ void Mesh::buildLocal(const DecomposeOption &option) {
     destroy();
     
     // domain decomposition
+    XTimer::begin("Domain Decomposition", 2);
     int nGllLocal;
     IColX procMask;
     mMsgInfo = new MessagingInfo();
     Connectivity con_global(mExModel->getConnectivity());
     con_global.decompose(option, nGllLocal, mLocalElemToGLL, *mMsgInfo, procMask);
+    XTimer::end("Domain Decomposition", 2);
     
     // form empty points 
+    XTimer::begin("Generate Points", 2);
     mGLLPoints.reserve(nGllLocal);
     for (int i = 0; i < nGllLocal; i++) 
         mGLLPoints.push_back(new GLLPoint());
+    XTimer::end("Generate Points", 2);
     
     // quads 
+    XTimer::begin("Generate Elements", 2);
     mQuads.reserve(mLocalElemToGLL.size());
     int iloc = 0;
     for (int iquad = 0; iquad < mExModel->getNumQuads(); iquad++) {
@@ -173,7 +192,9 @@ void Mesh::buildLocal(const DecomposeOption &option) {
             mQuads.push_back(quad);
         }
     }
+    XTimer::end("Generate Elements", 2);
     
+    XTimer::begin("Assemble Mass", 2);
     // plot here
     // dumpFieldVariable(Parameters::sOutputDirectory + "/vp.txt", "vp", 0, 
     //     Volumetric3D::ReferenceTypes::ReferenceDiff);
@@ -226,6 +247,8 @@ void Mesh::buildLocal(const DecomposeOption &option) {
     
     // wait send 
     XMPI::wait_all(mMsgInfo->mReqSend.begin(), mMsgInfo->mReqSend.end());
+    
+    XTimer::end("Assemble Mass", 2);
 }
 
 void Mesh::destroy() {
@@ -259,6 +282,7 @@ void Mesh::measure(DecomposeOption &measured) {
     int nMeasureSameKind = 3;
     
     ////////// measure elements //////////
+    XTimer::begin("Measure Elements", 2);
     // initialize with zero weights
     int nElemGlobal = mExModel->getNumQuads();
     RDColX eWgtEle = RDColX::Zero(nElemGlobal);
@@ -292,7 +316,10 @@ void Mesh::measure(DecomposeOption &measured) {
             }
         }
     }
+    XTimer::end("Measure Elements", 2);
+    
     // uniform measurements across procs
+    XTimer::begin("Bcast Element Costs", 2);
     std::map<std::string, double> elemCostLibraryGlobal;
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
         if (iproc == XMPI::rank()) {
@@ -316,8 +343,11 @@ void Mesh::measure(DecomposeOption &measured) {
         // commnunication size    
         eCommSize(quadTag) = elem->sizeComm();
     }
+    XTimer::end("Bcast Element Costs", 2);
+    
 
     ////////// measure points //////////
+    XTimer::begin("Measure Points", 2);
     // initialize with zero weights
     double ngll = mGLLPoints.size();
     RDColX pWgt = RDColX::Zero(ngll);
@@ -347,7 +377,10 @@ void Mesh::measure(DecomposeOption &measured) {
             }
         }
     }
+    XTimer::end("Measure Points", 2);
+    
     // uniform measurements across procs
+    XTimer::begin("Bcast Point Costs", 2);
     std::map<std::string, double> pointCostLibraryGlobal;
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
         if (iproc == XMPI::rank()) {
@@ -367,7 +400,9 @@ void Mesh::measure(DecomposeOption &measured) {
         // assign to point
         pWgt(ip) = measure / mGLLPoints[ip]->getReferenceCount();
     }
-        
+    XTimer::end("Bcast Point Costs", 2);
+    
+    XTimer::begin("Finish Measurement", 2);    
     // add point weights to elements
     RDColX eWgtPnt = RDColX::Zero(nElemGlobal);
     for (int iloc = 0; iloc < getNumQuads(); iloc++) {
@@ -410,6 +445,7 @@ void Mesh::measure(DecomposeOption &measured) {
             fs << it->first << "    " << it->second << std::endl;    
         fs.close();    
     }
+    XTimer::end("Finish Measurement", 2);    
 }
 
 void Mesh::test() {
