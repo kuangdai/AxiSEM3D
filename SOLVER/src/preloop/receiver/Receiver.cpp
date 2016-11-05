@@ -78,8 +78,11 @@ bool Receiver::locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const
     double r = mesh.computeRadiusRef(mDepth, mLat, mLon);
     recCrds(0) = r * sin(mTheta);
     recCrds(1) = r * cos(mTheta);
+    if (recCrds(0) > mesh.sMax() + tinySingle || recCrds(0) < mesh.sMin() - tinySingle) return false;
+    if (recCrds(1) > mesh.zMax() + tinySingle || recCrds(1) < mesh.zMin() - tinySingle) return false;
     for (int iloc = 0; iloc < mesh.getNumQuads(); iloc++) {
         const Quad *quad = mesh.getQuad(iloc);
+        if (!quad->nearMe(recCrds(0), recCrds(1))) continue;
         if (quad->invMapping(recCrds, srcXiEta)) {
             if (std::abs(srcXiEta(0)) <= 1.000001 && std::abs(srcXiEta(1)) <= 1.000001) {
                 elemTag = quad->getElementTag();

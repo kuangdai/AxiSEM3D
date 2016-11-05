@@ -58,6 +58,12 @@ public:
     double computeRadiusRef(double depth, double lat, double lon) const;
     double computeRPhysical(double r, double theta, double phi) const;
     
+    // get spatial ranges
+    double sMax() const {return mSMax;};
+    double sMin() const {return mSMin;};
+    double zMax() const {return mZMax;};
+    double zMin() const {return mZMin;};
+    
 private:
     
     // build local
@@ -111,6 +117,12 @@ private:
     
     // message info
     MessagingInfo *mMsgInfo;
+    
+    // spatial ranges
+    double mSMax;
+    double mSMin;
+    double mZMax;
+    double mZMin;
     
     ////////////////// other parameters //////////////////
     struct DDParameters {

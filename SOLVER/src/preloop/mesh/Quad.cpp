@@ -672,7 +672,7 @@ RDMatX3 Quad::computeNormal(int side, int ipol, int jpol) const {
     return normal;
 }
 
-std::string Quad::dumpFieldVariable(const std::string &vname, int islice, int refType, bool nodeOnly) {
+std::string Quad::dumpFieldVariable(const std::string &vname, int islice, int refType, bool nodeOnly) const {
     std::stringstream ss;
     if (nodeOnly) {
         for (int inode = 0; inode < 4; inode++) {
@@ -693,6 +693,21 @@ std::string Quad::dumpFieldVariable(const std::string &vname, int islice, int re
     }
     
     return ss.str();
+}
+
+void Quad::getSpatialRange(double &s_max, double &s_min, double &z_max, double &z_min) const {
+    s_max = mNodalCoords.row(0).maxCoeff();
+    s_min = mNodalCoords.row(0).minCoeff();
+    z_max = mNodalCoords.row(1).maxCoeff();
+    z_min = mNodalCoords.row(1).minCoeff();
+}
+
+bool Quad::nearMe(double s, double z) const {
+    if (s > mNodalCoords.row(0).maxCoeff() + tinySingle || 
+        s < mNodalCoords.row(0).minCoeff() - tinySingle) return false;
+    if (z > mNodalCoords.row(1).maxCoeff() + tinySingle || 
+        z < mNodalCoords.row(1).minCoeff() - tinySingle) return false;
+    return true;
 }
 
 bool Quad::isIsotropic() const {

@@ -55,10 +55,13 @@ void Source::release(Domain &domain, const Mesh &mesh) const {
 bool Source::locate(const Mesh &mesh, int &locTag, RDColP &interpFactZ) const {
     RDCol2 srcCrds = RDCol2::Zero();
     srcCrds(1) = mesh.computeRadiusRef(mDepth, mLatitude, mLongitude);
+    if (srcCrds(0) > mesh.sMax() + tinySingle || srcCrds(0) < mesh.sMin() - tinySingle) return false;
+    if (srcCrds(1) > mesh.zMax() + tinySingle || srcCrds(1) < mesh.zMin() - tinySingle) return false;
     RDCol2 srcXiEta;
     for (int iloc = 0; iloc < mesh.getNumQuads(); iloc++) {
         const Quad *quad = mesh.getQuad(iloc);
         if (!quad->isAxial() || quad->isFluid()) continue;
+        if (!quad->nearMe(srcCrds(0), srcCrds(1))) continue;
         if (quad->invMapping(srcCrds, srcXiEta)) {
             if (std::abs(srcXiEta(1)) <= 1.) {
                 if (std::abs(srcXiEta(0) + 1.) > tinyDouble) 

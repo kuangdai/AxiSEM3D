@@ -173,6 +173,9 @@ void Mesh::buildLocal(const DecomposeOption &option) {
     XTimer::end("Generate Points", 2);
     
     // quads 
+    double s_max, s_min, z_max, z_min;
+    mSMax = mZMax = -1e30;
+    mSMin = mZMin = 1e30;
     XTimer::begin("Generate Elements", 2);
     mQuads.reserve(mLocalElemToGLL.size());
     int iloc = 0;
@@ -190,6 +193,12 @@ void Mesh::buildLocal(const DecomposeOption &option) {
             // setup points
             quad->setupGLLPoints(mGLLPoints, mLocalElemToGLL[iloc++], mExModel->getDistTolerance());
             mQuads.push_back(quad);
+            // spatial range
+            quad->getSpatialRange(s_max, s_min, z_max, z_min);
+            mSMax = std::max(mSMax, s_max);
+            mSMin = std::min(mSMin, s_min);
+            mZMax = std::max(mZMax, z_max);
+            mZMin = std::min(mZMin, z_min);
         }
     }
     XTimer::end("Generate Elements", 2);
