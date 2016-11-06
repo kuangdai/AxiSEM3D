@@ -12,8 +12,8 @@ class XTimer {
 public:
     static void initialize(std::string fileName, int nLevels);
     static void finalize();
-    static void begin(std::string procName, int level);
-    static void end(std::string procName, int level);
+    static void begin(std::string procName, int level, bool barrier = false);
+    static void end(std::string procName, int level, bool barrier = true);
     static void enable() {mEnabled = true;};
     static void disable() {mEnabled = false;};
     static void pause(int level);

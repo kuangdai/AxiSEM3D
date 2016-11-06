@@ -25,16 +25,20 @@ void XTimer::finalize() {
     mFile.close();
 }
 
-void XTimer::begin(std::string name, int level) {
-    if (!XMPI::root() || !mEnabled) return;
+void XTimer::begin(std::string name, int level, bool barrier) {
+    if (!mEnabled) return;
+    if (barrier) XMPI::barrier();
+    if (!XMPI::root()) return;
     for (int i = 0; i < level; i++) mFile << "    ";
     mFile << name << " begins..." << std::endl;
     mTimers[level].elapsed().clear();
     mTimers[level].start();
 }
 
-void XTimer::end(std::string name, int level) {
-    if (!XMPI::root() || !mEnabled) return;
+void XTimer::end(std::string name, int level, bool barrier) {
+    if (!mEnabled) return;
+    if (barrier) XMPI::barrier();
+    if (!XMPI::root()) return;
     mTimers[level].stop();
     for (int i = 0; i < level; i++) mFile << "    ";
     mFile << name << " finishes. Elapsed seconds = " << mTimers[level].elapsed().wall / 1e9 << std::endl;
