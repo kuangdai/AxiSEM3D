@@ -173,12 +173,11 @@ void Mesh::buildLocal(const DecomposeOption &option) {
     XTimer::end("Generate Points", 2);
     
     // quads 
+    XTimer::begin("Generate Quads", 2);
     double s_max, s_min, z_max, z_min;
     mSMax = mZMax = -1e30;
     mSMin = mZMin = 1e30;
-    XTimer::begin("Generate Elements", 2);
     mQuads.reserve(mLocalElemToGLL.size());
-    int iloc = 0;
     for (int iquad = 0; iquad < mExModel->getNumQuads(); iquad++) {
         if (procMask(iquad)) {
             // 1D Quad
@@ -190,25 +189,32 @@ void Mesh::buildLocal(const DecomposeOption &option) {
                 quad->addGeometric3D(*(mGeometric3D[j]), mSrcLat, mSrcLon, mSrcDep);
             if (mOceanLoad3D != 0) quad->setOceanLoad3D(*mOceanLoad3D, mSrcLat, mSrcLon, mSrcDep);    
             quad->finishModel3D();
-            // setup points
-            quad->setupGLLPoints(mGLLPoints, mLocalElemToGLL[iloc++], mExModel->getDistTolerance());
-            mQuads.push_back(quad);
             // spatial range
             quad->getSpatialRange(s_max, s_min, z_max, z_min);
             mSMax = std::max(mSMax, s_max);
             mSMin = std::min(mSMin, s_min);
             mZMax = std::max(mZMax, z_max);
             mZMin = std::min(mZMin, z_min);
+            // add to local build
+            mQuads.push_back(quad);
         }
     }
-    XTimer::end("Generate Elements", 2);
+    XTimer::end("Generate Quads", 2);
     
-    XTimer::begin("Assemble Mass", 2);
+    // setup GLL points
+    XTimer::begin("Setup Points", 2);
+    for (int iloc = 0; iloc < mLocalElemToGLL.size(); iloc++) {
+        mQuads[iloc]->setupGLLPoints(mGLLPoints, mLocalElemToGLL[iloc], mExModel->getDistTolerance());
+    } 
+    XTimer::end("Setup Points", 2);
+    
     // plot here
     // dumpFieldVariable(Parameters::sOutputDirectory + "/vp.txt", "vp", 0, 
     //     Volumetric3D::ReferenceTypes::ReferenceDiff);
     // exit(0);
+    
     /////////////////////////////// assemble mass and normal ///////////////////////////////
+    XTimer::begin("Assemble Mass", 2);
     // mpi buffer
     std::vector<RDMatXX> bufferGLLSend;
     std::vector<RDMatXX> bufferGLLRecv;
