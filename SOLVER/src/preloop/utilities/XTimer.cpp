@@ -41,10 +41,12 @@ void XTimer::end(std::string name, int level) {
 }
 
 void XTimer::pause(int level) {
+    if (!XMPI::root() || !mEnabled) return;
     mTimers[level].stop();
 }
 
 void XTimer::resume(int level) {
+    if (!XMPI::root() || !mEnabled) return;
     mTimers[level].resume();
 }
 

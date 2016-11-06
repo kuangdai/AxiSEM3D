@@ -225,8 +225,8 @@ void Mesh::buildLocal(const DecomposeOption &option) {
         // nr_max * 3 for surface normal
         // nr_max * 3 for solid-fluid normal
         // 1 for reference count
-        bufferGLLSend.push_back(RDMatXX(nr_max * 8 + 1, npoint));
-        bufferGLLRecv.push_back(RDMatXX(nr_max * 8 + 1, npoint));
+        bufferGLLSend.push_back(RDMatXX::Zero(nr_max * 8 + 1, npoint));
+        bufferGLLRecv.push_back(RDMatXX::Zero(nr_max * 8 + 1, npoint));
     }    
     
     // feed buffer
