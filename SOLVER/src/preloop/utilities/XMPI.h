@@ -180,6 +180,17 @@ public:
             return std::vector<Type>(value, 1);
         #endif
     };
+    
+    template<typename Type>
+    static std::vector<Type> gather(const Type &value) {
+        #ifndef _SERIAL_BUILD
+            std::vector<Type> total;
+            boost::mpi::gather(*sWorld, value, total, 0);
+            return total;
+        #else 
+            return std::vector<Type>(value, 1);
+        #endif
+    };
         
     ////////////////////////////// stream on root //////////////////////////////
     struct root_cout {
