@@ -516,49 +516,50 @@ void Quad::formNrField(const NrField &nrf) {
             double circ = 2. * pi * crds(0);
             int upper = (int)(circ / spacing);
             if (upper < 3) upper = 3; // axis
-            if (nrf.useLuckyNumber()) upper = XMath::nextLuckyNumber(upper);
             mPointNr(ipol, jpol) = std::min(mPointNr(ipol, jpol), upper);
             
             ////////// deal with even numbers ////////
-            if (mPointNr(ipol, jpol) % 2 != 0) continue;
-            
-            // axis
-            if (mIsAxial) {
-                mPointNr(ipol, jpol)++;
-                if (nrf.useLuckyNumber()) mPointNr(ipol, jpol) = XMath::nextLuckyNumber(mPointNr(ipol, jpol), true);
-                continue;
-            }
-            
-            // near axis 
-            if (mNearAxisNodes.maxCoeff() < 0) continue;
-            for (int i = 0; i < 4; i++) {
-                if (mPointNr(ipol, jpol) % 2 != 0) break;
-                int n0 = mNearAxisNodes(i);
-                int n1 = mNearAxisNodes(Mapping::period0123(i + 1));
-                if (n0 >= 0 && n1 >= 0) {
-                    // on side
-                    bool onSide = 
-                    (n0 == 0 && jpol == 0) || 
-                    (n0 == 1 && ipol == nPol) || 
-                    (n0 == 2 && jpol == nPol) ||
-                    (n0 == 3 && ipol == 0);
-                    if (onSide) {
-                        mPointNr(ipol, jpol)++;
-                        if (nrf.useLuckyNumber()) mPointNr(ipol, jpol) = XMath::nextLuckyNumber(mPointNr(ipol, jpol), true);
-                    }
-                } else if (n0 >= 0 && n1 < 0) {
-                    // on point
-                    bool onPoint = 
-                    (n0 == 0 && ipol == 0 && jpol == 0) || 
-                    (n0 == 1 && ipol == nPol && jpol == 0) || 
-                    (n0 == 2 && ipol == nPol && jpol == nPol) ||
-                    (n0 == 3 && ipol == 0 && jpol == nPol);
-                    if (onPoint) {
-                        mPointNr(ipol, jpol)++;
-                        if (nrf.useLuckyNumber()) mPointNr(ipol, jpol) = XMath::nextLuckyNumber(mPointNr(ipol, jpol), true);
+            bool forceOdd = false;
+            if (mPointNr(ipol, jpol) % 2 == 0) {
+                if (mIsAxial) {
+                    // axis
+                    mPointNr(ipol, jpol)++;
+                    forceOdd = true;
+                } else if (mNearAxisNodes.maxCoeff() >= 0) {
+                    // near axis 
+                    for (int i = 0; i < 4; i++) {
+                        if (mPointNr(ipol, jpol) % 2 != 0) break;
+                        int n0 = mNearAxisNodes(i);
+                        int n1 = mNearAxisNodes(Mapping::period0123(i + 1));
+                        if (n0 >= 0 && n1 >= 0) {
+                            // on side
+                            bool onSide = 
+                            (n0 == 0 && jpol == 0) || 
+                            (n0 == 1 && ipol == nPol) || 
+                            (n0 == 2 && jpol == nPol) ||
+                            (n0 == 3 && ipol == 0);
+                            if (onSide) {
+                                mPointNr(ipol, jpol)++;
+                                forceOdd = true;
+                            }
+                        } else if (n0 >= 0 && n1 < 0) {
+                            // on point
+                            bool onPoint = 
+                            (n0 == 0 && ipol == 0 && jpol == 0) || 
+                            (n0 == 1 && ipol == nPol && jpol == 0) || 
+                            (n0 == 2 && ipol == nPol && jpol == nPol) ||
+                            (n0 == 3 && ipol == 0 && jpol == nPol);
+                            if (onPoint) {
+                                mPointNr(ipol, jpol)++;
+                                forceOdd = true;
+                            }
+                        }
                     }
                 }
             }
+            
+            // luck number
+            if (nrf.useLuckyNumber()) mPointNr(ipol, jpol) = XMath::nextLuckyNumber(mPointNr(ipol, jpol), forceOdd);
         }
     }
     mNr = mPointNr.maxCoeff();

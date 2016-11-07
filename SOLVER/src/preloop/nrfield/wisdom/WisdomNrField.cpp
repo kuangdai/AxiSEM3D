@@ -20,14 +20,12 @@ WisdomNrField::~WisdomNrField() {
 
 int WisdomNrField::getNrAtPoint(const RDCol2 &coords) const {
     int nu = round(mNuWisdom->getNu(coords(0), coords(1), mNumInterpPoints) * mFactor);
-    int nr = nu * 2 + 1;
-    return mUseLuckyNumber ? XMath::nextLuckyNumber(nr) : nr;
+    return nu * 2 + 1;
 }
 
 int WisdomNrField::getMaxNr() const {
     int nu = round(mNuWisdom->getMaxNu() * mFactor);
-    int nr = nu * 2 + 1;
-    return mUseLuckyNumber ? XMath::nextLuckyNumber(nr) : nr;
+    return nu * 2 + 1;
 }
 
 std::string WisdomNrField::verbose() const {

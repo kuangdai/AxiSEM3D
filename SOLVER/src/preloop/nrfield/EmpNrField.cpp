@@ -50,8 +50,7 @@ int EmpNrField::getNrAtPoint(const RDCol2 &coords) const {
     // minimum value
     int nr = 2 * std::max(mNuMin, (int)ceil(nu)) + 1;
     if (nr <= 0) throw std::runtime_error("EmpNrField::getNrAtPoint || Non-positive Nr.");
-    // FFTW
-    return mUseLuckyNumber ? XMath::nextLuckyNumber(nr) : nr;
+    return nr;
 }
 
 int EmpNrField::getMaxNr() const {

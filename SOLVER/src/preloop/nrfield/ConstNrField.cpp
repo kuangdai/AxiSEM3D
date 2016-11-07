@@ -16,8 +16,7 @@ int ConstNrField::getNrAtPoint(const RDCol2 &coords) const {
 }
 
 int ConstNrField::getMaxNr() const {
-    int nr = 2 * mNu + 1;
-    return mUseLuckyNumber ? XMath::nextLuckyNumber(nr) : nr;
+    return 2 * mNu + 1;
 }
 
 std::string ConstNrField::verbose() const {
