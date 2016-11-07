@@ -26,27 +26,30 @@ public:
     void initialize();
     void bcast();
     
+    // general
     bool isIsotropic() const {return mElementalVariables.find("VP_0") != mElementalVariables.end();};
     int getNumQuads() const {return mNumQuads;};
     int getNumNodes() const {return mNumNodes;};
-    const std::vector<std::array<int, 4>> &getConnectivity() const {return mConnectivity;};
-    const std::vector<double> &getNodalS() const {return mNodalS;};
-    const std::vector<double> &getNodalZ() const {return mNodalZ;};
-    const std::map<std::string, std::vector<double>> &getElementalVariables() const {return mElementalVariables;};
-    const std::map<std::string, std::vector<std::array<int, 2>>> &getSideSets() const {return mSideSets;};
     double getDistTolerance() const {return mDistTolerance;};
     double getROuter() const {return mROuter;};
     bool isCartesian() const {return mCartesian;};
-    const std::vector<std::array<int, 2>> &getSideSetAxis() const {return mSideSets.at(mSSNameAxis);};
-    const std::vector<std::array<int, 2>> &getSideSetSurface() const {return mSideSets.at(mSSNameSurface);};
-    const std::vector<std::array<int, 2>> &getSideSetSolidFluid() const {
+    const std::vector<std::array<int, 4>> &getConnectivity() const {return mConnectivity;};
+    const std::map<std::string, std::vector<double>> &getElementalVariables() const {return mElementalVariables;};
+    
+    // Node-wise
+    double getNodalS(int nodeTag) const {return mNodalS[nodeTag];};
+    double getNodalZ(int nodeTag) const {return mNodalZ[nodeTag];};
+    double getAveGLLSpacing(int nodeTag) const {return mAveGLLSpacing[nodeTag];};
+    
+    // Quad-wise
+    int getSideAxis(int quadTag) const {return mSideSets.at(mSSNameAxis)[quadTag];};
+    int getSideSurface(int quadTag) const {return mSideSets.at(mSSNameSurface)[quadTag];};
+    int getSideSolidFluid(int quadTag) const {
         if (mSideSets.find("solid_fluid_boundary") != mSideSets.end())
-            return mSideSets.at("solid_fluid_boundary");
-        static const std::vector<std::array<int, 2>> empty;
-        return empty;    
+            return mSideSets.at("solid_fluid_boundary")[quadTag];
+        return -1;
     };
-    const std::vector<double> &getAveGLLSpacing() const {return mAveGLLSpacing;};
-    const std::vector<std::array<int, 5>> &getVicinalAxis() const {return mVicinalAxis;};
+    const std::array<int, 4> &getVicinalAxis(int quadTag) const {return mVicinalAxis[quadTag];};
     
     std::string verbose() const;
     
@@ -92,7 +95,7 @@ private:
     
     // side sets
     int mNumSideSets;
-    std::map<std::string, std::vector<std::array<int, 2>>> mSideSets;
+    std::map<std::string, std::vector<int>> mSideSets;
     
     // others
     double mDistTolerance;
@@ -100,7 +103,7 @@ private:
     
     // for Nr map
     std::vector<double> mAveGLLSpacing;
-    std::vector<std::array<int, 5>> mVicinalAxis; 
+    std::vector<std::array<int, 4>> mVicinalAxis; 
     
     bool mCartesian = false;
     std::string mSSNameAxis = "t0";

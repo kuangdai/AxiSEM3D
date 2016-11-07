@@ -38,10 +38,10 @@ mQuadTag(quadTag) {
     // connectivity and coords
     for (int i = 0; i < 4; i++) {
         int nodeTag = exModel.getConnectivity()[mQuadTag][i];
-        mNodalCoords(0, i) = exModel.getNodalS()[nodeTag];
-        mNodalCoords(1, i) = exModel.getNodalZ()[nodeTag];
+        mNodalCoords(0, i) = exModel.getNodalS(nodeTag);
+        mNodalCoords(1, i) = exModel.getNodalZ(nodeTag);
+        mNodalAveGLLSpacing(i) = exModel.getAveGLLSpacing(nodeTag);
         mGlobalNodeTags[i] = nodeTag;
-        mNodalAveGLLSpacing(i) = exModel.getAveGLLSpacing()[nodeTag];
     }
     
     // geometric mapping
@@ -86,67 +86,51 @@ mQuadTag(quadTag) {
     
     // axial boundary
     mIsAxial = false;
-    mAxialSide = -1;
-    for (const auto &axss: exModel.getSideSetAxis()) {
-        if (mQuadTag == axss[0]) {
-            mIsAxial = true;
-            mAxialSide = axss[1];
-            if (mMapping->getType() != Mapping::MappingTypes::Linear && (mAxialSide + mCurvedOuter) % 2 == 0) 
-                throw std::runtime_error("Quad::Quad || Conflict in axial setting.");
-            if (mAxialSide != 3) throw std::runtime_error("Quad::Quad || Axial side must be 3.");
-            break;
-        }
-    }    
-    
+    mAxialSide = exModel.getSideAxis(mQuadTag);
+    if (mAxialSide >= 0) {
+        mIsAxial = true;
+        if (mMapping->getType() != Mapping::MappingTypes::Linear && (mAxialSide + mCurvedOuter) % 2 == 0) 
+            throw std::runtime_error("Quad::Quad || Conflict in axial setting.");
+        if (mAxialSide != 3) throw std::runtime_error("Quad::Quad || Axial side must be 3.");
+    }
+
     // solid-fluid boundary
     mOnSFBoundary = false;
-    mSFSide = -1;
-    for (const auto &sfss: exModel.getSideSetSolidFluid()) {
-        if (mQuadTag == sfss[0]) {
-            mOnSFBoundary = true;
-            mSFSide = sfss[1];
-            if (!exModel.isCartesian()) {
-                if (mMapping->getType() == Mapping::MappingTypes::Linear) 
-                    throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
-                if (mMapping->getType() == Mapping::MappingTypes::Spherical && (mSFSide + mCurvedOuter) % 2 != 0) 
-                    throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
-                if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && mSFSide != mCurvedOuter) 
-                    throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
-            }
-            break;
+    mSFSide = exModel.getSideSolidFluid(mQuadTag);
+    if (mSFSide >= 0) {
+        mOnSFBoundary = true;
+        if (!exModel.isCartesian()) {
+            if (mMapping->getType() == Mapping::MappingTypes::Linear) 
+                throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
+            if (mMapping->getType() == Mapping::MappingTypes::Spherical && (mSFSide + mCurvedOuter) % 2 != 0) 
+                throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
+            if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && mSFSide != mCurvedOuter) 
+                throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
         }
     }
     
     // surface boundary
     mOnSurface = false;
-    mSurfaceSide = -1;
-    for (const auto &sfss: exModel.getSideSetSurface()) {
-        if (mQuadTag == sfss[0]) {
-            mOnSurface = true;
-            mSurfaceSide = sfss[1];
-            if (!exModel.isCartesian()) {
-                if (mMapping->getType() == Mapping::MappingTypes::Linear) 
-                    throw std::runtime_error("Quad::Quad || Conflict in surface setting.");
-                if (mMapping->getType() == Mapping::MappingTypes::Spherical && mSurfaceSide != mCurvedOuter) 
-                    throw std::runtime_error("Quad::Quad || Conflict in surface setting.");
-                if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && mSurfaceSide != mCurvedOuter) 
-                    throw std::runtime_error("Quad::Quad || Conflict in surface setting.");
-            }
-            if (mIsFluid) throw std::runtime_error("Quad::Quad || Fluid element on surface.");
-            if (mOnSFBoundary) throw std::runtime_error("Quad::Quad || Element on both surface and solid-fluid boundary.");
-            break;
+    mSurfaceSide = exModel.getSideSurface(mQuadTag);
+    if (mSurfaceSide >= 0) {
+        mOnSurface = true;
+        if (!exModel.isCartesian()) {
+            if (mMapping->getType() == Mapping::MappingTypes::Linear) 
+                throw std::runtime_error("Quad::Quad || Conflict in surface setting.");
+            if (mMapping->getType() == Mapping::MappingTypes::Spherical && mSurfaceSide != mCurvedOuter) 
+                throw std::runtime_error("Quad::Quad || Conflict in surface setting.");
+            if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && mSurfaceSide != mCurvedOuter) 
+                throw std::runtime_error("Quad::Quad || Conflict in surface setting.");
         }
+        if (mIsFluid) throw std::runtime_error("Quad::Quad || Fluid element on surface.");
+        if (mOnSFBoundary) throw std::runtime_error("Quad::Quad || Element on both surface and solid-fluid boundary.");
     }
     
     // fourier 
     mNearAxisNodes = IColX::Constant(4, -1);
-    const std::vector<std::array<int, 5>> &vass = exModel.getVicinalAxis();
-    for (int i = 0; i < vass.size(); i++) {
-        if (mQuadTag == vass[i][0]) {
-            for (int j = 0; j < 4; j++) mNearAxisNodes(j) = vass[i][j + 1];
-            break;
-        }
-    }    
+    const std::array<int, 4> &vass = exModel.getVicinalAxis(quadTag);
+    for (int j = 0; j < 4; j++) mNearAxisNodes(j) = vass[j];
+    
     formNrField(nrf);
     
     // integral factor

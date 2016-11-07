@@ -194,14 +194,9 @@ void ExodusModel::readSideSets() {
         std::vector<int> sbuffer(size);
         exodusError(ex_get_side_set(
             mExodusId, (i + 1), ebuffer.data(), sbuffer.data()), "ex_get_elem_var");
-        std::vector<std::array<int, 2>> ss(size);
-        for (int j = 0; j < size; j++) {
-            // let start from 0
-            ss[j][0] = ebuffer[j] - 1;
-            ss[j][1] = sbuffer[j] - 1;
-        }
-        mSideSets.insert(std::pair<std::string, std::vector<std::array<int, 2>>>
-            (std::string(ssNames[i]), ss));
+        std::vector<int> ss(mNumQuads, -1);
+        for (int j = 0; j < size; j++) ss[ebuffer[j] - 1] = sbuffer[j] - 1;
+        mSideSets.insert(std::pair<std::string, std::vector<int>>(std::string(ssNames[i]), ss));
         delete [] ssNames[i];
     }
 }
@@ -288,11 +283,10 @@ void ExodusModel::finishReading() {
     } 
     
     // rotate nodes of axial elements such that side 3 is on axis
-    for (int i = 0; i < mSideSets.at(mSSNameAxis).size(); i++) {
+    for (int axialQuad = 0; axialQuad < mNumQuads; axialQuad++) {
         // loop over t0
-        int axialQuad = mSideSets.at(mSSNameAxis)[i][0];
-        int axialSide = mSideSets.at(mSSNameAxis)[i][1];
-        if (axialSide == 3) continue;
+        int axialSide = getSideAxis(axialQuad);
+        if (axialSide == 3 || axialSide == -1) continue;
 
         // connectivity
         std::array<int, 4> con = mConnectivity[axialQuad];
@@ -319,28 +313,25 @@ void ExodusModel::finishReading() {
         
         // side sets
         for (auto it = mSideSets.begin(); it != mSideSets.end(); it++) {
-            for (int j = 0; j < it->second.size(); j++) {
-                int iQuad = it->second[j][0];
-                int iSide = it->second[j][1];
-                if (iQuad == axialQuad) {
-                    it->second[j][1] = Mapping::period0123(iSide - axialSide + 3);
-                    break;
-                }
-            }
+            if (it->second[axialQuad] != -1) {
+                it->second[axialQuad] = Mapping::period0123(it->second[axialQuad] - axialSide + 3);
+            } 
         } 
         
         // done
-        mSideSets.at(mSSNameAxis)[i][1] = 3;
+        // mSideSets.at(mSSNameAxis)[axialQuad] = 3;
     }
     
     
     // find elements that are not axial but neighboring axial elements
-    mVicinalAxis = std::vector<std::array<int, 5>>();
+    std::array<int, 4> data = {-1, -1, -1, -1};
+    mVicinalAxis = std::vector<std::array<int, 4>>(mNumQuads, data);
     // first find near-axis nodes and axial quads
     std::vector<bool> nodeNearAxis(mNumNodes, false);
     std::vector<bool> quadOnAxis(mNumQuads, false);
-    for (int i = 0; i < mSideSets.at(mSSNameAxis).size(); i++) {
-        int axialQuad = mSideSets.at(mSSNameAxis)[i][0];
+    for (int axialQuad = 0; axialQuad < mNumQuads; axialQuad++) {
+        int axialSide = getSideAxis(axialQuad);
+        if (axialSide == -1) continue;
         nodeNearAxis[mConnectivity[axialQuad][0]] = true;
         nodeNearAxis[mConnectivity[axialQuad][1]] = true;
         nodeNearAxis[mConnectivity[axialQuad][2]] = true;
@@ -350,23 +341,16 @@ void ExodusModel::finishReading() {
     // loop over quads
     for (int iquad = 0; iquad < mNumQuads; iquad++) {
         if (quadOnAxis[iquad]) continue;
-        std::array<int, 5> data = {iquad, -1, -1, -1, -1};
-        bool found = false;
         for (int j = 0; j < 4; j++) {
             int nTag = mConnectivity[iquad][j];
-            if (nodeNearAxis[nTag]) {
-                data[j + 1] = j;
-                found = true;
-            }
+            if (nodeNearAxis[nTag]) mVicinalAxis[iquad][j] = j;
         }
-        if (found) mVicinalAxis.push_back(data);
     }
 
     // check if ocean presents in mesh
-    std::vector<std::array<int, 2>> surf = getSideSetSurface();
     std::string strVs = isIsotropic() ? "VS_0" : "VSV_0";
-    for (int j = 0; j < surf.size(); j++) {
-        int iQuad = surf[j][0];
+    for (int iQuad = 0; iQuad < mNumQuads; iQuad++) {
+        if (getSideSurface(iQuad) == -1) continue;
         double vs = mElementalVariables.at(strVs)[iQuad];
         if (vs < tinyDouble) throw std::runtime_error("ExodusModel::finishReading || "
             "Ocean is detected in mesh. By far, realistic ocean is not implemented in AxiSEM3D. ||"
@@ -431,7 +415,9 @@ std::string ExodusModel::verbose() const {
         widthname = std::max(widthname, (int)(it->first.length()));
     for (auto it = mSideSets.begin(); it != mSideSets.end(); it++) {
         ss << "    " << std::setw(widthname) << it->first << ":   ";
-        ss << it->second.size() << " paris" << std::endl;
+        int pair = 0;
+        for (int q = 0; q < mNumQuads; q++) pair += (int)(it->second[q] >= 0);
+        ss << pair << " paris" << std::endl;
         // ss << "  (" << std::setw(width) << it->second[0][0] << ",";
         // ss << std::setw(width) << it->second[0][1] << ")" << ", ..., ";
         // ss << "(" << std::setw(width) << it->second[it->second.size() - 1][0] << ",";
