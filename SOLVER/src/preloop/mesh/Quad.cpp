@@ -528,7 +528,6 @@ void Quad::formNrField(const NrField &nrf) {
                 } else if (mNearAxisNodes.maxCoeff() >= 0) {
                     // near axis 
                     for (int i = 0; i < 4; i++) {
-                        if (mPointNr(ipol, jpol) % 2 != 0) break;
                         int n0 = mNearAxisNodes(i);
                         int n1 = mNearAxisNodes(Mapping::period0123(i + 1));
                         if (n0 >= 0 && n1 >= 0) {
@@ -541,6 +540,7 @@ void Quad::formNrField(const NrField &nrf) {
                             if (onSide) {
                                 mPointNr(ipol, jpol)++;
                                 forceOdd = true;
+                                break;
                             }
                         } else if (n0 >= 0 && n1 < 0) {
                             // on point
@@ -552,6 +552,7 @@ void Quad::formNrField(const NrField &nrf) {
                             if (onPoint) {
                                 mPointNr(ipol, jpol)++;
                                 forceOdd = true;
+                                break;
                             }
                         }
                     }
