@@ -229,8 +229,8 @@ bool XMath::isLuckyNumber(int n, bool forceOdd)
     // force odd
     if (forceOdd && num % 2 == 0) return false;
     
-    // use even
-    if (!forceOdd && num % 2 != 0) return false;
+    // use even when n > 10
+    if (!forceOdd && num % 2 != 0 && num > 10) return false;
     
     for (int i = 2; i <= num; i++) {  
         while(num % i == 0) {
