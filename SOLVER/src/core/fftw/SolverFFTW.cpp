@@ -7,27 +7,28 @@
 #include <boost/filesystem/operations.hpp>
 #include "XMPI.h"
 
+#include <fstream>
+#include <sstream>
+
 void SolverFFTW::importWisdom() {
     std::string wisdomstr;
     if (XMPI::root()) {
         #ifdef _USE_DOUBLE
-            fftw_import_wisdom_from_filename((fftwWisdomDirectory + "/fftw_wisdom.double").c_str());
-            char *wisdom = fftw_export_wisdom_to_string();
+            std::string fname = fftwWisdomDirectory + "/fftw_wisdom.double";
         #else
-            fftwf_import_wisdom_from_filename((fftwWisdomDirectory + "/fftw_wisdom.float").c_str());
-            char *wisdom = fftwf_export_wisdom_to_string();
+            std::string fname = fftwWisdomDirectory + "/fftw_wisdom.float";
         #endif
-        wisdomstr = std::string(wisdom);
-        free(wisdom);
+        std::ifstream t(fname);
+        std::stringstream buffer;
+        if (t) buffer << t.rdbuf();
+        wisdomstr = buffer.str();
     }
     XMPI::bcast(wisdomstr);
-    if (!XMPI::root()) {
-        #ifdef _USE_DOUBLE
-            fftw_import_wisdom_from_string(wisdomstr.c_str());
-        #else
-            fftwf_import_wisdom_from_string(wisdomstr.c_str());
-        #endif
-    }
+    #ifdef _USE_DOUBLE
+        fftw_import_wisdom_from_string(wisdomstr.c_str());
+    #else
+        fftwf_import_wisdom_from_string(wisdomstr.c_str());
+    #endif
 }
 
 void SolverFFTW::exportWisdom() {
