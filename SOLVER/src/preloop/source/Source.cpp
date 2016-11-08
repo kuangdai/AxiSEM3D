@@ -72,8 +72,8 @@ bool Source::locate(const Mesh &mesh, int &locTag, RDColP &interpFactZ) const {
         if (!quad->isAxial() || quad->isFluid()) continue;
         if (!quad->nearMe(srcCrds(0), srcCrds(1))) continue;
         if (quad->invMapping(srcCrds, srcXiEta)) {
-            if (std::abs(srcXiEta(1)) <= 1.) {
-                if (std::abs(srcXiEta(0) + 1.) > tinyDouble) 
+            if (std::abs(srcXiEta(1)) <= 1.000001) {
+                if (std::abs(srcXiEta(0) + 1.) > tinySingle) 
                     throw std::runtime_error("Source::locate || Bad source location.");
                 locTag = iloc;
                 XMath::interpLagrange(srcXiEta(1), nPntEdge, 
