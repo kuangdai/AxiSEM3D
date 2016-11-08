@@ -14,12 +14,14 @@ public:
     static void finalize();
     static void begin(std::string procName, int level, bool barrier = false);
     static void end(std::string procName, int level, bool barrier = true);
-    static void enable() {mEnabled = true;};
+    static void enable() {openFile(); mEnabled = true;};
     static void disable() {mEnabled = false;};
     static void pause(int level);
     static void resume(int level);
     
 private:
+    static void openFile();
+    static std::string mFileName;
     static std::vector<boost::timer::cpu_timer> mTimers;
     static std::fstream mFile; 
     static bool mEnabled;

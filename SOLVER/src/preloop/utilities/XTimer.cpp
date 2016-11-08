@@ -5,24 +5,32 @@
 #include "XTimer.h"
 #include "XMPI.h"
 
+std::string XTimer::mFileName;
 std::vector<boost::timer::cpu_timer> XTimer::mTimers;
 std::fstream XTimer::mFile;
 bool XTimer::mEnabled = false;
 
 void XTimer::initialize(std::string fileName, int nLevels) {
     if (!XMPI::root()) return;
-    mFile = std::fstream(fileName, std::fstream::out);
+    // mFile = std::fstream(fileName, std::fstream::out);
+    mFileName = fileName;
     mTimers.clear();
     for (int i = 0; i < nLevels; i++) {
         mTimers.push_back(boost::timer::cpu_timer());
         mTimers[i].stop();
         mTimers[i].elapsed().clear();
     }
+    mEnabled = false;
+}
+
+void XTimer::openFile() {
+    if (!XMPI::root()) return;
+    if (!mFile.is_open()) mFile = std::fstream(mFileName, std::fstream::out);
 }
 
 void XTimer::finalize() {
     if (!XMPI::root()) return;
-    mFile.close();
+    if (!mFile.is_open()) mFile.close();
 }
 
 void XTimer::begin(std::string name, int level, bool barrier) {
