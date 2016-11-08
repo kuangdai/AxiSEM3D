@@ -11,7 +11,7 @@
 #include <sstream>
 
 void SolverFFTW::importWisdom() {
-    std::string wisdomstr;
+    std::string wisdomstr = "";
     if (XMPI::root()) {
         #ifdef _USE_DOUBLE
             std::string fname = fftwWisdomDirectory + "/fftw_wisdom.double";
@@ -24,11 +24,13 @@ void SolverFFTW::importWisdom() {
         wisdomstr = buffer.str();
     }
     XMPI::bcast(wisdomstr);
-    #ifdef _USE_DOUBLE
-        fftw_import_wisdom_from_string(wisdomstr.c_str());
-    #else
-        fftwf_import_wisdom_from_string(wisdomstr.c_str());
-    #endif
+    if (wisdomstr.length() > 0) {
+        #ifdef _USE_DOUBLE
+            fftw_import_wisdom_from_string(wisdomstr.c_str());
+        #else
+            fftwf_import_wisdom_from_string(wisdomstr.c_str());
+        #endif
+    }
 }
 
 void SolverFFTW::exportWisdom() {
