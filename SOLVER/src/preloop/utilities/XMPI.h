@@ -146,6 +146,18 @@ public:
         #endif
     };
     
+    // maximum
+    template<typename Type>
+    static Type max(const Type &value) {
+        #ifndef _SERIAL_BUILD
+            Type maximum;
+            boost::mpi::all_reduce(*sWorld, value, maximum, boost::mpi::maximum<Type>());
+            return maximum;
+        #else
+            return value;
+        #endif
+    };
+    
     // sum
     template<typename Type>
     static Type sum(const Type &value) {
@@ -155,6 +167,17 @@ public:
             return total;
         #else 
             return value;
+        #endif
+    };
+    
+    // sum std::vector
+    template<typename Type>
+    static void sumVector(std::vector<Type> &value) {
+        #ifndef _SERIAL_BUILD
+            std::vector<Type> total(value.size());
+            boost::mpi::all_reduce(*sWorld, value.data(), value.size(), total.data(), 
+                std::plus<Type>());
+            value = total;
         #endif
     };
     

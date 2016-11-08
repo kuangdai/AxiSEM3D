@@ -18,6 +18,8 @@
 #include "AttBuilder.h"
 #include "XMath.h"
 
+#include "XTimer.h"
+
 extern "C" {
     #include "hdf5.h"
 };
@@ -27,32 +29,43 @@ ExodusModel::ExodusModel(const std::string &fileName): mExodusFileName(fileName)
 }
 
 void ExodusModel::initialize() {
-    int io_ws = 0;
-    int comp_ws = 8;
-    mExodusId = ex_open(mExodusFileName.c_str(), EX_READ, &comp_ws, &io_ws, &mExodusVersion);
-    if (mExodusId < 0) throw std::runtime_error("ExodusModel::initialize || "
-        "Error opening exodus model file: ||" + mExodusFileName);
-    
-    int nDim = 0;
-    int nBlock = 0;
-    int nNodeSets = 0;
-    ExodusModel::exodusError(
-        ex_get_init(mExodusId, mExodusTitle, &nDim, &mNumNodes, &mNumQuads,
-            &nBlock, &nNodeSets, &mNumSideSets), "ex_get_init");   
-    
-    if (nDim != 2 || nBlock != 1 || nNodeSets != 0)
-        throw std::runtime_error("ExodusModel::initialize || Invalid exodus model file: ||" + mExodusFileName);
+    XTimer::begin("Read Exodus", 1);
+    if (XMPI::root()) {
+        int io_ws = 0;
+        int comp_ws = 8;
+        mExodusId = ex_open(mExodusFileName.c_str(), EX_READ, &comp_ws, &io_ws, &mExodusVersion);
+        if (mExodusId < 0) throw std::runtime_error("ExodusModel::initialize || "
+            "Error opening exodus model file: ||" + mExodusFileName);
         
-    readGlobalVariables();
-    readConnectivity();
-    readCoordinates();
-    readElementalVariables();
-    readSideSets();
-    // close as exodus
-    ExodusModel::exodusError(ex_close(mExodusId), "ex_close");
-    // open as hdf5
-    readExternalH5();
+        int nDim = 0;
+        int nBlock = 0;
+        int nNodeSets = 0;
+        ExodusModel::exodusError(
+            ex_get_init(mExodusId, mExodusTitle, &nDim, &mNumNodes, &mNumQuads,
+                &nBlock, &nNodeSets, &mNumSideSets), "ex_get_init");   
+        
+        if (nDim != 2 || nBlock != 1 || nNodeSets != 0)
+            throw std::runtime_error("ExodusModel::initialize || Invalid exodus model file: ||" + mExodusFileName);
+            
+        readGlobalVariables();
+        readConnectivity();
+        readCoordinates();
+        readElementalVariables();
+        readSideSets();
+        // close as exodus
+        ExodusModel::exodusError(ex_close(mExodusId), "ex_close");
+        // open as hdf5
+        readExternalH5();
+    }
+    XTimer::end("Read Exodus", 1);
+    
+    XTimer::begin("Bcast Exodus", 1);
+    bcast();
+    XTimer::end("Bcast Exodus", 1);
+    
+    XTimer::begin("Process Exodus", 1);
     finishReading();
+    XTimer::end("Process Exodus", 1);
 }
 
 void ExodusModel::bcast() {
@@ -69,10 +82,10 @@ void ExodusModel::bcast() {
     XMPI::bcast(mElementalVariables);
     XMPI::bcast(mNumSideSets);
     XMPI::bcast(mSideSets);
-    XMPI::bcast(mDistTolerance);
-    XMPI::bcast(mROuter);
-    XMPI::bcast(mAveGLLSpacing);
-    XMPI::bcast(mVicinalAxis);
+    // XMPI::bcast(mDistTolerance);
+    // XMPI::bcast(mROuter);
+    // XMPI::bcast(mAveGLLSpacing);
+    // XMPI::bcast(mVicinalAxis);
     XMPI::bcast(mCartesian);
     XMPI::bcast(mSSNameAxis);
     XMPI::bcast(mSSNameSurface);
@@ -231,9 +244,11 @@ void ExodusModel::readExternalH5() {
 }
 
 void ExodusModel::finishReading() {
+    XTimer::begin("Process Exodus DistTol", 2);
     // distance tolerance
-    mDistTolerance = 1e100;
+    double distTol = 1e100;
     for (int i = 0; i < mNumQuads; i++) {
+        if (i % XMPI::nproc() != XMPI::rank()) continue;
         double s0 = mNodalS[mConnectivity[i][0]];
         double z0 = mNodalZ[mConnectivity[i][0]];
         double s1 = mNodalS[mConnectivity[i][1]];
@@ -246,15 +261,23 @@ void ExodusModel::finishReading() {
         double dist1 = sqrt((s1 - s2) * (s1 - s2) + (z1 - z2) * (z1 - z2)) / 1000.;
         double dist2 = sqrt((s2 - s3) * (s2 - s3) + (z2 - z3) * (z2 - z3)) / 1000.;
         double dist3 = sqrt((s3 - s0) * (s3 - s0) + (z3 - z0) * (z3 - z0)) / 1000.;
-        mDistTolerance = std::min({dist0, dist1, dist2, dist3, mDistTolerance});
+        distTol = std::min({dist0, dist1, dist2, dist3, distTol});
     }
+    mDistTolerance = XMPI::min(distTol);
+    XTimer::end("Process Exodus DistTol", 2);
     
     // surface radius
-    mROuter = -1.;
-    for (int i = 0; i < mNumNodes; i++) 
-        mROuter = std::max(mROuter, mNodalZ[i]);
+    XTimer::begin("Process Exodus ROuter", 2);
+    double router = -1.;
+    for (int i = 0; i < mNumNodes; i++) {
+        if (i % XMPI::nproc() != XMPI::rank()) continue;
+        router = std::max(router, mNodalZ[i]);
+    } 
+    mROuter = XMPI::max(router);
+    XTimer::end("Process Exodus ROuter", 2);
         
     // average gll spacing
+    XTimer::begin("Process Exodus GLL-Spacing", 2);
     std::vector<std::vector<int>> refElem(mNumNodes, std::vector<int>());
     for (int i = 0; i < mNumQuads; i++) {
         refElem[mConnectivity[i][0]].push_back(i);
@@ -264,6 +287,7 @@ void ExodusModel::finishReading() {
     }
     mAveGLLSpacing = std::vector<double>(mNumNodes, 0.);
     for (int i = 0; i < mNumNodes; i++) {
+        if (i % XMPI::nproc() != XMPI::rank()) continue;
         for (int j = 0; j < refElem[i].size(); j++) {
             int ielem = refElem[i][j];
             double s0 = mNodalS[mConnectivity[ielem][0]];
@@ -281,8 +305,11 @@ void ExodusModel::finishReading() {
             mAveGLLSpacing[i] += (dist0 + dist1 + dist2 + dist3) / 4. / nPol / refElem[i].size();
         }
     } 
+    XMPI::sumVector(mAveGLLSpacing);
+    XTimer::end("Process Exodus GLL-Spacing", 2);
     
     // rotate nodes of axial elements such that side 3 is on axis
+    XTimer::begin("Process Exodus Axis", 2);
     for (int axialQuad = 0; axialQuad < mNumQuads; axialQuad++) {
         // loop over t0
         int axialSide = getSideAxis(axialQuad);
@@ -321,9 +348,10 @@ void ExodusModel::finishReading() {
         // done
         // mSideSets.at(mSSNameAxis)[axialQuad] = 3;
     }
-    
+    XTimer::end("Process Exodus Axis", 2);
     
     // find elements that are not axial but neighboring axial elements
+    XTimer::begin("Process Exodus Vicinal", 2);
     std::array<int, 4> data = {-1, -1, -1, -1};
     mVicinalAxis = std::vector<std::array<int, 4>>(mNumQuads, data);
     // first find near-axis nodes and axial quads
@@ -346,16 +374,20 @@ void ExodusModel::finishReading() {
             if (nodeNearAxis[nTag]) mVicinalAxis[iquad][j] = j;
         }
     }
+    XTimer::end("Process Exodus Vicinal", 2);
 
     // check if ocean presents in mesh
+    XTimer::begin("Process Exodus Check Ocean", 2);
     std::string strVs = isIsotropic() ? "VS_0" : "VSV_0";
     for (int iQuad = 0; iQuad < mNumQuads; iQuad++) {
+        if (iQuad % XMPI::nproc() != XMPI::rank()) continue;
         if (getSideSurface(iQuad) == -1) continue;
         double vs = mElementalVariables.at(strVs)[iQuad];
         if (vs < tinyDouble) throw std::runtime_error("ExodusModel::finishReading || "
             "Ocean is detected in mesh. By far, realistic ocean is not implemented in AxiSEM3D. ||"
             "Use non-ocean models in the Mesher and add ocean load in inparam.basic.");
     }
+    XTimer::end("Process Exodus Check Ocean", 2);
 }
 
 void ExodusModel::exodusError(const int retval, const std::string &func_name) {
@@ -442,8 +474,7 @@ void ExodusModel::buildInparam(ExodusModel *&exModel, const Parameters &par,
     std::string exfile = par.getValue<std::string>("MODEL_EXODUS_MESH_FILE");
     exfile = Parameters::sInputDirectory + "/" + exfile;
     exModel = new ExodusModel(exfile);
-    if (XMPI::root()) exModel->initialize();
-    exModel->bcast();
+    exModel->initialize();
     if (verbose) XMPI::cout << exModel->verbose();
     
     // form attenuation parameters
