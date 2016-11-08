@@ -113,6 +113,24 @@ void Geometric3D_crust1::initialize() {
     // fsdr.close();
     // exit(0);
     //////////// plot computed data ////////////  
+    
+    //////////// generate SPECFEM topo_bathy ////////////  
+    // std::cout << verbose() << std::endl;
+    // 
+    // std::fstream fsdr;
+    // fsdr.open("/Users/kuangdai/Desktop/crust1/specfem_topo_bathy.txt", std::fstream::out);
+    // double r = mRSurf; 
+    // int intGrid = 15;
+    // for (int i = 0; i < 180 * intGrid; i++) {
+    //     double theta = (i + .5) * degree / intGrid;
+    //     for (int j = 0; j < 360 * intGrid; j++) {
+    //         double phi = j * degree / intGrid;
+    //         fsdr << round(getDeltaR(r, theta, phi, r)) << std::endl;
+    //     }
+    // }   
+    // fsdr.close();
+    // exit(0);
+    //////////// generate SPECFEM topo_bathy ////////////  
 }
 
 void Geometric3D_crust1::initialize(const std::vector<double> &params) {
