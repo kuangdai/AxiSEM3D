@@ -1,11 +1,11 @@
-// Volumetric3D_bubble.h
+// Volumetric3D_cylinder.h
 // created by Kuangdai on 16-May-2016 
-// a bubble-shaped heterogeneity
+// a cylinder-shaped heterogeneity
 
 #pragma once
 #include "Volumetric3D.h"
 
-class Volumetric3D_bubble: public Volumetric3D {
+class Volumetric3D_cylinder: public Volumetric3D {
 public:
     
     void initialize(const std::vector<double> &params);
@@ -18,14 +18,15 @@ public:
     std::string verbose() const;
     
 private:
-    // center of the bubble
-    double mRadius;
-    double mTheta;
-    double mPhi;
+    // anchor points of the cylinder
+    double mR1, mR2;
+    double mTheta1, mTheta2;
+    double mPhi1, mPhi2;
     
     // Gaussian parameters
-    double mMax;    // maximum value
-    double mHWHM;   // halfwidth at half maximum
+    double mMaxAxis;        // maximum value
+    double mHWHM_lateral;   // halfwidth at half maximum
+    double mHWHM_top_bot;   // halfwidth at half maximum
     
     // reference type
     ReferenceTypes mReferenceType;

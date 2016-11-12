@@ -76,16 +76,16 @@ bool Volumetric3D_bubble::get3dProperties(double r, double theta, double phi, do
 std::string Volumetric3D_bubble::verbose() const {
     std::stringstream ss;
     ss << "\n======================= 3D Volumetric ======================" << std::endl;
-    ss << "  Model Name       =   bubble" << std::endl;
-    ss << "  Radius / km      =   " << mRadius / 1e3 << std::endl;
-    ss << "  Theta / degree   =   " << mTheta / degree << std::endl;
-    ss << "  Phi / degree     =   " << mPhi / degree << std::endl;
-    ss << "  Maximum          =   " << mMax << std::endl;
-    ss << "  HWHM / km        =   " << mHWHM / 1e3 << std::endl;
-    ss << "  Reference Type   =   " << ReferenceTypesString[mReferenceType] << std::endl;
-    ss << "  Affect VP        =   " << (mChangeVp ? "YES" : "NO") << std::endl;
-    ss << "  Affect VS        =   " << (mChangeVs ? "YES" : "NO") << std::endl;
-    ss << "  Affect Density   =   " << (mChangeRho ? "YES" : "NO") << std::endl;
+    ss << "  Model Name          =   bubble" << std::endl;
+    ss << "  Radius / km         =   " << mRadius / 1e3 << std::endl;
+    ss << "  Theta / degree      =   " << mTheta / degree << std::endl;
+    ss << "  Phi / degree        =   " << mPhi / degree << std::endl;
+    ss << "  Maximum at Center   =   " << mMax << std::endl;
+    ss << "  HWHM / km           =   " << mHWHM / 1e3 << std::endl;
+    ss << "  Reference Type      =   " << ReferenceTypesString[mReferenceType] << std::endl;
+    ss << "  Affect VP           =   " << (mChangeVp ? "YES" : "NO") << std::endl;
+    ss << "  Affect VS           =   " << (mChangeVs ? "YES" : "NO") << std::endl;
+    ss << "  Affect Density      =   " << (mChangeRho ? "YES" : "NO") << std::endl;
     ss << "======================= 3D Volumetric ======================\n" << std::endl;
     return ss.str();
 }
