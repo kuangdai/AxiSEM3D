@@ -78,7 +78,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
         }
         if (recRankMin == XMPI::rank()) {
             mReceivers[irec]->release(domain, mesh, mRecordInterval, mComponent, 
-                mOutputDir, mBinary, mAppend, mBufferSize, 
+                mOutputDir + "/stations", mBinary, mAppend, mBufferSize, 
                 recETag[irec], recInterpFact[irec]);
         }
     }

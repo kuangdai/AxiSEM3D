@@ -34,6 +34,8 @@ void XMPI::initialize(int argc, char *argv[]) {
         throw std::runtime_error("XMPI::initialize || Missing input directory: ||" + Parameters::sInputDirectory);
     if (!boost::filesystem::exists(Parameters::sOutputDirectory)) 
         boost::filesystem::create_directory(Parameters::sOutputDirectory);
+    if (!boost::filesystem::exists(Parameters::sOutputDirectory + "/stations")) 
+        boost::filesystem::create_directory(Parameters::sOutputDirectory + "/stations");    
 }
 
 void XMPI::finalize() {
