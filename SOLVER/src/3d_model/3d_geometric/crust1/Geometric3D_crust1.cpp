@@ -229,7 +229,7 @@ std::string Geometric3D_crust1::verbose() const {
     std::stringstream ss;
     ss << "\n======================= 3D Geometric ======================" << std::endl;
     ss << "  Model Name            =   Crust 1.0" << std::endl;
-    ss << "  Scope                 =   R80 to Surface" << std::endl;
+    ss << "  Scope                 =   crust" << std::endl;
     ss << "  Radii (km)            =   [" << mRBase / 1e3 << ", " << mRSurf / 1e3 << "]" << std::endl;
     ss << "  RMoho (km)            =   " << mRMoho << std::endl;
     ss << "  Include Sediment      =   " << (mIncludeSediment ? "YES" : "NO") << std::endl;
