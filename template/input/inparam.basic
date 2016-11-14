@@ -59,6 +59,15 @@ MODEL_OCEAN_LOAD                            none
 
 
 
+# ================================ source ================================
+# source type [earthquake / point_force]
+SOURCE_TYPE                                 earthquake
+
+# source file
+SOURCE_FILE                                 CMTSOLUTION
+
+
+
 # ================================ time ================================
 # enforced time step 
 # dt will be computed automatically from mesh and model if TIME_DELTA_T <= 0.0

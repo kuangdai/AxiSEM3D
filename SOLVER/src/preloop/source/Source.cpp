@@ -89,6 +89,8 @@ bool Source::locate(const Mesh &mesh, int &locTag, RDColP &interpFactZ) const {
 #include "Earthquake.h"
 #include "NullSource.h"
 #include <fstream>
+#include <boost/algorithm/string.hpp>
+
 void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
     if (src) delete src;
     
@@ -99,46 +101,54 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
         return;
     }
     
-    std::string cmtfile = Parameters::sInputDirectory + "/CMTSOLUTION";    
-    double depth, lat, lon;
-    double Mrr, Mtt, Mpp, Mrt, Mrp, Mtp;
-    if (XMPI::root()) {
-        std::fstream fs(cmtfile, std::fstream::in);
-        if (!fs) throw std::runtime_error("Earthquake::Earthquake || "
-            "Error opening CMT data file: ||" + cmtfile);
-        std::string junk;
-        std::getline(fs, junk);
-        std::getline(fs, junk);
-        std::getline(fs, junk);
-        std::getline(fs, junk);
-        fs >> junk >> lat;
-        fs >> junk >> lon;
-        fs >> junk >> depth;
-        fs >> junk >> Mrr;
-        fs >> junk >> Mtt;
-        fs >> junk >> Mpp;
-        fs >> junk >> Mrt;
-        fs >> junk >> Mrp;
-        fs >> junk >> Mtp;
-        depth *= 1e3;
-        Mrr *= 1e-7;
-        Mtt *= 1e-7; 
-        Mpp *= 1e-7; 
-        Mrt *= 1e-7; 
-        Mrp *= 1e-7; 
-        Mtp *= 1e-7;
-        fs.close();
+    std::string src_type = par.getValue<std::string>("SOURCE_TYPE");
+    std::string src_file = par.getValue<std::string>("SOURCE_FILE");
+    
+    if (boost::iequals(src_type, "earthquake")) {
+        std::string cmtfile = Parameters::sInputDirectory + "/" + src_file;    
+        double depth, lat, lon;
+        double Mrr, Mtt, Mpp, Mrt, Mrp, Mtp;
+        if (XMPI::root()) {
+            std::fstream fs(cmtfile, std::fstream::in);
+            if (!fs) throw std::runtime_error("Earthquake::Earthquake || "
+                "Error opening CMT data file: ||" + cmtfile);
+            std::string junk;
+            std::getline(fs, junk);
+            std::getline(fs, junk);
+            std::getline(fs, junk);
+            std::getline(fs, junk);
+            fs >> junk >> lat;
+            fs >> junk >> lon;
+            fs >> junk >> depth;
+            fs >> junk >> Mrr;
+            fs >> junk >> Mtt;
+            fs >> junk >> Mpp;
+            fs >> junk >> Mrt;
+            fs >> junk >> Mrp;
+            fs >> junk >> Mtp;
+            depth *= 1e3;
+            Mrr *= 1e-7;
+            Mtt *= 1e-7; 
+            Mpp *= 1e-7; 
+            Mrt *= 1e-7; 
+            Mrp *= 1e-7; 
+            Mtp *= 1e-7;
+            fs.close();
+        }
+        XMPI::bcast(depth);
+        XMPI::bcast(lat);
+        XMPI::bcast(lon);
+        XMPI::bcast(Mrr);
+        XMPI::bcast(Mtt);
+        XMPI::bcast(Mpp);
+        XMPI::bcast(Mrt);
+        XMPI::bcast(Mrp);
+        XMPI::bcast(Mtp);
+        src = new Earthquake(depth, lat, lon, Mrr, Mtt, Mpp, Mrt, Mrp, Mtp);
+        if (verbose) XMPI::cout << src->verbose();
+    } else {
+        // add point-force here
+        throw std::runtime_error("Source::buildInparam || Unknown source type: " + src_type);
     }
-    XMPI::bcast(depth);
-    XMPI::bcast(lat);
-    XMPI::bcast(lon);
-    XMPI::bcast(Mrr);
-    XMPI::bcast(Mtt);
-    XMPI::bcast(Mpp);
-    XMPI::bcast(Mrt);
-    XMPI::bcast(Mrp);
-    XMPI::bcast(Mtp);
-    src = new Earthquake(depth, lat, lon, Mrr, Mtt, Mpp, Mrt, Mrp, Mtp);
-    if (verbose) XMPI::cout << src->verbose();
 }
 

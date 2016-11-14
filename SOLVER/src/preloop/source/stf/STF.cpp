@@ -24,12 +24,12 @@ void STF::buildInparam(STF *&stf, const Parameters &par, double dt, int verbose)
     if (enforceMaxSteps > 0) maxTotalSteps = enforceMaxSteps;
     
     // read half duration
-    std::string cmtfile = Parameters::sInputDirectory + "/CMTSOLUTION";
+    std::string cmtfile = Parameters::sInputDirectory + "/" + par.getValue<std::string>("SOURCE_FILE");
     double hdur;
     if (XMPI::root()) {
         std::fstream fs(cmtfile, std::fstream::in);
         if (!fs) throw std::runtime_error("STF::buildInparam || "
-            "Error opening CMTSOLUTION data file: ||" + cmtfile);
+            "Error opening source data file: ||" + cmtfile);
         std::string line;
         while (getline(fs, line)) {
             try {
@@ -42,7 +42,7 @@ void STF::buildInparam(STF *&stf, const Parameters &par, double dt, int verbose)
                 }
             } catch(std::exception) {
                 throw std::runtime_error("STF::buildInparam || "
-                    "Error reading half duration in CMTSOLUTION data file: ||" + cmtfile);
+                    "Error reading half duration in source data file: ||" + cmtfile);
             }
         }
         fs.close();

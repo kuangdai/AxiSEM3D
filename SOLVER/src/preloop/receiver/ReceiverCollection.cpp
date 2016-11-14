@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iomanip>
 #include "XMPI.h"
-#include "boost/algorithm/string.hpp"
+#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include "Parameters.h"
 #include "Domain.h"
