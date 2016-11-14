@@ -106,7 +106,7 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec,
     if (rec) delete rec;
     
     // create from file
-    std::string recFile = Parameters::sInputDirectory + "/STATIONS";
+    std::string recFile = Parameters::sInputDirectory + "/" + par.getValue<std::string>("OUT_STATIONS_FILE");
     std::string recSys = par.getValue<std::string>("OUT_STATIONS_SYSTEM");
     bool geographic;
     if (boost::iequals(recSys, "source_centered")) {

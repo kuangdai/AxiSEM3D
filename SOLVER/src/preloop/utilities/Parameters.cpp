@@ -36,6 +36,7 @@ void Parameters::registerAll() {
     registerPar("MODEL_OCEAN_LOAD");
     registerPar("SOURCE_TYPE");
     registerPar("SOURCE_FILE");
+    registerPar("OUT_STATIONS_FILE");
     registerPar("TIME_DELTA_T");
     registerPar("TIME_RECORD_LENGTH");
     registerPar("ATTENUATION");

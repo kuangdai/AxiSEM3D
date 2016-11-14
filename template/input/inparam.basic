@@ -68,6 +68,18 @@ SOURCE_FILE                                 CMTSOLUTION
 
 
 
+# ================================ stations ================================
+# station file
+# format 1: [name network latitude longitude depth]
+# format 2: [name network latitude longitude elevation depth]
+# To keep compatible with SPECFEM "STATIONS", if six entities are 
+# presented in a row, we always ignore the LAST SECOND column, i.e., 
+# the "elevation" column (a redundant input). 
+# See other output parameters in inparam.advanced. 
+OUT_STATIONS_FILE                           STATIONS
+
+
+
 # ================================ time ================================
 # enforced time step 
 # dt will be computed automatically from mesh and model if TIME_DELTA_T <= 0.0

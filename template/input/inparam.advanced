@@ -25,14 +25,11 @@ ATTENUATION_QKAPPA                          false
 
 
 # ========================= stations and output options ==========================
-# coordinate system used in file "STATIONS" [geographic / source_centered]
-# geographic:       name network latitude longitude depth
-# source_centered:  name network theta phi depth
+# coordinate system used in OUT_STATIONS_FILE [geographic / source_centered]
+# geographic:       name network latitude longitude [elevation] depth
+# source_centered:  name network theta phi [elevation] depth
 #                   where theta and phi are geocentric coordinates, with 
 #                   the source located beneath the north pole (theta = 0)
-# To keep compatible with SPECFEM "STATIONS", if six entities are 
-# presented in each row, we always ignore the LAST SECOND column, i.e., 
-# the "elevation" column. Elevations are determined by geometric models. 
 OUT_STATIONS_SYSTEM                         geographic
 
 # seismogram format [ascii / binary]
