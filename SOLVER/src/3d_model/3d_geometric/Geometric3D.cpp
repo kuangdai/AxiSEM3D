@@ -21,15 +21,15 @@ void Geometric3D::buildInparam(std::vector<Geometric3D *> &models,
     for (const auto &m: models) delete m;    
     models.clear();
     // first check size
-    int nmodels = par.getValue<int>("MODEL_GEOMETRIC_3D_NUM");
-    int nsize = par.getSize("MODEL_GEOMETRIC_3D_LIST");
+    int nmodels = par.getValue<int>("MODEL_3D_GEOMETRIC_NUM");
+    int nsize = par.getSize("MODEL_3D_GEOMETRIC_LIST");
     if (nmodels > nsize) throw std::runtime_error("Geometric3D::buildInparam || "
-        "Not enough model names provided in MODEL_GEOMETRIC_3D_LIST ||"
-        "MODEL_GEOMETRIC_3D_NUM = " + par.getValue<std::string>("MODEL_GEOMETRIC_3D_NUM") + ".");
+        "Not enough model names provided in MODEL_3D_GEOMETRIC_LIST ||"
+        "MODEL_3D_GEOMETRIC_NUM = " + par.getValue<std::string>("MODEL_3D_GEOMETRIC_NUM") + ".");
     
     for (int i = 0; i < nmodels; i++) {
         // split model name and parameters
-        std::string mstr = par.getValue<std::string>("MODEL_GEOMETRIC_3D_LIST", i);
+        std::string mstr = par.getValue<std::string>("MODEL_3D_GEOMETRIC_LIST", i);
         std::vector<std::string> strs;
         boost::trim_if(mstr, boost::is_any_of("\t "));
         boost::split(strs, mstr, boost::is_any_of("$"), boost::token_compress_on);
@@ -65,7 +65,7 @@ void Geometric3D::buildInparam(std::vector<Geometric3D *> &models,
     }
     
     // ELLIPTICITY
-    std::string emode = par.getValue<std::string>("MODEL_ELLIPTICITY_MODE");
+    std::string emode = par.getValue<std::string>("MODEL_3D_ELLIPTICITY_MODE");
     if (boost::iequals(emode, "full")) {
         Geometric3D *m = new Ellipticity();
         if (verbose) XMPI::cout << m->verbose();

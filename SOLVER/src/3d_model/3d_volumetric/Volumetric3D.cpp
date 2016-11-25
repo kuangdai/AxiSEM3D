@@ -24,15 +24,15 @@ void Volumetric3D::buildInparam(std::vector<Volumetric3D *> &models,
     for (const auto &m: models) delete m;     
     models.clear();
     // first check size
-    int nmodels = par.getValue<int>("MODEL_VOLUMETRIC_3D_NUM");
-    int nsize = par.getSize("MODEL_VOLUMETRIC_3D_LIST");
+    int nmodels = par.getValue<int>("MODEL_3D_VOLUMETRIC_NUM");
+    int nsize = par.getSize("MODEL_3D_VOLUMETRIC_LIST");
     if (nmodels > nsize) throw std::runtime_error("Volumetric3D::buildInparam || "
-        "Not enough model names provided in MODEL_VOLUMETRIC_3D_LIST ||"
-        "MODEL_VOLUMETRIC_3D_NUM = " + par.getValue<std::string>("MODEL_VOLUMETRIC_3D_NUM") + ".");
+        "Not enough model names provided in MODEL_3D_VOLUMETRIC_LIST ||"
+        "MODEL_3D_VOLUMETRIC_NUM = " + par.getValue<std::string>("MODEL_3D_VOLUMETRIC_NUM") + ".");
     
     for (int i = 0; i < nmodels; i++) {
         // split model name and parameters
-        std::string mstr = par.getValue<std::string>("MODEL_VOLUMETRIC_3D_LIST", i);
+        std::string mstr = par.getValue<std::string>("MODEL_3D_VOLUMETRIC_LIST", i);
         std::vector<std::string> strs;
         boost::trim_if(mstr, boost::is_any_of("\t "));
         boost::split(strs, mstr, boost::is_any_of("$"), boost::token_compress_on);

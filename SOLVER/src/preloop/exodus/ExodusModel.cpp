@@ -471,7 +471,7 @@ std::string ExodusModel::verbose() const {
 void ExodusModel::buildInparam(ExodusModel *&exModel, const Parameters &par, 
     AttParameters *&attPar, int verbose) {
     if (exModel) delete exModel;
-    std::string exfile = par.getValue<std::string>("MODEL_EXODUS_MESH_FILE");
+    std::string exfile = par.getValue<std::string>("MODEL_1D_EXODUS_MESH_FILE");
     exfile = Parameters::sInputDirectory + "/" + exfile;
     exModel = new ExodusModel(exfile);
     exModel->initialize();
@@ -495,12 +495,12 @@ void ExodusModel::buildInparam(ExodusModel *&exModel, const Parameters &par,
     
     // ellipticity
     if (exModel->isCartesian()) return;
-    std::string emode = par.getValue<std::string>("MODEL_ELLIPTICITY_MODE");
+    std::string emode = par.getValue<std::string>("MODEL_3D_ELLIPTICITY_MODE");
     if (boost::iequals(emode, "off")) {
         // no ellipticity
         XMath::setEllipticity(0., exModel->mROuter, std::vector<double>(), std::vector<double>());
     } else {
-        double inv_f = par.getValue<double>("MODEL_ELLIPTICITY_INVF");
+        double inv_f = par.getValue<double>("MODEL_3D_ELLIPTICITY_INVF");
         if (inv_f <= 0.) throw std::runtime_error("ExodusModel::buildInparam || Invalid flattening."); 
         XMath::setEllipticity(1. / inv_f, exModel->mROuter, exModel->mEllipKnots, exModel->mEllipCoeffs);
     }

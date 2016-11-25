@@ -119,9 +119,9 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec,
     rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep); 
     
     // options 
-    rec->mRecordInterval = par.getValue<int>("OUT_RECORD_INTERVAL");
+    rec->mRecordInterval = par.getValue<int>("OUT_STATIONS_RECORD_INTERVAL");
     if (rec->mRecordInterval <= 0) rec->mRecordInterval = 1;
-    std::string strcomp = par.getValue<std::string>("OUT_SEISMOGRAM_COMPONENTS");
+    std::string strcomp = par.getValue<std::string>("OUT_STATIONS_COMPONENTS");
     if (boost::iequals(strcomp, "RTZ")) {
         rec->mComponent = 0;
     } else if (boost::iequals(strcomp, "ENZ")) {
@@ -129,19 +129,19 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec,
     } else if (boost::iequals(strcomp, "SPZ")) {
         rec->mComponent = 2;
     } else {
-        throw std::runtime_error("ReceiverCollection::buildInparam || Invalid parameter, keyword = OUT_SEISMOGRAM_COMPONENTS.");
+        throw std::runtime_error("ReceiverCollection::buildInparam || Invalid parameter, keyword = OUT_STATIONS_COMPONENTS.");
     }
     rec->mOutputDir = Parameters::sOutputDirectory; 
-    std::string strfmt = par.getValue<std::string>("OUT_SEISMOGRAM_FORMAT"); 
+    std::string strfmt = par.getValue<std::string>("OUT_STATIONS_FORMAT"); 
     if (boost::iequals(strfmt, "ascii")) {
         rec->mBinary = false;
     } else if (boost::iequals(strfmt, "binary")) {
         rec->mBinary = true;
     } else {
-        throw std::runtime_error("ReceiverCollection::buildInparam || Invalid parameter, keyword = OUT_SEISMOGRAM_FORMAT.");
+        throw std::runtime_error("ReceiverCollection::buildInparam || Invalid parameter, keyword = OUT_STATIONS_FORMAT.");
     }
     rec->mAppend = false;
-    rec->mBufferSize = par.getValue<int>("OUT_DUMP_INTERVAL");
+    rec->mBufferSize = par.getValue<int>("OUT_STATIONS_DUMP_INTERVAL");
     if (rec->mBufferSize <= 0) rec->mBufferSize = 100;
     
     if (verbose) XMPI::cout << rec->verbose();

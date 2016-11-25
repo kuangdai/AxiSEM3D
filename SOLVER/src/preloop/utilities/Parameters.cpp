@@ -16,29 +16,30 @@ std::string Parameters::sOutputDirectory;
 void Parameters::initReadBcast() {
     if (XMPI::root()) {
         registerAll();
-        readParFile(Parameters::sInputDirectory + "/inparam.basic");
-        readParFile(Parameters::sInputDirectory + "/inparam.advanced");
+        readParFile(Parameters::sInputDirectory + "/inparam.model");
         readParFile(Parameters::sInputDirectory + "/inparam.nu");
+        readParFile(Parameters::sInputDirectory + "/inparam.time_src_recv");
+        readParFile(Parameters::sInputDirectory + "/inparam.advanced");
     }
     XMPI::bcast(mKeyValues);
 }
 
 void Parameters::registerAll() {
 
-    // inparam.basic
-    registerPar("MODEL_EXODUS_MESH_FILE");
-    registerPar("MODEL_VOLUMETRIC_3D_NUM");
-    registerPar("MODEL_VOLUMETRIC_3D_LIST");
-    registerPar("MODEL_GEOMETRIC_3D_NUM");
-    registerPar("MODEL_GEOMETRIC_3D_LIST");
-    registerPar("MODEL_ELLIPTICITY_MODE");
-    registerPar("MODEL_ELLIPTICITY_INVF");
-    registerPar("MODEL_OCEAN_LOAD");
-    registerPar("SOURCE_TYPE");
-    registerPar("SOURCE_FILE");
-    registerPar("OUT_STATIONS_FILE");
-    registerPar("TIME_DELTA_T");
-    registerPar("TIME_RECORD_LENGTH");
+    // inparam.model
+    registerPar("MODEL_1D_EXODUS_MESH_FILE");
+    registerPar("MODEL_3D_VOLUMETRIC_NUM");
+    registerPar("MODEL_3D_VOLUMETRIC_LIST");
+    registerPar("MODEL_3D_GEOMETRIC_NUM");
+    registerPar("MODEL_3D_GEOMETRIC_LIST");
+    registerPar("MODEL_3D_ELLIPTICITY_MODE");
+    registerPar("MODEL_3D_ELLIPTICITY_INVF");
+    registerPar("MODEL_3D_OCEAN_LOAD");
+    registerPar("MODEL_2D_MODE");
+    registerPar("MODEL_2D_LATITUDE");
+    registerPar("MODEL_2D_LONGITUDE");
+    registerPar("MODEL_PLOT_SLICES_NUM");
+    registerPar("MODEL_PLOT_SLICES_LIST");
     registerPar("ATTENUATION");
     
     // inparam.nu
@@ -64,26 +65,32 @@ void Parameters::registerAll() {
     registerPar("NU_WISDOM_REUSE_INPUT");
     registerPar("NU_WISDOM_REUSE_FACTOR");
     
+    // inparam.time_src_recv
+    registerPar("TIME_DELTA_T");
+    registerPar("TIME_RECORD_LENGTH");
+    registerPar("SOURCE_TYPE");
+    registerPar("SOURCE_FILE");
+    registerPar("OUT_STATIONS_FILE");
+    registerPar("OUT_STATIONS_SYSTEM");
+    registerPar("OUT_STATIONS_FORMAT");
+    registerPar("OUT_STATIONS_COMPONENTS");
+    registerPar("OUT_STATIONS_RECORD_INTERVAL");
+    registerPar("OUT_STATIONS_DUMP_INTERVAL");
+    
     // inparam.advanced
     registerPar("ATTENUATION_CG4");
     registerPar("ATTENUATION_SPECFEM_LEGACY");
     registerPar("ATTENUATION_QKAPPA");
-    registerPar("OUT_STATIONS_SYSTEM");
-    registerPar("OUT_SEISMOGRAM_FORMAT");
-    registerPar("OUT_SEISMOGRAM_COMPONENTS");
-    registerPar("OUT_RECORD_INTERVAL");
-    registerPar("OUT_DUMP_INTERVAL");
     registerPar("DD_BALANCE_ELEMENT_POINT");
     registerPar("DD_NPART_METIS");
     registerPar("DD_COMM_VOL_METIS");
-    registerPar("DD_PLOT_DOMAIN_DECOMPOSITION");
-    registerPar("DD_REPORT_COST_MEASUREMENTS");
     registerPar("OPTION_VERBOSE_LEVEL");
     registerPar("OPTION_STABILITY_INTERVAL");
     registerPar("OPTION_LOOP_INFO_INTERVAL");
     registerPar("DEVELOP_MAX_TIME_STEPS");
     registerPar("DEVELOP_NON_SOURCE_MODE");
     registerPar("DEVELOP_DIAGNOSE_PRELOOP");
+    registerPar("DEVELOP_MEASURED_ELE_COST");
     
 }
 

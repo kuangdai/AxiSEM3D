@@ -21,7 +21,7 @@ void OceanLoad3D::buildInparam(OceanLoad3D *&model,
     const Parameters &par, int verbose) {
     if (model) delete model;
     
-    std::string mstr = par.getValue<std::string>("MODEL_OCEAN_LOAD");
+    std::string mstr = par.getValue<std::string>("MODEL_3D_OCEAN_LOAD");
     if (boost::iequals(mstr, "none")) {
         model = 0;
     } else {
