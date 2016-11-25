@@ -5,60 +5,86 @@
 # a) angles are measured in degrees and distances in kilometers
 # b) string-typed parameters (except file names) are case insensitive
 # c) bool-typed parameters can be specified by 1/0, true/false, yes/no and on/off
-# d) the prefix of input files is path_of_executable/input/, similar for output
+# d) prefix of input files is path_of_executable/input/
+# e) ParSeries is a series of parameters concatenated by '$', e.g., "s40rts$0.2"
 
 
 
 # ================================= attenuation ==================================
-# use coarse-grained attenuation or not [bool]
-# always turn this on unless you are using polynomial orders other than 4
+# WHAT: whether to use coarse-grained attenuation
+# TYPE: bool
+# NOTE: always turn this on unless you are using polynomial orders other than 4
 ATTENUATION_CG4                             true
 
-# use SPECFEM legacy model or not [bool]
-# turn this on only when benchmarking SPECFEM solutions
+# WHAT: whether to use SPECFEM legacy model
+# TYPE: bool
+# NOTE: turn this on when benchmarking SPECFEM solutions
 ATTENUATION_SPECFEM_LEGACY                  true
 
-# consider Q_Kappa or not [bool]
-# cannot be turned on if ATTENUATION_SPECFEM_LEGACY = true
+# WHAT: whether to consider Q_Kappa or not
+# TYPE: bool 
+# NOTE: must be turned off if ATTENUATION_SPECFEM_LEGACY = true
 ATTENUATION_QKAPPA                          false
 
 
 
 # ============================= domain decomposition =============================
-# balance elemental and point-wise operations individually [bool]
+# WHAT: whether to balance elemental and point-wise operations individually
+# TYPE: bool
+# NOTE: users are less likely to change this
 DD_BALANCE_ELEMENT_POINT                    true
 
-# number of candidate partitionings that metis will compute [integer]
+# WHAT: number of candidate partitionings that METIS will compute
+# TYPE: integer
+# NOTE: users are less likely to change this
 DD_NPART_METIS                              50
 
-# horoning communication volume or not [bool]
+# WHAT: horoning communication volume or not
+# TYPE: bool
+# NOTE: users are less likely to change this
 DD_COMM_VOL_METIS                           false
 
 
 
 # ============================== simulation options ==============================
-# verbose level [none / essential / detailed]
+# WHAT: verbose level of the solver
+# TYPE: none / essential / detailed
+# NOTE: always use "detailed" unless you are debugging with stdout
 OPTION_VERBOSE_LEVEL                        detailed
 
-# interval for stability check [integer]
+# WHAT: interval for stability check
+# TYPE: integer
+# NOTE: change this to "1" to accurately locate the instability
 OPTION_STABILITY_INTERVAL                   1000
 
-# interval for time-loop info display [integer]
+# WHAT: interval to display time-loop information
+# TYPE: integer
+# NOTE: information such as elapsed / total / remaining wall-clock time 
 OPTION_LOOP_INFO_INTERVAL                   1000
 
 
 
 # ============================== development ==============================
-# maximum number of time steps (usually for performance test) [integer]
-# set to zero or negative to determine it by record length and deltaT
+# WHAT: maximum number of time steps
+# TYPE: integer
+# NOTE: usually for performance test; set it to zero or negative to 
+#       determine the number of time steps by record length and deltaT
 DEVELOP_MAX_TIME_STEPS                      0
 
-# non-source mode (only for scaling test) [bool]
-# if turned on, no source will be added 
+# WHAT: switch of non-source mode
+# TYPE: bool
+# NOTE: if turned on, no source will be added; used for scaling test
 DEVELOP_NON_SOURCE_MODE                     false
 
-# diagnose preprocessing time [bool]
-# see results in output/preloop_timer.txt
+# WHAT: diagnose preprocessing time
+# TYPE: bool
+# NOTE: see results in output/diag/preloop_timer.txt
 DEVELOP_DIAGNOSE_PRELOOP                    false
+
+
+# WHAT: dump measured elemental cost
+# TYPE: bool
+# NOTE: see results in output/diag/elemental_cost.txt
+DEVELOP_MEASURED_ELE_COST                   false
 
 

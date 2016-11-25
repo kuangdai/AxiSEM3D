@@ -5,58 +5,74 @@
 # a) angles are measured in degrees and distances in kilometers
 # b) string-typed parameters (except file names) are case insensitive
 # c) bool-typed parameters can be specified by 1/0, true/false, yes/no and on/off
-# d) the prefix for input files is path_of_executable/input/, similar for output
+# d) prefix of input files is path_of_executable/input/
+# e) ParSeries is a series of parameters concatenated by '$', e.g., "s40rts$0.2"
 
 
 
 # ================================ time ================================
-# enforced time step [real]
-# dt will be computed automatically if TIME_DELTA_T <= 0.0
+# WHAT: enforced time step
+# TYPE: real
+# NOTE: deltaT will be computed automatically if TIME_DELTA_T <= 0.0
 TIME_DELTA_T                                0.0
 
-# record length in seconds [real]
+# WHAT: record length in seconds
+# TYPE: real
+# NOTE: the actual simulation time will be slightly longer than the
+#       specified record length depending on the source time function   
 TIME_RECORD_LENGTH                          3600.0  
 
 
 
 # ================================ source ================================
-# source type [earthquake / point_force]
+# WHAT: source type
+# TYPE: earthquake / point_force
+# NOTE: the source type also determines the source time function
 SOURCE_TYPE                                 earthquake
 
-# source file [string]
+# WHAT: source file
+# TYPE: string (path to file)
+# NOTE: the file format for "earthquake" is CMTSOLUTION
 SOURCE_FILE                                 CMTSOLUTION
 
 
 
 # ================================ stations ================================
-# station file [string]
-# format 1: [name network latitude longitude depth]
-# format 2: [name network latitude longitude elevation depth]
-# To keep compatible with SPECFEM "STATIONS", if six entities are 
-# presented in a row, we always ignore the LAST SECOND column, i.e., 
-# the "elevation" column (a redundant input). 
-# See other output parameters in inparam.advanced. 
+# WHAT: file of stations
+# TYPE: string (path to file)
+# NOTE: File format 1 -- name network latitude longitude depth
+#       File format 2 -- name network latitude longitude elevation depth
+#       File format 2 is compatible with SPECFEM input. However, the 
+#       "elevation" data are not used in either SPECFEM or AxiSEM3D.
 OUT_STATIONS_FILE                           STATIONS
 
-# coordinate system used in OUT_STATIONS_FILE [geographic / source_centered]
-# geographic:       name network latitude longitude [elevation] depth
-# source_centered:  name network theta phi [elevation] depth
-#                   theta: epicentral distance; phi: azimuth
+# WHAT: coordinate system used in OUT_STATIONS_FILE
+# TYPE: geographic / source_centered
+# NOTE: geographic      -- name network latitude longitude [elevation] depth
+#       source_centered -- name network distance azimuth [elevation] depth
 OUT_STATIONS_SYSTEM                         geographic
 
-# seismogram format [ascii / binary]
+# WHAT: seismogram format
+# TYPE: ascii / binary
+# NOTE: a more decent format is on our TODO list
 OUT_STATIONS_FORMAT                         ascii
 
-# seismogram components [RTZ / ENZ / SPZ]
-# RTZ: radial, transverse, vertical (source centered)
-# ENZ: east, north, vertical (geographic)
-# SPZ: s, phi, z (solver inherent)
+# WHAT: seismogram components
+# TYPE: RTZ / ENZ / SPZ
+# NOTE: RTZ -- radial, transverse, vertical (source-centered)
+#       ENZ -- east, north, vertical (geographic)
+#       SPZ -- s, phi, z (solver inherent)
 OUT_STATIONS_COMPONENTS                     RTZ
 
-# interval for seismogram sampling [integer]
+# WHAT: interval for seismogram sampling
+# TYPE: integer
+# NOTE: Time steps in between are ingored. We strongly discourage a sparse sampling
+#       at simulation stage and suggest OUT_STATIONS_RECORD_INTERVAL = 1.
 OUT_STATIONS_RECORD_INTERVAL                1
 
-# interval to dump buffers to files [integer]
+# WHAT: interval to dump buffers to files
+# TYPE: integer
+# NOTE: set this to some large number to avoid frequent I/O access
 OUT_STATIONS_DUMP_INTERVAL                  1000
 
 

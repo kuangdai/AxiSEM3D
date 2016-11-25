@@ -5,109 +5,122 @@
 # a) angles are measured in degrees and distances in kilometers
 # b) string-typed parameters (except file names) are case insensitive
 # c) bool-typed parameters can be specified by 1/0, true/false, yes/no and on/off
-# d) the prefix for input files is path_of_executable/input/, similar for output
+# d) prefix of input files is path_of_executable/input/
+# e) ParSeries is a series of parameters concatenated by '$', e.g., "s40rts$0.2"
 
 
 
 # ================================ mesh and model ================================
-# exodus file created by salvus_mesher (mesh + 1D reference model) [string]
+# WHAT: exodus file created by salvus_mesher
+# TYPE: string (path to file)
+# NOTE: mesh + 1D reference model
 MODEL_1D_EXODUS_MESH_FILE                   prem_ani_one_crust_spherical_2D_50s.e
 
 
 
 # ================================ 3D model ================================
-# number of volumetric 3D models [integer]
+# WHAT: number of volumetric 3D models
+# TYPE: integer
+# NOTE: Use the first MODEL_3D_VOLUMETRIC_NUM models in MODEL_3D_VOLUMETRIC_LIST
+#       while ingoring the rests.
 MODEL_3D_VOLUMETRIC_NUM                     0
 
-# list of volumetric 3D models [list of strings, can be followed by $parameters]
-# Only the first MODEL_VOLUMETRIC_3D_NUM models will be used.
-# A volumetric model may belong to one of the following four types: 
-#   Absolute:       absolute vs, vp and rho values 
-#   Reference1D:    perturbations w.r.t. the 1D reference model (MODEL_EXODUS_MESH_FILE)
-#   Reference3D:    perturbations w.r.t. the current 3D model
-#   ReferenceDiff:  perturbations w.r.t. the current 3D perturbations
-# Absolute and Reference1D models overwrites the previous models if they overlap in space,
-# while Reference3D and ReferenceDiff are based on the previous models. 
-# Therefore, the order of this list DOES matter.
+# WHAT: list of volumetric 3D models
+# TYPE: list of ParSeries <see top notes>
+# NOTE: The order in this list DOES matter, because a model may be based on previously
+#       defined ones or/and overwrite previous ones when they overlap in space.
 MODEL_3D_VOLUMETRIC_LIST                    s40rts crust1
 
-# number of geometric 3D models [integer]
+# WHAT: number of geometric 3D models
+# TYPE: integer
+# NOTE: Use the first MODEL_3D_GEOMETRIC_NUM models in MODEL_3D_GEOMETRIC_LIST
+#       while ingoring the rests.
 MODEL_3D_GEOMETRIC_NUM                      0
 
-# names of geometric 3D models  [list of strings, can be followed by $parameters]
-# Only the first MODEL_GEOMETRIC_3D_NUM models will be used.
-# All geometric models superpose, so the order of this list is not important.
+# WHAT: list of geometric 3D models
+# TYPE: list of ParSeries <see top notes>
+# NOTE: All geometric models superpose, so the order in this list is not important.
 MODEL_3D_GEOMETRIC_LIST                     crust1
 
 
 
 # ================================ ellipticity ================================
-# ellipticity mode [off / geographic / full]
-# off:        do not consider ellipticity at all.
-# geographic: consider ellipticity only for geographic-geocentric coordinate transformation,
-#             i.e., the transformation between colatitude and theta. It will affect the locating of
-#             source and receivers, and the 3D models given in geographic coordinate system.
-# full:       beside "geographic", the computational model will be actually flattened (expensive)
-#             to fit the Earth ellipsoid. This option considerably increases computational cost.
+# WHAT: ellipticity mode
+# TYPE: off / geographic / full
+# NOTE: off        -- do not consider ellipticity at all;
+#       geographic -- consider ellipticity only for geographic-geocentric transformation 
+#                     between colatitude and theta. It will affect locating of source
+#                     and receivers and geographically-defined 3D models [suggested];
+#       full       -- beside "geographic", the computational model will be actually flattened 
+#                     to fit the Earth ellipsoid. This option considerably increases  
+#                     computational cost but trivially improves accuracy. 
 MODEL_3D_ELLIPTICITY_MODE                   geographic
 
-# inverse flattening on the surface, e.g., 299.8 in Dahlen and Tromp (1998) [real]
+# WHAT: inverse flattening on the surface
+# TYPE: real
+# NOTE: 299.8 in Dahlen and Tromp (1998)
 MODEL_3D_ELLIPTICITY_INVF                   299.8
 
 
 
 # ================================ ocean ================================
-# ocean load [none / constant / 3d_model]
-# none:     no ocean
-# constant: constant ocean depth. The PREM value (3 km) is used by default.
-#           Specify any other constant values by "constant$value".
-# 3d_model: specify a 3d ocean model, such as "crust1".
-# In AxiSEM3D, we model oceans as hydrodynamic loads. As proclaimed by 
-# Komatitsch and Tromp, Geophys. J. Int. (2002) 150 (1): 303-318, this should be 
-# a good approximation unless the seismic period is below roughly 5s. 
+# WHAT: mode of ocean load
+# TYPE: none / constant / 3d_model
+# NOTE: none     -- no ocean;
+#       constant -- constant ocean depth. The PREM value (3 km) is used by default.
+#                   Specify other constant values by ParSeries "constant$value";
+#       3d_model -- 3d ocean model, such as "crust1".
 MODEL_3D_OCEAN_LOAD                         none
 
 
 
 # ================================ in-plane 2D model ================================
-# After defining a 3D model following the above steps, one may create a 2D model 
-# by extracting and rotating one of the azimuthal slices of the 3-D model. 
-# switch of 2D mode [bool]
+# WHAT: switch of 2D mode
+# TYPE: bool
+# NOTE: After defining a 3D model following the above steps, one may create a 2D 
+#       in-plane (axisymmetric) model by extracting one of the azimuthal slices 
+#       from the 3D model, and use this 2D model for the simulation. 
 MODEL_2D_MODE                               false
 
-# The slice is determined by 3 points: the source point, the center of the Earth, 
-# and a control point on the surface specified below.  
-# latitude of the surface point [real]
+# WHAT: latitude and longitude of a control point on the slice
+# TYPE: real
+# NOTE: The to-be-extracted slice is determined by 3 points: the source point,  
+#       the center of the Earth and the control point specified here. 
 MODEL_2D_LATITUDE                           20.
-
-# longitude of the surface point [real]
 MODEL_2D_LONGITUDE                          30.           
 
 
 
 # ================================ model visualization ================================
-# dump the mesh and model parameters for visualization 
-# currently only support azimuthal slices 
-# number of slices to be ploted [integer]
+# WHAT: number of slices to be ploted
+# TYPE: integer
+# NOTE: dump mesh and model parameters on a slice for visualization;
+#       see results in output/slice_plots/, one slice one file
 MODEL_PLOT_SLICES_NUM                       2
 
-# list of slices to be ploted [list of PAR$LAT$LON$REF$SAMPLE$R_MIN$R_MAX]
-# Parameter: vp / vpv / vph / vs / vsv / vsh / rho / eta / Qmu / Qkappa / undulation /
-#            eleType / mpiRank / nu / eleCost 
-#            for the last four, $LAT$LON$REF_TYPE$SAMPLE are not needed
-# LAT, LON:  latitude and longitude of a control point determining the slice azimuth
-# REF_TYPE:  3D / 1D / perturb
-# SAMPLE:    center / vertex / gllpnt
-#            center -- 1 value at the center of the elements
-#            vertex -- 4 values at the vertexes of the elements
-#            gllpnt -- 25 (if npol=4) values at all the gll-points of the elements
-# R_MIN, R_MAX (optional): minimum and maximum radius of the plot range
-MODEL_PLOT_SLICES_LIST                      mpiRank vs$20$30$perturb$vertex
+# WHAT: list of slices to be ploted
+# TYPE: list of ParSeries <see top notes>
+# NOTE: ParSeries format 1 -- PAR$LAT$LON$REF$SAMPLE$R_MIN$R_MAX
+#       where   PAR          -- may be one of the following: 
+#                               vp / vpv / vph / vs / vsv / vsh / rho / eta / Qmu / Qkappa / undulation                  
+#               LAT, LON     -- latitude and longitude of a control point determining the slice
+#               REF_TYPE     -- 3D / 1D / perturb
+#               SAMPLE       -- may be one of the following: center / vertex / gllpnt
+#                               center -- 1 value at the center of the elements
+#                               vertex -- 4 values at the vertexes of the elements
+#                               gllpnt -- 25 (if npol=4) values at all the gll-points of the elements
+#               R_MIN, R_MAX -- minimum and maximum radius of the plot range (optional)
+#       ParSeries format 2 -- PAR$R_MIN$R_MAX
+#       where   PAR          -- may be one of the following: nu / eleType / eleCost / mpiRank
+#               R_MIN, R_MAX -- minimum and maximum radius of the plot range (optional)
+MODEL_PLOT_SLICES_LIST                      vs$20$30$perturb$vertex mpiRank
 
 
 
 # ================================= attenuation ==================================
-# attenuation on-off [bool] 
+# WHAT: attenuation on-off
+# TYPE: bool
+# NOTE: advanced attenuation parameters in inparam.advanced
 ATTENUATION                                 true
  
 
