@@ -90,7 +90,7 @@ void Parameters::registerAll() {
     registerPar("DEVELOP_MAX_TIME_STEPS");
     registerPar("DEVELOP_NON_SOURCE_MODE");
     registerPar("DEVELOP_DIAGNOSE_PRELOOP");
-    registerPar("DEVELOP_MEASURED_ELE_COST");
+    registerPar("DEVELOP_MEASURED_COSTS");
     
 }
 

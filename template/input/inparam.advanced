@@ -76,15 +76,15 @@ DEVELOP_MAX_TIME_STEPS                      0
 # NOTE: if turned on, no source will be added; used for scaling test
 DEVELOP_NON_SOURCE_MODE                     false
 
-# WHAT: diagnose preprocessing time
+# WHAT: diagnose preprocessing runtime
 # TYPE: bool
-# NOTE: see results in output/diag/preloop_timer.txt
+# NOTE: see results in output/develop/preloop_timer.txt
 DEVELOP_DIAGNOSE_PRELOOP                    false
 
 
-# WHAT: dump measured elemental cost
+# WHAT: dump cost measurements for elements and points
 # TYPE: bool
-# NOTE: see results in output/diag/elemental_cost.txt
-DEVELOP_MEASURED_ELE_COST                   false
+# NOTE: see results in output/develop/measured_costs.txt
+DEVELOP_MEASURED_COSTS                      false
 
 

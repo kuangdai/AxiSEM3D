@@ -55,7 +55,7 @@ void Mesh::buildUnweighted() {
     XTimer::begin("Build Local", 1);
     buildLocal(option);
     XTimer::end("Build Local", 1);
-    if (mDDPar->mPlotDD) plotLocalBuild(Parameters::sOutputDirectory + "/unweighted.nb");
+    // if (mDDPar->mPlotDD) plotLocalBuild(Parameters::sOutputDirectory + "/unweighted.nb");
 }
 
 double Mesh::getDeltaT() const {
@@ -79,7 +79,7 @@ void Mesh::buildWeighted() {
     buildLocal(measured);
     XTimer::end("Build Local", 1);
     
-    if (mDDPar->mPlotDD) plotLocalBuild(Parameters::sOutputDirectory + "/weighted.nb");
+    // if (mDDPar->mPlotDD) plotLocalBuild(Parameters::sOutputDirectory + "/weighted.nb");
 }
 
 void Mesh::release(Domain &domain) {
@@ -448,7 +448,7 @@ void Mesh::measure(DecomposeOption &measured) {
     
     // report
     if (XMPI::root() && mDDPar->mReportMeasure) {
-        std::string fname = Parameters::sOutputDirectory + "/cost_measurements.txt";
+        std::string fname = Parameters::sOutputDirectory + "/develop/measured_costs.txt";
         std::fstream fs(fname, std::fstream::out);
         fs << "*** Element Types ***" << std::endl;
         for (auto it = elemCostLibraryGlobal.begin(); it != elemCostLibraryGlobal.end(); it++) 
@@ -506,8 +506,7 @@ Mesh::DDParameters::DDParameters(const Parameters &par) {
     mBalanceEP = par.getValue<bool>("DD_BALANCE_ELEMENT_POINT");
     mNPartMetis = par.getValue<int>("DD_NPART_METIS");
     mCommVolMetis = par.getValue<bool>("DD_COMM_VOL_METIS");
-    mPlotDD = par.getValue<bool>("DD_PLOT_DOMAIN_DECOMPOSITION");
-    mReportMeasure = par.getValue<bool>("DD_REPORT_COST_MEASUREMENTS");
+    mReportMeasure = par.getValue<bool>("DEVELOP_MEASURED_COSTS");
     if (mNPartMetis <= 0) mNPartMetis = 10;
 }
 

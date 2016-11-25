@@ -36,6 +36,10 @@ void XMPI::initialize(int argc, char *argv[]) {
         boost::filesystem::create_directory(Parameters::sOutputDirectory);
     if (!boost::filesystem::exists(Parameters::sOutputDirectory + "/stations")) 
         boost::filesystem::create_directory(Parameters::sOutputDirectory + "/stations");    
+    if (!boost::filesystem::exists(Parameters::sOutputDirectory + "/plots")) 
+        boost::filesystem::create_directory(Parameters::sOutputDirectory + "/plots");
+    if (!boost::filesystem::exists(Parameters::sOutputDirectory + "/develop")) 
+        boost::filesystem::create_directory(Parameters::sOutputDirectory + "/develop");            
 }
 
 void XMPI::finalize() {

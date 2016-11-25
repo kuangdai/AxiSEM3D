@@ -130,7 +130,6 @@ private:
         bool mBalanceEP;
         int mNPartMetis;
         bool mCommVolMetis;
-        bool mPlotDD;
         bool mReportMeasure;
     } *mDDPar;
     

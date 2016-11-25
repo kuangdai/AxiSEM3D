@@ -24,7 +24,7 @@ int axisem_main(int argc, char *argv[]) {
         Parameters::buildInparam(pl.mParameters, verbose);
         
         // preloop timer
-        XTimer::initialize(Parameters::sOutputDirectory + "/preloop_timer.txt", 4);
+        XTimer::initialize(Parameters::sOutputDirectory + "/develop/preloop_timer.txt", 4);
         if (pl.mParameters->getValue<bool>("DEVELOP_DIAGNOSE_PRELOOP")) XTimer::enable();
         
         //////// exodus model and attenuation parameters 
