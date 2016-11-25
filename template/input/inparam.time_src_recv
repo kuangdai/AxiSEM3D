@@ -1,0 +1,62 @@
+# inparam.model
+# created by Kuangdai on 28-Jun-2016 
+# parameters for time, source and stations
+# NOTE:
+# a) angles are measured in degrees and distances in kilometers
+# b) string-typed parameters (except file names) are case insensitive
+# c) bool-typed parameters can be specified by 1/0, true/false, yes/no and on/off
+# d) the prefix for input files is path_of_executable/input/, similar for output
+
+
+
+# ================================ time ================================
+# enforced time step [real]
+# dt will be computed automatically if TIME_DELTA_T <= 0.0
+TIME_DELTA_T                                0.0
+
+# record length in seconds [real]
+TIME_RECORD_LENGTH                          3600.0  
+
+
+
+# ================================ source ================================
+# source type [earthquake / point_force]
+SOURCE_TYPE                                 earthquake
+
+# source file [string]
+SOURCE_FILE                                 CMTSOLUTION
+
+
+
+# ================================ stations ================================
+# station file [string]
+# format 1: [name network latitude longitude depth]
+# format 2: [name network latitude longitude elevation depth]
+# To keep compatible with SPECFEM "STATIONS", if six entities are 
+# presented in a row, we always ignore the LAST SECOND column, i.e., 
+# the "elevation" column (a redundant input). 
+# See other output parameters in inparam.advanced. 
+OUT_STATIONS_FILE                           STATIONS
+
+# coordinate system used in OUT_STATIONS_FILE [geographic / source_centered]
+# geographic:       name network latitude longitude [elevation] depth
+# source_centered:  name network theta phi [elevation] depth
+#                   theta: epicentral distance; phi: azimuth
+OUT_STATIONS_SYSTEM                         geographic
+
+# seismogram format [ascii / binary]
+OUT_STATIONS_FORMAT                         ascii
+
+# seismogram components [RTZ / ENZ / SPZ]
+# RTZ: radial, transverse, vertical (source centered)
+# ENZ: east, north, vertical (geographic)
+# SPZ: s, phi, z (solver inherent)
+OUT_STATIONS_COMPONENTS                     RTZ
+
+# interval for seismogram sampling [integer]
+OUT_STATIONS_RECORD_INTERVAL                1
+
+# interval to dump buffers to files [integer]
+OUT_STATIONS_DUMP_INTERVAL                  1000
+
+
