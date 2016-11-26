@@ -19,17 +19,15 @@
 #include "Geometric3D.h"
 #include "NuWisdom.h"
 
-// only to use ReferenceTypes
-#include "Volumetric3D.h"
-
+#include "XTimer.h"
+#include "SlicePlot.h"
 #include <fstream>
-
-#include <XTimer.h>
 
 Mesh::~Mesh() {
     destroy(); // local build
     delete mDDPar;
     delete mLearnPar;
+    for (const auto &sp: mSlicePlots) delete sp;    
 }
 
 Mesh::Mesh(const ExodusModel *exModel, const NrField *nrf, 
@@ -40,6 +38,7 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
     mOceanLoad3D = 0;
     mDDPar = new DDParameters(par);
     mLearnPar = new LearnParameters(par);
+    
     // 2D mode
     mUse2D = par.getValue<bool>("MODEL_2D_MODE");
     mPhi2D = -1.;
@@ -53,6 +52,23 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
         const RDCol3 &rtpS = XMath::rotateGlob2Src(rtpG, srcLat, srcLon, srcDep);
         mPhi2D = rtpS(2);
     } 
+    
+    // slice plots
+    SlicePlot::buildInparam(mSlicePlots, par, this);
+    if (mSlicePlots.size() > 0 && XMPI::root()) {
+        std::fstream fs;
+        // node coordinates
+        fs.open(Parameters::sOutputDirectory + "/plots/mesh_coordinates.txt", std::fstream::out);
+        for (int i = 0; i < exModel->getNumNodes(); i++) 
+            fs << exModel->getNodalS(i) << " " << exModel->getNodalZ(i) << std::endl; 
+        fs.close();
+        // element connectivity
+        const std::vector<std::array<int, 4>> &con = exModel->getConnectivity();
+        fs.open(Parameters::sOutputDirectory + "/plots/mesh_connectivity.txt", std::fstream::out);
+        for (int i = 0; i < exModel->getNumQuads(); i++) 
+            fs << con[i][0] << " " << con[i][1] << " " << con[i][2] << " " << con[i][3] << std::endl;
+        fs.close();
+    }
 }
 
 void Mesh::buildUnweighted() {
@@ -68,7 +84,8 @@ void Mesh::buildUnweighted() {
     XTimer::begin("Build Local", 1);
     buildLocal(option);
     XTimer::end("Build Local", 1);
-    // if (mDDPar->mPlotDD) plotLocalBuild(Parameters::sOutputDirectory + "/unweighted.nb");
+    // slice plots
+    for (const auto &sp: mSlicePlots) sp->plotUnweighted();
 }
 
 double Mesh::getDeltaT() const {
@@ -91,8 +108,8 @@ void Mesh::buildWeighted() {
     XTimer::begin("Build Local", 1);
     buildLocal(measured);
     XTimer::end("Build Local", 1);
-    
-    // if (mDDPar->mPlotDD) plotLocalBuild(Parameters::sOutputDirectory + "/weighted.nb");
+    // slice plots
+    for (const auto &sp: mSlicePlots) sp->plotWeighted();
 }
 
 void Mesh::release(Domain &domain) {
@@ -234,11 +251,6 @@ void Mesh::buildLocal(const DecomposeOption &option) {
         mQuads[iloc]->setupGLLPoints(mGLLPoints, mLocalElemToGLL[iloc], mExModel->getDistTolerance());
     } 
     XTimer::end("Setup Points", 2);
-    
-    // plot here
-    // dumpFieldVariable(Parameters::sOutputDirectory + "/vp.txt", "vp", 0, 
-    //     Volumetric3D::ReferenceTypes::ReferenceDiff);
-    // exit(0);
     
     /////////////////////////////// assemble mass and normal ///////////////////////////////
     XTimer::begin("Assemble Mass", 2);
@@ -493,40 +505,6 @@ void Mesh::test() {
     Domain domain;
     release(domain);
     domain.test();
-}
-
-void Mesh::plotLocalBuild(const std::string &fname) {
-    XMPI::barrier();
-    for (int ip = 0; ip < XMPI::nproc(); ip++) {
-        if (ip == XMPI::rank()) {
-            std::fstream::openmode mode = std::fstream::out;
-            if (ip > 0) mode = mode | std::fstream::app;
-            std::fstream fs(fname, mode);
-            if (ip == 0) fs << "Graphics[{EdgeForm[Thin], ";
-            for (int i = 0; i < getNumQuads(); i++) {
-                fs << mQuads[i]->plotPolygon(ip % 7, 0, 6, 0);
-                if (!(ip == XMPI::nproc() - 1 && i == getNumQuads() - 1)) fs << ",\n";
-            }
-            if (ip == XMPI::nproc() - 1) fs << "}]";
-            fs.close();    
-        }
-        XMPI::barrier();
-    }
-}
-
-void Mesh::dumpFieldVariable(const std::string &fname, const std::string &vname, int islice, int refType) {
-    XMPI::barrier();
-    for (int ip = 0; ip < XMPI::nproc(); ip++) {
-        if (ip == XMPI::rank()) {
-            std::fstream::openmode mode = std::fstream::out;
-            if (ip > 0) mode = mode | std::fstream::app;
-            std::fstream fs(fname, mode);
-            for (int i = 0; i < getNumQuads(); i++) 
-                fs << mQuads[i]->dumpFieldVariable(vname, islice, refType);
-            fs.close();    
-        }
-        XMPI::barrier();
-    }
 }
 
 Mesh::DDParameters::DDParameters(const Parameters &par) {

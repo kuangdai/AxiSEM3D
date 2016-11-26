@@ -62,10 +62,6 @@ public:
         const RDCol2 &xieta, int npnt, double phi2D) const;
     double computeCenterRadius() const;
     
-    // plot 
-    std::string plotPolygon(int color, int colorLow, int colorUp) const;
-    std::string plotPolygon(int color, int colorLow, int colorUp, int islice) const;
-    
     // get properties
     int getQuadTag() const {return mQuadTag;};
     int getElementTag() const {return mElementTag;};

@@ -21,6 +21,7 @@ class Domain;
 struct DecomposeOption;
 struct MessagingInfo;
 struct LearnParameters;
+class SlicePlot;
 
 class Mesh {
     friend class SlicePlot;
@@ -75,12 +76,6 @@ private:
     
     // measure
     void measure(DecomposeOption &measured);
-    
-    // plot local build (demain decomposition)
-    void plotLocalBuild(const std::string &fname);
-    
-    // dump field variable for plot
-    void dumpFieldVariable(const std::string &fname, const std::string &vname, int islice, int refType);
     
 private:
     
@@ -140,6 +135,9 @@ private:
     ////////////////// 2D in-plane mode //////////////////
     bool mUse2D;
     double mPhi2D;
+    
+    ////////////////// slice plotss //////////////////
+    std::vector<SlicePlot *> mSlicePlots;
 };
 
 

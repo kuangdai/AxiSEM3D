@@ -389,45 +389,6 @@ double Quad::computeCenterRadius() const {
     return mapping(RDCol2::Zero()).norm();
 }
 
-std::string Quad::plotPolygon(int color, int colorLow, int colorUp) const {
-    std::stringstream ss;
-    ss << "ColorData[\"Rainbow\"][Rescale[" << color << ", {" << colorLow << ", " << colorUp << "}]], ";
-    ss << std::fixed << "Polygon[{";
-    ss << "{" << mNodalCoords(0, 0) << ", " << mNodalCoords(1, 0) << "}, ";
-    ss << "{" << mNodalCoords(0, 1) << ", " << mNodalCoords(1, 1) << "}, ";
-    ss << "{" << mNodalCoords(0, 2) << ", " << mNodalCoords(1, 2) << "}, ";
-    ss << "{" << mNodalCoords(0, 3) << ", " << mNodalCoords(1, 3) << "}}]";
-    return ss.str();
-}
-
-std::string Quad::plotPolygon(int color, int colorLow, int colorUp, int islice) const {
-    if (stiffRelabelling()) {
-        RDMat24 deformedCoords = mNodalCoords;
-        const RDMatXN &deltaR = mRelabelling->getDeltaR();
-        for (int i = 0; i < 4; i++) {
-            const RDCol2 &crds = mNodalCoords.col(i);
-            double theta = XMath::theta(crds);
-            int ipnt;
-            if (i == 0) ipnt = 0 * nPntEdge + 0; 
-            if (i == 1) ipnt = nPol * nPntEdge + 0;
-            if (i == 2) ipnt = nPol * nPntEdge + nPol; 
-            if (i == 3) ipnt = 0 * nPntEdge + nPol;
-            deformedCoords(0, i) += deltaR(islice, ipnt) * sin(theta);
-            deformedCoords(1, i) += deltaR(islice, ipnt) * cos(theta);
-        } 
-        std::stringstream ss;
-        ss << "ColorData[\"Rainbow\"][Rescale[" << color << ", {" << colorLow << ", " << colorUp << "}]], ";
-        ss << std::fixed << "Polygon[{";
-        ss << "{" << deformedCoords(0, 0) << ", " << deformedCoords(1, 0) << "}, ";
-        ss << "{" << deformedCoords(0, 1) << ", " << deformedCoords(1, 1) << "}, ";
-        ss << "{" << deformedCoords(0, 2) << ", " << deformedCoords(1, 2) << "}, ";
-        ss << "{" << deformedCoords(0, 3) << ", " << deformedCoords(1, 3) << "}}]";
-        return ss.str();
-    } else {
-        return plotPolygon(color, colorLow, colorUp);
-    }
-}    
-
 void Quad::computeGradientScalar(const vec_CDMatPP &u, vec_ar3_CDMatPP &u_i, int Nu) const {
     // create Gradient object
     RDMatPP dsdxii, dsdeta, dzdxii, dzdeta, inv_s;
