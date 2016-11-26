@@ -23,6 +23,7 @@ struct MessagingInfo;
 struct LearnParameters;
 
 class Mesh {
+    friend class SlicePlot;
 public:
     ~Mesh();
     
