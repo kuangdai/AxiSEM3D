@@ -111,7 +111,7 @@ MODEL_PLOT_SLICES_NUM                       2
 #                               gllpnt -- 25 (if npol=4) values at all the gll-points of the elements
 #               R_MIN, R_MAX -- minimum and maximum radius of the plot range (optional)
 #       ParSeries format 2 -- PAR$R_MIN$R_MAX
-#       where   PAR          -- may be one of the following: nu / eleType / eleCost / mpiRank
+#       where   PAR          -- may be one of the following: nu / eleType / eleCost / unweighted / weighted
 #               R_MIN, R_MAX -- minimum and maximum radius of the plot range (optional)
 MODEL_PLOT_SLICES_LIST                      vs$20$30$perturb$vertex mpiRank
 
