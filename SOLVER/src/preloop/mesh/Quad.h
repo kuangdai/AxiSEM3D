@@ -30,9 +30,9 @@ public:
     ~Quad();
     
     // 3D models
-    void addVolumetric3D(const Volumetric3D &m3D, double srcLat, double srcLon, double srcDep);
-    void addGeometric3D(const Geometric3D &g3D, double srcLat, double srcLon, double srcDep);
-    void setOceanLoad3D(const OceanLoad3D &o3D, double srcLat, double srcLon, double srcDep);
+    void addVolumetric3D(const Volumetric3D &m3D, double srcLat, double srcLon, double srcDep, double phi2D);
+    void addGeometric3D(const Geometric3D &g3D, double srcLat, double srcLon, double srcDep, double phi2D);
+    void setOceanLoad3D(const OceanLoad3D &o3D, double srcLat, double srcLon, double srcDep, double phi2D);
     void finishModel3D();
     bool massRelabelling() const;
     bool stiffRelabelling() const;
@@ -59,7 +59,7 @@ public:
     
     // compute geographic coordinates
     RDMatX3 computeGeocentricGlobal(double srcLat, double srcLon, double srcDep,
-        const RDCol2 &xieta, int npnt) const;
+        const RDCol2 &xieta, int npnt, double phi2D) const;
     double computeCenterRadius() const;
     
     // plot 

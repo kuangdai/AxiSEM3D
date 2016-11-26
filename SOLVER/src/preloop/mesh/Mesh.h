@@ -124,7 +124,7 @@ private:
     double mZMax;
     double mZMin;
     
-    ////////////////// other parameters //////////////////
+    ////////////////// domain decomposition //////////////////
     struct DDParameters {
         DDParameters(const Parameters &par);
         bool mBalanceEP;
@@ -133,7 +133,12 @@ private:
         bool mReportMeasure;
     } *mDDPar;
     
+    ////////////////// wisdom learning //////////////////
     LearnParameters *mLearnPar;
+    
+    ////////////////// 2D in-plane mode //////////////////
+    bool mUse2D;
+    double mPhi2D;
 };
 
 

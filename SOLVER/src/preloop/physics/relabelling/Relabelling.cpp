@@ -50,14 +50,14 @@ bool Relabelling::isZeroMass() const {
     return true;
 }
 
-void Relabelling::addUndulation(const Geometric3D &g3D, double srcLat, double srcLon, double srcDep) {
+void Relabelling::addUndulation(const Geometric3D &g3D, double srcLat, double srcLon, double srcDep, double phi2D) {
     double rElemCenter = mMyQuad->computeCenterRadius();
     int Nr = mMyQuad->getNr();
     for (int ipol = 0; ipol <= nPol; ipol++) {
         for (int jpol = 0; jpol <= nPol; jpol++) {
             int ipnt = ipol * nPntEdge + jpol;
             const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mMyQuad->isAxial());
-            const RDMatX3 &rtpS = mMyQuad->computeGeocentricGlobal(srcLat, srcLon, srcDep, xieta, Nr);
+            const RDMatX3 &rtpS = mMyQuad->computeGeocentricGlobal(srcLat, srcLon, srcDep, xieta, Nr, phi2D);
             for (int alpha = 0; alpha < Nr; alpha++) {
                 double r = rtpS(alpha, 0);
                 double t = rtpS(alpha, 1);

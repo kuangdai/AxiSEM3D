@@ -164,16 +164,16 @@ Quad::~Quad() {
     delete mRelabelling;
 }
 
-void Quad::addVolumetric3D(const Volumetric3D &m3D, double srcLat, double srcLon, double srcDep) {
+void Quad::addVolumetric3D(const Volumetric3D &m3D, double srcLat, double srcLon, double srcDep, double phi2D) {
     if (isFluid()) return;
-    mMaterial->addVolumetric3D(m3D, srcLat, srcLon, srcDep);
+    mMaterial->addVolumetric3D(m3D, srcLat, srcLon, srcDep, phi2D);
 }
 
-void Quad::addGeometric3D(const Geometric3D &g3D, double srcLat, double srcLon, double srcDep) {
-    mRelabelling->addUndulation(g3D, srcLat, srcLon, srcDep);
+void Quad::addGeometric3D(const Geometric3D &g3D, double srcLat, double srcLon, double srcDep, double phi2D) {
+    mRelabelling->addUndulation(g3D, srcLat, srcLon, srcDep, phi2D);
 }
 
-void Quad::setOceanLoad3D(const OceanLoad3D &o3D, double srcLat, double srcLon, double srcDep) {
+void Quad::setOceanLoad3D(const OceanLoad3D &o3D, double srcLat, double srcLon, double srcDep, double phi2D) {
     if (!mOnSurface) return;
     for (int ipol = 0; ipol <= nPol; ipol++) {
         for (int jpol = 0; jpol <= nPol; jpol++) {
@@ -186,7 +186,7 @@ void Quad::setOceanLoad3D(const OceanLoad3D &o3D, double srcLat, double srcLon, 
                 int nr_read = getPointNr(ipol, jpol);
                 int ipnt = ipol * nPntEdge + jpol;
                 const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mIsAxial);
-                const RDMatX3 &rtpS = computeGeocentricGlobal(srcLat, srcLon, srcDep, xieta, nr_read);
+                const RDMatX3 &rtpS = computeGeocentricGlobal(srcLat, srcLon, srcDep, xieta, nr_read, phi2D);
                 for (int alpha = 0; alpha < nr_read; alpha++) {
                     double t = rtpS(alpha, 1);
                     double p = rtpS(alpha, 2);
@@ -370,7 +370,7 @@ RDRow4 Quad::computeWeightsCG4() const {
 }
 
 RDMatX3 Quad::computeGeocentricGlobal(double srcLat, double srcLon, double srcDep,
-    const RDCol2 &xieta, int npnt) const {
+    const RDCol2 &xieta, int npnt, double phi2D) const {
     RDMatX3 rtpG_Nr(npnt, 3);
     RDCol3 rtpS;
     XMath::rtheta(mapping(xieta), rtpS(0), rtpS(1));
@@ -378,7 +378,7 @@ RDMatX3 Quad::computeGeocentricGlobal(double srcLat, double srcLon, double srcDe
     // rtpS(1) = XMath::theta(mapping(RDCol2::Zero()));
     double dphi = 2. * pi / npnt;
     for (int i = 0; i < npnt; i++) {
-        rtpS(2) = dphi * i;
+        rtpS(2) = phi2D < 0. ? dphi * i : phi2D;
         rtpG_Nr.row(i) = XMath::rotateSrc2Glob(rtpS, srcLat, srcLon, srcDep).transpose();
     }
     return rtpG_Nr;

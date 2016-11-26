@@ -19,7 +19,7 @@ public:
     bool isZeroMass() const;
     
     // add deltaR on mass sampling points
-    void addUndulation(const Geometric3D &g3D, double srcLat, double srcLon, double srcDep);
+    void addUndulation(const Geometric3D &g3D, double srcLat, double srcLon, double srcDep, double phi2D);
     
     // finishUndulation
     void finishUndulation();

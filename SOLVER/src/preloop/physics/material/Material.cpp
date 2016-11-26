@@ -78,7 +78,7 @@ Material::Material(const Quad *myQuad, const ExodusModel &exModel): mMyQuad(myQu
     }
 }
 
-void Material::addVolumetric3D(const Volumetric3D &m3D, double srcLat, double srcLon, double srcDep) {
+void Material::addVolumetric3D(const Volumetric3D &m3D, double srcLat, double srcLon, double srcDep, double phi2D) {
     // radius at element center 
     double rElemCenter = mMyQuad->computeCenterRadius();
     
@@ -88,7 +88,7 @@ void Material::addVolumetric3D(const Volumetric3D &m3D, double srcLat, double sr
         for (int jpol = 0; jpol <= nPol; jpol++) {
             const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mMyQuad->isAxial());
             // geographic oordinates of cardinal points
-            const RDMatX3 &rtp = mMyQuad->computeGeocentricGlobal(srcLat, srcLon, srcDep, xieta, Nr);
+            const RDMatX3 &rtp = mMyQuad->computeGeocentricGlobal(srcLat, srcLon, srcDep, xieta, Nr, phi2D);
             // 1D reference values
             double vpv_ref = Mapping::interpolate(mVpv1D, xieta);
             double vph_ref = Mapping::interpolate(mVph1D, xieta);
@@ -129,7 +129,7 @@ void Material::addVolumetric3D(const Volumetric3D &m3D, double srcLat, double sr
             }
             // rho for mass
             int NrP = mMyQuad->getPointNr(ipol, jpol);
-            const RDMatX3 &rtpM = mMyQuad->computeGeocentricGlobal(srcLat, srcLon, srcDep, xieta, NrP);
+            const RDMatX3 &rtpM = mMyQuad->computeGeocentricGlobal(srcLat, srcLon, srcDep, xieta, NrP, phi2D);
             for (int alpha = 0; alpha < NrP; alpha++) {
                 double dvpv, dvph, dvsv, dvsh, drho;
                 if (m3D.get3dProperties(rtpM(alpha, 0), rtpM(alpha, 1), rtpM(alpha, 2), rElemCenter,

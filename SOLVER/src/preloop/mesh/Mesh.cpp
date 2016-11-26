@@ -40,6 +40,19 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
     mOceanLoad3D = 0;
     mDDPar = new DDParameters(par);
     mLearnPar = new LearnParameters(par);
+    // 2D mode
+    mUse2D = par.getValue<bool>("MODEL_2D_MODE");
+    mPhi2D = -1.;
+    if (mUse2D) {
+        double lat2D = par.getValue<double>("MODEL_2D_LATITUDE");
+        double lon2D = par.getValue<double>("MODEL_2D_LONGITUDE");
+        RDCol3 rtpG;
+        rtpG(0) = 1.;
+        rtpG(1) = XMath::lat2Theta(lat2D, 0.);
+        rtpG(2) = XMath::lon2Phi(lon2D);
+        const RDCol3 &rtpS = XMath::rotateGlob2Src(rtpG, srcLat, srcLon, srcDep);
+        mPhi2D = rtpS(2);
+    } 
 }
 
 void Mesh::buildUnweighted() {
@@ -119,6 +132,20 @@ double Mesh::computeRadiusRef(double depth, double lat, double lon) const {
     double phi = XMath::lon2Phi(lon);
     double router = mExModel->getROuter();
     
+    // 2D mode
+    if (mUse2D) {
+        RDCol3 rtpG, rtpS;
+        rtpG(0) = 1.;
+        rtpG(1) = theta;
+        rtpG(2) = phi;
+        rtpS = XMath::rotateGlob2Src(rtpG, mSrcLat, mSrcLon, mSrcDep);
+        // enforced azimuth
+        rtpS(2) = mPhi2D;
+        rtpG = XMath::rotateSrc2Glob(rtpS, mSrcLat, mSrcLon, mSrcDep);
+        theta = rtpG(1);
+        phi = rtpG(2);
+    }
+    
     // surface receivers
     if (depth < tinyDouble) return router;
     
@@ -184,10 +211,10 @@ void Mesh::buildLocal(const DecomposeOption &option) {
             Quad *quad = new Quad(*mExModel, iquad, *mNrField);
             // 3D model
             for (int j = 0; j < mVolumetric3D.size(); j++) 
-                quad->addVolumetric3D(*(mVolumetric3D[j]), mSrcLat, mSrcLon, mSrcDep);
+                quad->addVolumetric3D(*(mVolumetric3D[j]), mSrcLat, mSrcLon, mSrcDep, mPhi2D);
             for (int j = 0; j < mGeometric3D.size(); j++) 
-                quad->addGeometric3D(*(mGeometric3D[j]), mSrcLat, mSrcLon, mSrcDep);
-            if (mOceanLoad3D != 0) quad->setOceanLoad3D(*mOceanLoad3D, mSrcLat, mSrcLon, mSrcDep);    
+                quad->addGeometric3D(*(mGeometric3D[j]), mSrcLat, mSrcLon, mSrcDep, mPhi2D);
+            if (mOceanLoad3D != 0) quad->setOceanLoad3D(*mOceanLoad3D, mSrcLat, mSrcLon, mSrcDep, mPhi2D);    
             quad->finishModel3D();
             // spatial range
             quad->getSpatialRange(s_max, s_min, z_max, z_min);
