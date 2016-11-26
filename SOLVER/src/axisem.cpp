@@ -23,7 +23,7 @@ int axisem_main(int argc, char *argv[]) {
         int verbose;
         Parameters::buildInparam(pl.mParameters, verbose);
         
-        // preloop timer
+        //////// preloop timer
         XTimer::initialize(Parameters::sOutputDirectory + "/develop/preloop_timer.txt", 4);
         if (pl.mParameters->getValue<bool>("DEVELOP_DIAGNOSE_PRELOOP")) XTimer::enable();
         
