@@ -104,7 +104,7 @@ MODEL_PLOT_SLICES_NUM                       2
 #       where   PAR          -- may be one of the following: 
 #                               vp / vpv / vph / vs / vsv / vsh / rho / eta / Qmu / Qkappa / undulation                  
 #               LAT, LON     -- latitude and longitude of a control point determining the slice
-#               REF_TYPE     -- 3D / 1D / perturb
+#               REF_TYPE     -- 1D / 3D / perturb
 #               SAMPLE       -- may be one of the following: center / vertex / gllpnt
 #                               center -- 1 value at the center of the elements
 #                               vertex -- 4 values at the vertexes of the elements
