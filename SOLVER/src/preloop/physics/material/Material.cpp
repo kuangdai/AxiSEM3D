@@ -26,6 +26,9 @@
 #include "TransverselyIsotropic3D.h"
 #include "TransverselyIsotropic3X.h"
 
+#include <boost/algorithm/string.hpp>
+#include "SlicePlot.h"
+
 Material::Material(const Quad *myQuad, const ExodusModel &exModel): mMyQuad(myQuad) {
     // read Exodus model
     int quadTag = mMyQuad->getQuadTag();
@@ -360,39 +363,70 @@ Elastic *Material::createElastic3D(const AttBuilder *attBuild) const {
     }
 }
 
-double Material::getFieldVariable(const std::string &vname, int ipol, int jpol, int islice, int refType) {
-    int ipnt = ipol * nPntEdge + jpol;
-    const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mMyQuad->isAxial());
-    double vpv_ref = Mapping::interpolate(mVpv1D, xieta);
-    double vph_ref = Mapping::interpolate(mVph1D, xieta);
-    double vsv_ref = Mapping::interpolate(mVsv1D, xieta);
-    double vsh_ref = Mapping::interpolate(mVsh1D, xieta);
-    double rho_ref = Mapping::interpolate(mRho1D, xieta);
+RDMatXN Material::getProperty(const std::string &vname, int refType) {
+    int Nr = mMyQuad->getNr();
     
-    if (refType == Volumetric3D::ReferenceTypes::Absolute || refType == Volumetric3D::ReferenceTypes::Reference3D) {
-        if (vname == "vpv" || vname == "vp") return mVpv3D(islice, ipnt);
-        if (vname == "vsv" || vname == "vs") return mVsv3D(islice, ipnt);
-        if (vname == "vph") return mVph3D(islice, ipnt);
-        if (vname == "vsh") return mVsh3D(islice, ipnt);
-        if (vname == "rho") return mRho3D(islice, ipnt);
-    } else if (refType == Volumetric3D::ReferenceTypes::Reference1D) {
-        if (vname == "vpv" || vname == "vp") return vpv_ref;
-        if (vname == "vsv" || vname == "vs") return vsv_ref;
-        if (vname == "vph") return vph_ref;
-        if (vname == "vsh") return vsh_ref;
-        if (vname == "rho") return rho_ref;
+    // eta / Qmu / Qkappa
+    if (boost::iequals(vname, "eta") || boost::iequals(vname, "Qmu") || boost::iequals(vname, "Qkappa")) {
+        RDMatXN data1DXN(Nr, nPntElem);
+        RDRow4 data1D;
+        if (boost::iequals(vname, "eta")) data1D = mEta;
+        if (boost::iequals(vname, "Qmu")) data1D = mQmu;
+        if (boost::iequals(vname, "Qkappa")) data1D = mQkp;
+        for (int ipol = 0; ipol <= nPol; ipol++) {
+            for (int jpol = 0; jpol <= nPol; jpol++) {
+                int ipnt = ipol * nPntEdge + jpol;
+                const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mMyQuad->isAxial());
+                data1DXN.col(ipnt).fill(Mapping::interpolate(data1D, xieta));
+            }
+        }
+        return data1DXN;
+    }
+    
+    // vp / vpv / vph / vs / vsv / vsh / rho
+    std::string varname = vname;
+    if (boost::iequals(vname, "vp")) varname = "vpv";
+    if (boost::iequals(vname, "vs")) varname = "vsv";
+    RDRow4 data1D;
+    RDMatXN data3D;
+    if (boost::iequals(varname, "vpv")) {
+        data1D = mVpv1D;
+        data3D = mVpv3D;
+    } else if (boost::iequals(varname, "vsv")) {
+        data1D = mVsv1D;
+        data3D = mVsv3D;
+    } else if (boost::iequals(varname, "vph")) {
+        data1D = mVph1D;
+        data3D = mVph3D;
+    } else if (boost::iequals(varname, "vsh")) {
+        data1D = mVsh1D;
+        data3D = mVsh3D;
+    } else if (boost::iequals(varname, "rho")) {
+        data1D = mRho1D;
+        data3D = mRho3D;
     } else {
-        if (vname == "vpv" || vname == "vp") return (mVpv3D(islice, ipnt) - vpv_ref) / vpv_ref;
-        if (vname == "vph") return (mVph3D(islice, ipnt) - vph_ref) / vph_ref;
-        if (vname == "rho") return (mRho3D(islice, ipnt) - rho_ref) / rho_ref;
-        if (mMyQuad->isFluid()) {
-            if (vname == "vsv" || vname == "vs" || vname == "vsh") return 0.;
-        } else {
-            if (vname == "vsv" || vname == "vs") return (mVsv3D(islice, ipnt) - vsv_ref) / vsv_ref;
-            if (vname == "vsh") return (mVsh3D(islice, ipnt) - vsh_ref) / vsh_ref;
+        throw std::runtime_error("Material::getProperty || Unknown field variable name: " + vname);
+    }
+    
+    // 3D
+    if (refType == SlicePlot::PropertyRefTypes::Property3D) return data3D;
+    
+    // fill 1D
+    RDMatXN data1DXN(Nr, nPntElem);
+    for (int ipol = 0; ipol <= nPol; ipol++) {
+        for (int jpol = 0; jpol <= nPol; jpol++) {
+            int ipnt = ipol * nPntEdge + jpol;
+            const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mMyQuad->isAxial());
+            data1DXN.col(ipnt).fill(Mapping::interpolate(data1D, xieta));
         }
     }
-    throw std::runtime_error("Material::getFieldVariable || Unknown field variable name: " + vname);
+    
+    // 1D
+    if (refType == SlicePlot::PropertyRefTypes::Property1D) return data1DXN;
+    
+    // perturb
+    RDMatXN data1DBase = data1DXN.array().max(tinyDouble).matrix(); // in fluid, vs = 0
+    return ((data3D - data1DXN).array() / data1DBase.array()).matrix();
 }
 
 void Material::makeAttenuation1D(const AttBuilder &attBuild, 

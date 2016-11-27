@@ -85,7 +85,9 @@ void Mesh::buildUnweighted() {
     buildLocal(option);
     XTimer::end("Build Local", 1);
     // slice plots
+    XTimer::begin("Plot at Unweighted Phase", 1);
     for (const auto &sp: mSlicePlots) sp->plotUnweighted();
+    XTimer::end("Plot at Unweighted Phase", 1);
 }
 
 double Mesh::getDeltaT() const {
@@ -109,7 +111,9 @@ void Mesh::buildWeighted() {
     buildLocal(measured);
     XTimer::end("Build Local", 1);
     // slice plots
+    XTimer::begin("Plot at Weighted Phase", 1);
     for (const auto &sp: mSlicePlots) sp->plotWeighted();
+    XTimer::end("Plot at Weighted Phase", 1);
 }
 
 void Mesh::release(Domain &domain) {
@@ -497,6 +501,15 @@ void Mesh::measure(DecomposeOption &measured) {
             fs << it->first << "    " << it->second << std::endl;    
         fs.close();    
     }
+    
+    // plot 
+    XTimer::begin("Plot during Cost Measurements", 2);
+    for (const auto &sp: mSlicePlots) {
+        sp->plotEleType(domain);
+        sp->plotMeasured(eWgtEle + eWgtPnt);
+    }
+    XTimer::end("Plot during Cost Measurements", 2);
+    
     XTimer::end("Finish Measurement", 2);    
 }
 

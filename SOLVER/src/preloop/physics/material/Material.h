@@ -44,7 +44,7 @@ public:
     bool isStiffness1D() const;
     
     // get properties
-    double getFieldVariable(const std::string &vname, int ipol, int jpol, int islice, int refType);
+    RDMatXN getProperty(const std::string &vname, int refType);
         
 private:
     // elastic

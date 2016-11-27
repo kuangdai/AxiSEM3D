@@ -313,6 +313,23 @@ RDColX XMath::linearResampling(int newSize, const RDColX &original) {
     return densed; 
 }
 
+RDRowN XMath::computeFourierAtPhi(const RDMatXN &data, double phi) {
+    int nslices = data.rows();
+    RDRowN result;
+    for (int col = 0; col < nPntElem; col++) {
+        PreloopFFTW::getR2C_RMat(nslices) = data.col(col);
+        PreloopFFTW::computeR2C(nslices);
+        CDColX &fourier = PreloopFFTW::getR2C_CMat(nslices);
+        double value_phi = fourier(0).real();
+        for (int alpha = 1; alpha < fourier.size(); alpha++) {
+            double factor = (nslices % 2 == 0 && alpha == fourier.size() - 1) ? 1. : 2.;
+            value_phi += factor * (fourier(alpha) * exp(alpha * phi * iid)).real();
+        }
+        result(col) = value_phi;
+    }
+    return result;
+}
+
 #include <boost/timer/timer.hpp>
 double XMath::getClockResolution(bool user) {
     boost::timer::cpu_timer cpu;

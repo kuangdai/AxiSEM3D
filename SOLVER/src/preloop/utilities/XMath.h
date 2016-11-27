@@ -86,6 +86,9 @@ public:
     static RDColX trigonResampling(int newSize, const RDColX &original);
     static RDColX linearResampling(int newSize, const RDColX &original);
     
+    // Fourier
+    static RDRowN computeFourierAtPhi(const RDMatXN &data, double phi);
+    
     //////////////// clock ////////////////
     static double getClockResolution(bool user);
     

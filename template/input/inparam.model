@@ -100,20 +100,21 @@ MODEL_PLOT_SLICES_NUM                       2
 
 # WHAT: list of slices to be ploted
 # TYPE: list of ParSeries <see top notes>
-# NOTE: ParSeries format 1 -- PAR$LAT$LON$REF$SAMPLE$R_MIN$R_MAX
-#       where   PAR          -- may be one of the following: 
-#                               vp / vpv / vph / vs / vsv / vsh / rho / eta / Qmu / Qkappa / undulation                  
-#               LAT, LON     -- latitude and longitude of a control point determining the slice
-#               REF          -- 1D / 3D / perturb
-#               SAMPLE       -- may be one of the following: center / vertex / gllpnt
-#                               center -- 1 value at the center of the elements
-#                               vertex -- 4 values at the vertexes of the elements
-#                               gllpnt -- 25 (if npol=4) values at all the gll-points of the elements
-#               R_MIN, R_MAX -- minimum and maximum radius of the plot range (optional)
-#       ParSeries format 2 -- PAR$R_MIN$R_MAX
-#       where   PAR          -- may be one of the following: nu / eleType / eleCost / unweighted / weighted
-#               R_MIN, R_MAX -- minimum and maximum radius of the plot range (optional)
-MODEL_PLOT_SLICES_LIST                      vs$20$30$perturb$vertex weighted
+# NOTE: Format 1 -- PAR$SAMPLE$LAT$LON$REF, PAR may be: vp / vpv / vph / vs / vsv / vsh / rho 
+#       Format 2 -- PAR$SAMPLE$LAT$LON,     PAR may be: undulation
+#       Format 3 -- PAR$SAMPLE,             PAR may be: nu / eta / Qmu / Qkappa
+#       Format 4 -- Par,                    PAR may be: eleType / eleCost / unweighted / weighted
+#       Arguments after PAR:
+#       SAMPLE   -- center / vertex / gllpnt
+#                   center -- 1 value at the center of the elements (but maximum for "nu")
+#                   vertex -- 4 values at the vertexes of the elements
+#                   gllpnt -- 25 (if npol=4) values at all the gll-points of the elements
+#       LAT, LON -- latitude and longitude of a control point determining the slice azimuth
+#       REF      -- 1D / 3D / perturb
+#                   1D -- 1D reference model
+#                   3D -- 3D model
+#                   perturb -- (3D - 1D) / 1D 
+MODEL_PLOT_SLICES_LIST                      vs$vertex$20$30$perturb weighted
 
 
 

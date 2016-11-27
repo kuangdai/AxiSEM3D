@@ -90,8 +90,9 @@ public:
     // get hmin on slices
     RDColX getHminSlices() const;
     
-    // dump field variable
-    std::string dumpFieldVariable(const std::string &vname, int islice, int refType, bool nodeOnly = false) const;
+    // get field variables for plots
+    RDRowN getUndulationOnSlice(double phi) const;
+    RDRowN getMaterialOnSlice(const std::string &parName, int refType, double phi) const;
     
     // get spatial range
     void getSpatialRange(double &s_max, double &s_min, double &z_max, double &z_min) const;

@@ -6,34 +6,41 @@
 
 #include <string>
 #include <vector>
+#include "eigenp.h"
 class Parameters;
 class Mesh;
+class Domain;
 
 class SlicePlot {
     
 public:
-    enum PropertyTypes {Property1D, Property3D, PropertyPerturb};
+    enum PropertyRefTypes {Property1D, Property3D, PropertyPerturb};
     enum SampleTypes {Center, Vertex, GLLPnt};
     
     SlicePlot(const std::string &params, const Mesh *mesh);
     
-    std::string verbose() const; 
-    
     void plotUnweighted() const;
     void plotWeighted() const;
+    void plotEleType(const Domain &domain) const;
+    void plotMeasured(const RDColX &cost) const;
         
     // build from input parameters
     static void buildInparam(std::vector<SlicePlot *> &splots, 
         const Parameters &par, const Mesh *mesh);   
     
 private:
-    bool isSlicePar(const std::string &parName) const;
+    void plotPhysicalProperties() const;
+    void plotNu() const;
+    void plotRank(bool weighted) const;
+    
+    int numArgs(const std::string &parName) const;
+    bool isPhysical(const std::string &parName) const;
+    std::string verbose(char sep = ' ') const; 
     
     std::string mParName;
-    double mLat, mLon, mPhi;
-    PropertyTypes mPropertyType;
-    SampleTypes mSampleType;
-    double mRMin, mRMax;
+    SampleTypes mSampleType = SampleTypes::Center;
+    double mLat = 0., mLon = 0., mPhi = 0.;
+    PropertyRefTypes mRefType = PropertyRefTypes::Property1D;
     
     const Mesh *mMesh;
 };

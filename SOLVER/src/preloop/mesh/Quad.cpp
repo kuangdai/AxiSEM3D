@@ -622,27 +622,12 @@ RDMatX3 Quad::computeNormal(int side, int ipol, int jpol) const {
     return normal;
 }
 
-std::string Quad::dumpFieldVariable(const std::string &vname, int islice, int refType, bool nodeOnly) const {
-    std::stringstream ss;
-    if (nodeOnly) {
-        for (int inode = 0; inode < 4; inode++) {
-            int ipol = (inode == 0 || inode == 3) ? 0 : nPol;
-            int jpol = (inode == 0 || inode == 1) ? 0 : nPol;
-            ss << mNodalCoords(0, inode) << " " << mNodalCoords(1, inode) << " ";
-            ss << mMaterial->getFieldVariable(vname, ipol, jpol, islice, refType) << std::endl;
-        }
-    } else {
-        for (int ipol = 0; ipol <= nPol; ipol++) {
-            for (int jpol = 0; jpol <= nPol; jpol++) {
-                const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mIsAxial);
-                const RDCol2 &coords = mapping(xieta);
-                ss << coords(0) << " " << coords(1) << " ";
-                ss << mMaterial->getFieldVariable(vname, ipol, jpol, islice, refType) << std::endl;
-            }
-        }
-    }
-    
-    return ss.str();
+RDRowN Quad::getUndulationOnSlice(double phi) const {
+    return XMath::computeFourierAtPhi(mRelabelling->getDeltaR(), phi);
+}
+
+RDRowN Quad::getMaterialOnSlice(const std::string &parName, int refType, double phi) const {
+    return XMath::computeFourierAtPhi(mMaterial->getProperty(parName, refType), phi);
 }
 
 void Quad::getSpatialRange(double &s_max, double &s_min, double &z_max, double &z_min) const {
