@@ -27,9 +27,9 @@ void Volumetric3D_bubble::initialize(const std::vector<double> &params) {
     else if (params[6] < 1.5) 
         mReferenceType = ReferenceTypes::Reference1D;
     else if (params[6] < 2.5)
-        mReferenceType = ReferenceTypes::Reference3D;
+        mReferenceType = ReferenceTypes::ReferenceDiff;
     else 
-        mReferenceType = ReferenceTypes::ReferenceDiff;    
+        mReferenceType = ReferenceTypes::Reference3D;
         
     try {
         int ipar = 7;

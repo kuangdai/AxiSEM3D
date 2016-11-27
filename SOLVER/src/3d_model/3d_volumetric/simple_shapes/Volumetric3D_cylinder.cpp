@@ -32,9 +32,9 @@ void Volumetric3D_cylinder::initialize(const std::vector<double> &params) {
     else if (params[10] < 1.5) 
         mReferenceType = ReferenceTypes::Reference1D;
     else if (params[10] < 2.5)
-        mReferenceType = ReferenceTypes::Reference3D;
+        mReferenceType = ReferenceTypes::ReferenceDiff;
     else 
-        mReferenceType = ReferenceTypes::ReferenceDiff;    
+        mReferenceType = ReferenceTypes::Reference3D; 
         
     try {
         int ipar = 11;
