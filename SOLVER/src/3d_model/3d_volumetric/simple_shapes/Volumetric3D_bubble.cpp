@@ -12,9 +12,9 @@ void Volumetric3D_bubble::initialize(const std::vector<double> &params) {
         "Not enough parameters to initialize a Volumetric3D_bubble object.");
     
     // initialize location    
-    mRadius = params[0] * 1e3;
-    mTheta = params[1] * degree;
-    mPhi = params[2] * degree;
+    mDepth = params[0] * 1e3;
+    mLat = params[1];
+    mLon = params[2];
     
     // initialize Gaussian parameters
     mMax = params[3];
@@ -45,9 +45,9 @@ bool Volumetric3D_bubble::get3dProperties(double r, double theta, double phi, do
     
     // find the distance between bubble center and target point
     RDCol3 rtpBubble, rtpTarget;
-    rtpBubble(0) = mRadius;
-    rtpBubble(1) = mTheta;
-    rtpBubble(2) = mPhi;
+    rtpBubble(0) = XMath::getROuter() - mDepth;
+    rtpBubble(1) = XMath::lat2Theta(mLat, mDepth);
+    rtpBubble(2) = XMath::lon2Phi(mLon);
     const RDCol3 &xyzBubble = XMath::toCartesian(rtpBubble);
     rtpTarget(0) = r;
     rtpTarget(1) = theta;
@@ -77,9 +77,9 @@ std::string Volumetric3D_bubble::verbose() const {
     std::stringstream ss;
     ss << "\n======================= 3D Volumetric ======================" << std::endl;
     ss << "  Model Name          =   bubble" << std::endl;
-    ss << "  Radius / km         =   " << mRadius / 1e3 << std::endl;
-    ss << "  Theta / degree      =   " << mTheta / degree << std::endl;
-    ss << "  Phi / degree        =   " << mPhi / degree << std::endl;
+    ss << "  Depth / km          =   " << mDepth / 1e3 << std::endl;
+    ss << "  Lat / degree        =   " << mLat << std::endl;
+    ss << "  Lon / degree        =   " << mLon << std::endl;
     ss << "  Maximum at Center   =   " << mMax << std::endl;
     ss << "  HWHM / km           =   " << mHWHM / 1e3 << std::endl;
     ss << "  Reference Type      =   " << ReferenceTypesString[mReferenceType] << std::endl;

@@ -12,13 +12,13 @@ void Volumetric3D_cylinder::initialize(const std::vector<double> &params) {
         "Not enough parameters to initialize a Volumetric3D_cylinder object.");
     
     // initialize location    
-    mR1 = params[0] * 1e3;
-    mTheta1 = params[1] * degree;
-    mPhi1 = params[2] * degree;
+    mD1 = params[0] * 1e3;
+    mLat1 = params[1];
+    mLon1 = params[2];
     
-    mR2 = params[3] * 1e3;
-    mTheta2 = params[4] * degree;
-    mPhi2 = params[5] * degree;
+    mD2 = params[3] * 1e3;
+    mLat2 = params[4];
+    mLon2 = params[5];
     
     // initialize Gaussian parameters
     mMaxAxis = params[6];
@@ -52,12 +52,12 @@ bool Volumetric3D_cylinder::get3dProperties(double r, double theta, double phi, 
     
     // distance from point to axis
     RDCol3 rtpPoint1, rtpPoint2, rtpTarget;
-    rtpPoint1(0) = mR1;
-    rtpPoint1(1) = mTheta1;
-    rtpPoint1(2) = mPhi1;
-    rtpPoint2(0) = mR2;
-    rtpPoint2(1) = mTheta2;
-    rtpPoint2(2) = mPhi2;
+    rtpPoint1(0) = XMath::getROuter() - mD1;
+    rtpPoint1(1) = XMath::lat2Theta(mLat1, mD1);
+    rtpPoint1(2) = XMath::lon2Phi(mLon1);
+    rtpPoint2(0) = XMath::getROuter() - mD2;
+    rtpPoint2(1) = XMath::lat2Theta(mLat2, mD2);
+    rtpPoint2(2) = XMath::lon2Phi(mLon2);
     rtpTarget(0) = r;
     rtpTarget(1) = theta;
     rtpTarget(2) = phi;
@@ -104,12 +104,12 @@ std::string Volumetric3D_cylinder::verbose() const {
     std::stringstream ss;
     ss << "\n======================= 3D Volumetric ======================" << std::endl;
     ss << "  Model Name            =   cylinder" << std::endl;
-    ss << "  Radius_1 / km         =   " << mR1 / 1e3 << std::endl;
-    ss << "  Theta_1 / degree      =   " << mTheta1 / degree << std::endl;
-    ss << "  Phi_1 / degree        =   " << mPhi1 / degree << std::endl;
-    ss << "  Radius_2 / km         =   " << mR2 / 1e3 << std::endl;
-    ss << "  Theta_2 / degree      =   " << mTheta2 / degree << std::endl;
-    ss << "  Phi_2 / degree        =   " << mPhi2 / degree << std::endl;
+    ss << "  Depth_1 / km          =   " << mD1 / 1e3 << std::endl;
+    ss << "  Lat_1 / degree        =   " << mLat1 << std::endl;
+    ss << "  Lon_1 / degree        =   " << mLon1 << std::endl;
+    ss << "  Depth_2 / km          =   " << mD2 / 1e3 << std::endl;
+    ss << "  Lat_2 / degree        =   " << mLat2 << std::endl;
+    ss << "  Lon_2 / degree        =   " << mLon2 << std::endl;
     ss << "  Maximum on Axis       =   " << mMaxAxis << std::endl;
     ss << "  HWHM lateral / km     =   " << mHWHM_lateral / 1e3 << std::endl;
     ss << "  HWHM top & bot / km   =   " << mHWHM_top_bot / 1e3 << std::endl;

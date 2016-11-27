@@ -19,9 +19,9 @@ public:
     
 private:
     // anchor points of the cylinder
-    double mR1, mR2;
-    double mTheta1, mTheta2;
-    double mPhi1, mPhi2;
+    double mD1, mD2;
+    double mLat1, mLat2;
+    double mLon1, mLon2;
     
     // Gaussian parameters
     double mMaxAxis;        // maximum value

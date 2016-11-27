@@ -19,9 +19,9 @@ public:
     
 private:
     // center of the bubble
-    double mRadius;
-    double mTheta;
-    double mPhi;
+    double mDepth;
+    double mLat;
+    double mLon;
     
     // Gaussian parameters
     double mMax;    // maximum value
