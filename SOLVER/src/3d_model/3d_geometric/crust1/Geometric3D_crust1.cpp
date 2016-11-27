@@ -136,13 +136,13 @@ void Geometric3D_crust1::initialize() {
 void Geometric3D_crust1::initialize(const std::vector<double> &params) {
     try {
         int ipar = 0;
-        mIncludeSediment = (params.at(ipar++) > 0.);
+        mIncludeSediment = (params.at(ipar++) > tinyDouble);
         mSurfFactor = params.at(ipar++);
         mMohoFactor = params.at(ipar++);
         mGaussianOrder = round(params.at(ipar++));
         mGaussianDev = params.at(ipar++);
         mNPointInterp = round(params.at(ipar++));
-        mGeographic = (params.at(ipar++) > 0.);
+        mGeographic = (params.at(ipar++) > tinyDouble);
         mRBase = params.at(ipar++) * 1e3;
         mRMoho = params.at(ipar++) * 1e3;
         mRSurf = params.at(ipar++) * 1e3;

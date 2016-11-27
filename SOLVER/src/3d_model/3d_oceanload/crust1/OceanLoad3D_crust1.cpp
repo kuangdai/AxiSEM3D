@@ -74,7 +74,7 @@ void OceanLoad3D_crust1::initialize(const std::vector<double> &params) {
         mGaussianOrder = round(params.at(ipar++));
         mGaussianDev = params.at(ipar++);
         mNPointInterp = round(params.at(ipar++));
-        mGeographic = (params.at(ipar++) > 0.);
+        mGeographic = (params.at(ipar++) > tinyDouble);
     } catch (std::out_of_range) {
         // nothing
     }

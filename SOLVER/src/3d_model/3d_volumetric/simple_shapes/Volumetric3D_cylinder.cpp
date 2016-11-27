@@ -37,9 +37,9 @@ void Volumetric3D_cylinder::initialize(const std::vector<double> &params) {
         
     try {
         int ipar = 10;
-        mChangeVp = (params.at(ipar++) > 0.);
-        mChangeVs = (params.at(ipar++) > 0.);
-        mChangeRho = (params.at(ipar++) > 0.);
+        mChangeVp = (params.at(ipar++) > tinyDouble);
+        mChangeVs = (params.at(ipar++) > tinyDouble);
+        mChangeRho = (params.at(ipar++) > tinyDouble);
     } catch (std::out_of_range) {
         // nothing
     }    

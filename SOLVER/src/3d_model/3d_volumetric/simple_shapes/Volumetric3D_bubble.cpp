@@ -32,9 +32,9 @@ void Volumetric3D_bubble::initialize(const std::vector<double> &params) {
         
     try {
         int ipar = 6;
-        mChangeVp = (params.at(ipar++) > 0.);
-        mChangeVs = (params.at(ipar++) > 0.);
-        mChangeRho = (params.at(ipar++) > 0.);
+        mChangeVp = (params.at(ipar++) > tinyDouble);
+        mChangeVs = (params.at(ipar++) > tinyDouble);
+        mChangeRho = (params.at(ipar++) > tinyDouble);
     } catch (std::out_of_range) {
         // nothing
     }    
