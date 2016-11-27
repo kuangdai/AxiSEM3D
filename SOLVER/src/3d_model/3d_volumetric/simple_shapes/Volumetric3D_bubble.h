@@ -24,8 +24,9 @@ private:
     double mLon;
     
     // Gaussian parameters
-    double mMax;    // maximum value
-    double mHWHM;   // halfwidth at half maximum
+    double mRadius; // radius of the bubble 
+    double mHWHM;   // halfwidth at half maximum; how the perturbation fades outside the bubble 
+    double mMax;    // value inside the bubble
     
     // reference type
     ReferenceTypes mReferenceType;

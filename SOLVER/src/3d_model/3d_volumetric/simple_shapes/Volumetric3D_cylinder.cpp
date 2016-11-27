@@ -8,7 +8,7 @@
 
 void Volumetric3D_cylinder::initialize(const std::vector<double> &params) {
     // need at least 6 parameters to make a cylinder
-    if (params.size() < 10) throw std::runtime_error("Volumetric3D_cylinder::initialize || "
+    if (params.size() < 11) throw std::runtime_error("Volumetric3D_cylinder::initialize || "
         "Not enough parameters to initialize a Volumetric3D_cylinder object.");
     
     // initialize location    
@@ -21,22 +21,23 @@ void Volumetric3D_cylinder::initialize(const std::vector<double> &params) {
     mLon2 = params[5];
     
     // initialize Gaussian parameters
-    mMaxAxis = params[6];
+    mRadius = params[6] * 1e3;
     mHWHM_lateral = params[7] * 1e3;
     mHWHM_top_bot = params[8] * 1e3;
+    mMaxAxis = params[9];
     
     // initialize reference type
-    if (params[9] < 0.5) 
+    if (params[10] < 0.5) 
         mReferenceType = ReferenceTypes::Absolute;
-    else if (params[9] < 1.5) 
+    else if (params[10] < 1.5) 
         mReferenceType = ReferenceTypes::Reference1D;
-    else if (params[9] < 2.5)
+    else if (params[10] < 2.5)
         mReferenceType = ReferenceTypes::Reference3D;
     else 
         mReferenceType = ReferenceTypes::ReferenceDiff;    
         
     try {
-        int ipar = 10;
+        int ipar = 11;
         mChangeVp = (params.at(ipar++) > tinyDouble);
         mChangeVs = (params.at(ipar++) > tinyDouble);
         mChangeRho = (params.at(ipar++) > tinyDouble);
@@ -70,11 +71,13 @@ bool Volumetric3D_cylinder::get3dProperties(double r, double theta, double phi, 
     double distToLine = xyzDiff1.cross(xyzDiff2).norm() / length;
     
     // outside range
-    if (distToLine > 4. * mHWHM_lateral) return false;
+    if (distToLine > mRadius + 4. * mHWHM_lateral) return false;
     
     // compute Gaussian lateral
+    double distToSurf = distToLine - mRadius;
+    if (distToSurf < 0.) distToSurf = 0.;
     double stddev = mHWHM_lateral / sqrt(2. * log(2.));
-    double gaussian_lateral = mMaxAxis * exp(-distToLine * distToLine / (stddev * stddev * 2.));
+    double gaussian_lateral = mMaxAxis * exp(-distToSurf * distToSurf / (stddev * stddev * 2.));
     
     // distance from point to ends
     double d1 = xyzDiff1.norm();
@@ -103,20 +106,21 @@ bool Volumetric3D_cylinder::get3dProperties(double r, double theta, double phi, 
 std::string Volumetric3D_cylinder::verbose() const {
     std::stringstream ss;
     ss << "\n======================= 3D Volumetric ======================" << std::endl;
-    ss << "  Model Name            =   cylinder" << std::endl;
-    ss << "  Depth_1 / km          =   " << mD1 / 1e3 << std::endl;
-    ss << "  Lat_1 / degree        =   " << mLat1 << std::endl;
-    ss << "  Lon_1 / degree        =   " << mLon1 << std::endl;
-    ss << "  Depth_2 / km          =   " << mD2 / 1e3 << std::endl;
-    ss << "  Lat_2 / degree        =   " << mLat2 << std::endl;
-    ss << "  Lon_2 / degree        =   " << mLon2 << std::endl;
-    ss << "  Maximum on Axis       =   " << mMaxAxis << std::endl;
-    ss << "  HWHM lateral / km     =   " << mHWHM_lateral / 1e3 << std::endl;
-    ss << "  HWHM top & bot / km   =   " << mHWHM_top_bot / 1e3 << std::endl;
-    ss << "  Reference Type        =   " << ReferenceTypesString[mReferenceType] << std::endl;
-    ss << "  Affect VP             =   " << (mChangeVp ? "YES" : "NO") << std::endl;
-    ss << "  Affect VS             =   " << (mChangeVs ? "YES" : "NO") << std::endl;
-    ss << "  Affect Density        =   " << (mChangeRho ? "YES" : "NO") << std::endl;
+    ss << "  Model Name             =   cylinder" << std::endl;
+    ss << "  Depth_1 / km           =   " << mD1 / 1e3 << std::endl;
+    ss << "  Lat_1 / degree         =   " << mLat1 << std::endl;
+    ss << "  Lon_1 / degree         =   " << mLon1 << std::endl;
+    ss << "  Depth_2 / km           =   " << mD2 / 1e3 << std::endl;
+    ss << "  Lat_2 / degree         =   " << mLat2 << std::endl;
+    ss << "  Lon_2 / degree         =   " << mLon2 << std::endl;
+    ss << "  Cylinder Radius / km   =   " << mRadius / 1e3 << std::endl;
+    ss << "  HWHM lateral / km      =   " << mHWHM_lateral / 1e3 << std::endl;
+    ss << "  HWHM top & bot / km    =   " << mHWHM_top_bot / 1e3 << std::endl;
+    ss << "  Maximum on Axis        =   " << mMaxAxis << std::endl;
+    ss << "  Reference Type         =   " << ReferenceTypesString[mReferenceType] << std::endl;
+    ss << "  Affect VP              =   " << (mChangeVp ? "YES" : "NO") << std::endl;
+    ss << "  Affect VS              =   " << (mChangeVs ? "YES" : "NO") << std::endl;
+    ss << "  Affect Density         =   " << (mChangeRho ? "YES" : "NO") << std::endl;
     ss << "======================= 3D Volumetric ======================\n" << std::endl;
     return ss.str();
 }

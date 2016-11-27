@@ -8,7 +8,7 @@
 
 void Volumetric3D_bubble::initialize(const std::vector<double> &params) {
     // need at least 6 parameters to make a bubble
-    if (params.size() < 6) throw std::runtime_error("Volumetric3D_bubble::initialize || "
+    if (params.size() < 7) throw std::runtime_error("Volumetric3D_bubble::initialize || "
         "Not enough parameters to initialize a Volumetric3D_bubble object.");
     
     // initialize location    
@@ -17,21 +17,22 @@ void Volumetric3D_bubble::initialize(const std::vector<double> &params) {
     mLon = params[2];
     
     // initialize Gaussian parameters
-    mMax = params[3];
+    mRadius = params[3] * 1e3;
     mHWHM = params[4] * 1e3;
+    mMax = params[5];
     
     // initialize reference type
-    if (params[5] < 0.5) 
+    if (params[6] < 0.5) 
         mReferenceType = ReferenceTypes::Absolute;
-    else if (params[5] < 1.5) 
+    else if (params[6] < 1.5) 
         mReferenceType = ReferenceTypes::Reference1D;
-    else if (params[5] < 2.5)
+    else if (params[6] < 2.5)
         mReferenceType = ReferenceTypes::Reference3D;
     else 
         mReferenceType = ReferenceTypes::ReferenceDiff;    
         
     try {
-        int ipar = 6;
+        int ipar = 7;
         mChangeVp = (params.at(ipar++) > tinyDouble);
         mChangeVs = (params.at(ipar++) > tinyDouble);
         mChangeRho = (params.at(ipar++) > tinyDouble);
@@ -58,6 +59,10 @@ bool Volumetric3D_bubble::get3dProperties(double r, double theta, double phi, do
     // zero results
     dvpv = dvph = dvsv = dvsh = drho = 0.;
     
+    // treat as center if inside bubble
+    distance -= mRadius; 
+    if (distance < 0.) distance = 0.;
+    
     // outside range
     if (distance > 4. * mHWHM) return false;
     
@@ -80,8 +85,9 @@ std::string Volumetric3D_bubble::verbose() const {
     ss << "  Depth / km          =   " << mDepth / 1e3 << std::endl;
     ss << "  Lat / degree        =   " << mLat << std::endl;
     ss << "  Lon / degree        =   " << mLon << std::endl;
-    ss << "  Maximum at Center   =   " << mMax << std::endl;
+    ss << "  Bubble Radius / km  =   " << mRadius / 1e3 << std::endl;
     ss << "  HWHM / km           =   " << mHWHM / 1e3 << std::endl;
+    ss << "  Maximum at Center   =   " << mMax << std::endl;
     ss << "  Reference Type      =   " << ReferenceTypesString[mReferenceType] << std::endl;
     ss << "  Affect VP           =   " << (mChangeVp ? "YES" : "NO") << std::endl;
     ss << "  Affect VS           =   " << (mChangeVs ? "YES" : "NO") << std::endl;

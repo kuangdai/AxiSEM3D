@@ -24,9 +24,10 @@ private:
     double mLon1, mLon2;
     
     // Gaussian parameters
-    double mMaxAxis;        // maximum value
-    double mHWHM_lateral;   // halfwidth at half maximum
-    double mHWHM_top_bot;   // halfwidth at half maximum
+    double mRadius;         // radius of the cylinder
+    double mHWHM_lateral;   // halfwidth at half maximum; how the perturbation fades laterally outside the cylinder
+    double mHWHM_top_bot;   // halfwidth at half maximum; how the perturbation fades longitudinally outside the cylinder
+    double mMaxAxis;        // value inside the cylinder
     
     // reference type
     ReferenceTypes mReferenceType;
