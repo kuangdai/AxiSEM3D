@@ -35,7 +35,7 @@ private:
     // radii of reference spheres
     double mRSurf = 6371000.0;
     double mRMoho = 6346600.0;
-    double mRBase = 6291000.0; // the radius where deltaR is fixed at zero
+    double mRBase = 6151000.0; // the radius where deltaR is fixed at zero
     
     // include sediment or not
     bool mIncludeSediment = true;
