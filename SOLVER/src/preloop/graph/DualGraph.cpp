@@ -35,61 +35,65 @@ void DualGraph::decompose(const IMatX4 &connectivity, const DecomposeOption &opt
     int nelem = connectivity.rows();    
     elemToProc = IColX::Zero(nelem);
     if (nproc == 1) return;
+    
+    if (XMPI::root()) {    
+        // form graph
+        int *xadj, *adjncy;
+        formAdjacency(connectivity, 2, xadj, adjncy);
         
-    // form graph
-    int *xadj, *adjncy;
-    formAdjacency(connectivity, 2, xadj, adjncy);
-    
-    // weights
-    double imax = std::numeric_limits<int>::max() * .9;
-    int ncon = 0;
-    std::vector<int> vweight;
-    float ubvec[2] = {1.f, 1.f};
-    std::vector<int> vsize = option.mElemCommSize;
-    if (option.mDoubleConstrants) {
-        ncon = 2;
-        vweight.reserve(nelem * 2);
-        double sum1 = std::accumulate(option.mElemWeights1.begin(), option.mElemWeights1.end(), 0.);
-        double sum2 = std::accumulate(option.mElemWeights2.begin(), option.mElemWeights2.end(), 0.);
-        for (int i = 0; i < nelem; i++) {
-            vweight.push_back((int)round(option.mElemWeights1[i] / sum1 * imax));
-            vweight.push_back((int)round(option.mElemWeights2[i] / sum2 * imax));
+        // weights
+        double imax = std::numeric_limits<int>::max() * .9;
+        int ncon = 0;
+        std::vector<int> vweight;
+        float ubvec[2] = {1.f, 1.f};
+        std::vector<int> vsize = option.mElemCommSize;
+        if (option.mDoubleConstrants) {
+            ncon = 2;
+            vweight.reserve(nelem * 2);
+            double sum1 = std::accumulate(option.mElemWeights1.begin(), option.mElemWeights1.end(), 0.);
+            double sum2 = std::accumulate(option.mElemWeights2.begin(), option.mElemWeights2.end(), 0.);
+            for (int i = 0; i < nelem; i++) {
+                vweight.push_back((int)round(option.mElemWeights1[i] / sum1 * imax));
+                vweight.push_back((int)round(option.mElemWeights2[i] / sum2 * imax));
+            }
+            ubvec[0] = {1.f + option.mImbalance1};
+            ubvec[1] = {1.f + option.mImbalance2};
+        } else {
+            ncon = 1;
+            vweight.reserve(nelem);
+            double sum1 = std::accumulate(option.mElemWeights1.begin(), option.mElemWeights1.end(), 0.);
+            for (int i = 0; i < nelem; i++) {
+                vweight.push_back((int)round(option.mElemWeights1[i] / sum1 * imax));
+            }
+            ubvec[0] = {1.f + option.mImbalance1};
         }
-        ubvec[0] = {1.f + option.mImbalance1};
-        ubvec[1] = {1.f + option.mImbalance2};
-    } else {
-        ncon = 1;
-        vweight.reserve(nelem);
-        double sum1 = std::accumulate(option.mElemWeights1.begin(), option.mElemWeights1.end(), 0.);
-        for (int i = 0; i < nelem; i++) {
-            vweight.push_back((int)round(option.mElemWeights1[i] / sum1 * imax));
+        
+        // metis options
+        int metis_option[METIS_NOPTIONS];
+        metisError(METIS_SetDefaultOptions(metis_option), "METIS_SetDefaultOptions");
+        metis_option[METIS_OPTION_NCUTS] = option.mNPartition;
+        metis_option[METIS_OPTION_UFACTOR] = round(option.mImbalance1 * 1000);
+        if (option.mCommVol) {
+            metis_option[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;
+            metis_option[METIS_OPTION_CONTIG] = 1;
         }
-        ubvec[0] = {1.f + option.mImbalance1};
+        
+        int objval;
+        if (option.mCommVol) {
+            metisError(METIS_PartGraphKway(&nelem, &ncon, xadj, adjncy, 
+                vweight.data(), vsize.data(), NULL, &nproc, NULL, ubvec, 
+                metis_option, &objval, elemToProc.data()), "METIS_PartGraphKway");
+        } else {
+            metisError(METIS_PartGraphRecursive(&nelem, &ncon, xadj, adjncy, 
+                vweight.data(), vsize.data(), NULL, &nproc, NULL, ubvec, 
+                metis_option, &objval, elemToProc.data()), "METIS_PartGraphRecursive");
+        }
+         
+        // free memory 
+        freeAdjacency(xadj, adjncy);
     }
     
-    // metis options
-    int metis_option[METIS_NOPTIONS];
-    metisError(METIS_SetDefaultOptions(metis_option), "METIS_SetDefaultOptions");
-    metis_option[METIS_OPTION_NCUTS] = option.mNPartition;
-    metis_option[METIS_OPTION_UFACTOR] = round(option.mImbalance1 * 1000);
-    if (option.mCommVol) {
-        metis_option[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;
-        metis_option[METIS_OPTION_CONTIG] = 1;
-    }
-    
-    int objval;
-    if (option.mCommVol) {
-        metisError(METIS_PartGraphKway(&nelem, &ncon, xadj, adjncy, 
-            vweight.data(), vsize.data(), NULL, &nproc, NULL, ubvec, 
-            metis_option, &objval, elemToProc.data()), "METIS_PartGraphKway");
-    } else {
-        metisError(METIS_PartGraphRecursive(&nelem, &ncon, xadj, adjncy, 
-            vweight.data(), vsize.data(), NULL, &nproc, NULL, ubvec, 
-            metis_option, &objval, elemToProc.data()), "METIS_PartGraphRecursive");
-    }
-     
-    // free memory 
-    freeAdjacency(xadj, adjncy);
+    XMPI::bcastEigen(elemToProc);
 }
 
 void DualGraph::formAdjacency(const IMatX4 &connectivity, int ncommon, int *&xadj, int *&adjncy) {
