@@ -180,7 +180,7 @@ double Geometric3D_crust1::getDeltaR(double r, double theta, double phi, double 
     }
 
     // interpolation along radius    
-    if (rElemCenter <= mRMoho)
+    if (rElemCenter < mRMoho)
         return drMoho / (mRMoho - mRBase) * (r - mRBase);
     else 
         return (drSurf - drMoho) / (mRSurf - mRMoho) * (r - mRMoho) + drMoho;
