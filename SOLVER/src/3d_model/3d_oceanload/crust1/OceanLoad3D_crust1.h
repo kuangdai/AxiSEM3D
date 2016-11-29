@@ -34,7 +34,11 @@ private:
     // use geocentric or geographic
     bool mGeographic = true;
     
+    // treat ice as water load
     bool mIncludeIceAsWater = false;
+    
+    // flag to benchmark with specfem
+    bool mBenchmarkSPECFEM = false; 
     
     // depth at grid points 
     RDMatXX mDepth;

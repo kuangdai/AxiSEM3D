@@ -34,6 +34,12 @@ void OceanLoad3D_crust1::initialize() {
     int colWaterBot = 1;
     if (mIncludeIceAsWater) colWaterBot = 2;
     RDColX depthVec = (elevation.col(0) - elevation.col(colWaterBot)) * 1e3;
+    if (mBenchmarkSPECFEM) {
+        // determine ocean depth ONLY by elevation 
+        RDColX depthVec = elevation.col(2) * 1e3;
+        mGeographic = false;
+    }
+    
     RDMatXX depth(sNLat, sNLon);
     for (int i = 0; i < sNLat; i++) 
         depth.row(i) = depthVec.block(i * sNLon, 0, sNLon, 1).transpose();
@@ -95,6 +101,15 @@ double OceanLoad3D_crust1::getOceanDepth(double theta, double phi) const {
         for (int j = 0; j < mNPointInterp; j++) {
             double weight = wlat[i] * wlon[j];
             depth += weight * mDepth(ilat[i], ilon[j]);
+        }
+    }
+    if (mBenchmarkSPECFEM) {
+        double elevation = depth;
+        double MINIMUM_THICKNESS_3D_OCEANS = 50.;
+        if (elevation >= - MINIMUM_THICKNESS_3D_OCEANS) {
+            depth = 0.;
+        } else {
+            depth = std::abs(elevation);
         }
     }
     return depth;
