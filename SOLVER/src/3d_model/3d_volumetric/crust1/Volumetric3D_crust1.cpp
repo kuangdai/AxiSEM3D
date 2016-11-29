@@ -72,28 +72,31 @@ void Volumetric3D_crust1::initialize() {
     mRh *= 1e3;
     mRl *= 1e3;
     
+    // layers
+    if (mIncludeIce) mIncludeSediment = true;
+    int colSurf = columnSurf();
+    int colMoho = 8;
+    
     // check sediment thickness to avoid too thin sediment layers
-    for (int row = 0; row < mRl.rows(); row++) {
-        // 3 sediments + ice, check from bottom to up
-        for (int ised = 4; ised >= 1; ised--) {
-            double sed = mRl(row, ised) - mRl(row, ised + 1);
-            if (sed > 1. && sed < mMinimumSedimentThickness) {
-                mVp(row, ised) = mVp(row, ised + 1);
-                mVs(row, ised) = mVs(row, ised + 1);
-                mRh(row, ised) = mRh(row, ised + 1);
+    if (colSurf < 5) {
+        for (int row = 0; row < mRl.rows(); row++) {
+            double totalThick = mRl(row, colSurf) - mRl(row, colMoho);
+            double limitLayerThick = totalThick / (mNumElementLayersInCrust * nPol) * .5; // 0.5 is empirical
+            // check from bottom to up
+            for (int ised = 4; ised >= colSurf; ised--) {
+                // halve the limit for surface
+                if (ised == colSurf) limitLayerThick /= 2.;
+                double sed = mRl(row, ised) - mRl(row, ised + 1);
+                if (sed > 1. && sed < limitLayerThick) {
+                    mVp(row, ised) = mVp(row, ised + 1);
+                    mVs(row, ised) = mVs(row, ised + 1);
+                    mRh(row, ised) = mRh(row, ised + 1);
+                }
             }
         }
     }
 
     // linear mapping to sphere
-    int colSurf = 5; // no ice, no sediment
-    if (mIncludeIce) {
-        colSurf = 1; // ice
-        mIncludeSediment = true;
-    } else if (mIncludeSediment) {
-        colSurf = 2; // sediment
-    }
-    int colMoho = 8;
     const RDColX &rmoho = RDColX::Constant(nrow + sNLon, mRMoho);
     const RDColX &rdiff = (RDColX::Constant(nrow + sNLon, mRSurf - mRMoho).array() 
         / (mRl.col(colSurf) - mRl.col(colMoho)).array()).matrix();
@@ -107,7 +110,7 @@ void Volumetric3D_crust1::initialize(const std::vector<double> &params) {
     try {
         int ipar = 0;
         mIncludeSediment = (params.at(ipar++) > tinyDouble);
-        mMinimumSedimentThickness = params.at(ipar++) * 1e3;
+        mNumElementLayersInCrust = params.at(ipar++);
         mNPointInterp = round(params.at(ipar++));
         mGeographic = (params.at(ipar++) > tinyDouble);
         mRMoho = params.at(ipar++) * 1e3;
@@ -139,7 +142,7 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
     vpv = 0.;
     vsv = 0.;
     rho = 0.;
-    int istart = mIncludeSediment ? 3 : 6; 
+    int istart = columnSurf() + 1; 
     for (int i = 0; i < mNPointInterp; i++) {
         for (int j = 0; j < mNPointInterp; j++) {
             double weight = wlat[i] * wlon[j];
@@ -184,7 +187,7 @@ std::string Volumetric3D_crust1::verbose() const {
     ss << "  Anisotropic           =   NO" << std::endl;
     ss << "  Include Ice           =   " << (mIncludeIce ? "YES" : "NO") << std::endl;
     ss << "  Include Sediment      =   " << (mIncludeSediment ? "YES" : "NO") << std::endl;
-    ss << "  Min. Sediment / km    =   " << mMinimumSedimentThickness / 1e3 << std::endl;
+    ss << "  Num. Element Layers   =   " << mNumElementLayersInCrust << std::endl;
     ss << "  Num. Interp. Points   =   " << mNPointInterp << std::endl;
     ss << "  Use Geographic        =   " << (mGeographic ? "YES" : "NO") << std::endl;
     ss << "======================= 3D Volumetric ======================\n" << std::endl;

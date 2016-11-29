@@ -27,6 +27,17 @@ public:
     void setROuter(double router) {mRSurf = router;};
     
 private:
+    
+    int columnSurf() const {
+        int colSurf = 5; // no ice, no sediment
+        if (mIncludeIce) {
+            colSurf = 1; // ice
+        } else if (mIncludeSediment) {
+            colSurf = 2; // sediment
+        }
+        return colSurf;
+    };
+    
     static void interpThetaPhi(double theta, double phi, int np, 
         std::vector<int> &ilat, std::vector<int> &ilon, 
         std::vector<double> &wlat, std::vector<double> &wlon);
@@ -45,7 +56,7 @@ private:
     // include sediment or not
     bool mIncludeIce = false;
     bool mIncludeSediment = true;
-    double mMinimumSedimentThickness = 1000.0;
+    int mNumElementLayersInCrust = 2;
     // number of interpolation points 
     int mNPointInterp = 2;
     // use geocentric or geographic
