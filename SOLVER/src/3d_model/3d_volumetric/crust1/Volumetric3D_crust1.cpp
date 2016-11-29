@@ -74,17 +74,26 @@ void Volumetric3D_crust1::initialize() {
     
     // check sediment thickness to avoid too thin sediment layers
     for (int row = 0; row < mRl.rows(); row++) {
-        double sed = mRl(row, 2) - mRl(row, 5);
-        if (sed < mMinimumSedimentThickness) {
-            mVp(row, 2) = mVp(row, 3) = mVp(row, 4) = mVp(row, 5);
-            mVs(row, 2) = mVs(row, 3) = mVs(row, 4) = mVs(row, 5);
-            mRh(row, 2) = mRh(row, 3) = mRh(row, 4) = mRh(row, 5); 
+        // 3 sediments + ice, check from bottom to up
+        for (int ised = 4; ised >= 1; ised--) {
+            double sed = mRl(row, ised) - mRl(row, ised + 1);
+            if (sed > 1. && sed < mMinimumSedimentThickness) {
+                mVp(row, ised) = mVp(row, ised + 1);
+                mVs(row, ised) = mVs(row, ised + 1);
+                mRh(row, ised) = mRh(row, ised + 1);
+            }
         }
     }
 
     // linear mapping to sphere
+    int colSurf = 5; // no ice, no sediment
+    if (mIncludeIce) {
+        colSurf = 1; // ice
+        mIncludeSediment = true;
+    } else if (mIncludeSediment) {
+        colSurf = 2; // sediment
+    }
     int colMoho = 8;
-    int colSurf = mIncludeSediment ? 2 : 5; 
     const RDColX &rmoho = RDColX::Constant(nrow + sNLon, mRMoho);
     const RDColX &rdiff = (RDColX::Constant(nrow + sNLon, mRSurf - mRMoho).array() 
         / (mRl.col(colSurf) - mRl.col(colMoho)).array()).matrix();
@@ -103,6 +112,7 @@ void Volumetric3D_crust1::initialize(const std::vector<double> &params) {
         mGeographic = (params.at(ipar++) > tinyDouble);
         mRMoho = params.at(ipar++) * 1e3;
         mRSurf = params.at(ipar++) * 1e3;
+        mIncludeIce = (params.at(ipar++) > tinyDouble);
     } catch (std::out_of_range) {
         // nothing
     }
@@ -172,6 +182,7 @@ std::string Volumetric3D_crust1::verbose() const {
     ss << "  Reference Type        =   Absolute" << std::endl;
     ss << "  Max. Fourier Order    =   180" << std::endl;
     ss << "  Anisotropic           =   NO" << std::endl;
+    ss << "  Include Ice           =   " << (mIncludeIce ? "YES" : "NO") << std::endl;
     ss << "  Include Sediment      =   " << (mIncludeSediment ? "YES" : "NO") << std::endl;
     ss << "  Min. Sediment / km    =   " << mMinimumSedimentThickness / 1e3 << std::endl;
     ss << "  Num. Interp. Points   =   " << mNPointInterp << std::endl;

@@ -34,6 +34,8 @@ private:
     // use geocentric or geographic
     bool mGeographic = true;
     
+    bool mIncludeIceAsWater = false;
+    
     // depth at grid points 
     RDMatXX mDepth;
 };

@@ -31,7 +31,9 @@ void OceanLoad3D_crust1::initialize() {
     XMPI::bcastEigen(elevation);
     
     // water depth
-    RDColX depthVec = (elevation.col(0) - elevation.col(1)) * 1e3;
+    int colWaterBot = 1;
+    if (mIncludeIceAsWater) colWaterBot = 2;
+    RDColX depthVec = (elevation.col(0) - elevation.col(colWaterBot)) * 1e3;
     RDMatXX depth(sNLat, sNLon);
     for (int i = 0; i < sNLat; i++) 
         depth.row(i) = depthVec.block(i * sNLon, 0, sNLon, 1).transpose();
@@ -75,6 +77,7 @@ void OceanLoad3D_crust1::initialize(const std::vector<double> &params) {
         mGaussianDev = params.at(ipar++);
         mNPointInterp = round(params.at(ipar++));
         mGeographic = (params.at(ipar++) > tinyDouble);
+        mIncludeIceAsWater = (params.at(ipar++) > tinyDouble);
     } catch (std::out_of_range) {
         // nothing
     }

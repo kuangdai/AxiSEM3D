@@ -33,7 +33,13 @@ void Geometric3D_crust1::initialize() {
     // surface and moho undulations
     // NOTE: ellipticity should not be considered here because all geometric 
     //       models are defined independently w.r.t. reference sphere 
-    int colSurf = mIncludeSediment ? 2 : 5; 
+    int colSurf = 5; // no ice, no sediment
+    if (mIncludeIce) {
+        colSurf = 1; // ice
+        mIncludeSediment = true;
+    } else if (mIncludeSediment) {
+        colSurf = 2; // sediment
+    }
     int colMoho = 8;
     RDColX deltaRSurfVec = elevation.col(colSurf) * 1e3;
     RDColX deltaRMohoVec = elevation.col(colMoho) * 1e3;
@@ -146,6 +152,7 @@ void Geometric3D_crust1::initialize(const std::vector<double> &params) {
         mRBase = params.at(ipar++) * 1e3;
         mRMoho = params.at(ipar++) * 1e3;
         mRSurf = params.at(ipar++) * 1e3;
+        mIncludeIce = (params.at(ipar++) > tinyDouble);
     } catch (std::out_of_range) {
         // nothing
     }
@@ -232,6 +239,7 @@ std::string Geometric3D_crust1::verbose() const {
     ss << "  Scope                 =   crust" << std::endl;
     ss << "  Radii (km)            =   [" << mRBase / 1e3 << ", " << mRSurf / 1e3 << "]" << std::endl;
     ss << "  RMoho (km)            =   " << mRMoho << std::endl;
+    ss << "  Include Ice           =   " << (mIncludeIce ? "YES" : "NO") << std::endl;
     ss << "  Include Sediment      =   " << (mIncludeSediment ? "YES" : "NO") << std::endl;
     ss << "  Surface Factor        =   " << mSurfFactor << std::endl;
     ss << "  Moho Factor           =   " << mMohoFactor << std::endl;

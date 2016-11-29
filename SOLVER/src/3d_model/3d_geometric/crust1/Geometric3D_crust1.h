@@ -38,6 +38,7 @@ private:
     double mRBase = 6151000.0; // the radius where deltaR is fixed at zero
     
     // include sediment or not
+    bool mIncludeIce = false;
     bool mIncludeSediment = true;
     
     // strengthening factor
