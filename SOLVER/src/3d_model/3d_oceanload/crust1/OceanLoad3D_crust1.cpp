@@ -123,6 +123,7 @@ std::string OceanLoad3D_crust1::verbose() const {
     ss << "  Smoothing Intensity   =   " << mGaussianDev << std::endl;
     ss << "  Num. Interp. Points   =   " << mNPointInterp << std::endl;
     ss << "  Use Geographic        =   " << (mGeographic ? "YES" : "NO") << std::endl;
+    ss << "  Add Ice as Water      =   " << (mIncludeIceAsWater ? "YES" : "NO") << std::endl;
     ss << "======================= 3D OceanLoad ======================\n" << std::endl;
     return ss.str();
 }
