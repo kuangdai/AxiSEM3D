@@ -84,6 +84,7 @@ void OceanLoad3D_crust1::initialize(const std::vector<double> &params) {
         mNPointInterp = round(params.at(ipar++));
         mGeographic = (params.at(ipar++) > tinyDouble);
         mIncludeIceAsWater = (params.at(ipar++) > tinyDouble);
+        mBenchmarkSPECFEM = (params.at(ipar++) > tinyDouble);
     } catch (std::out_of_range) {
         // nothing
     }

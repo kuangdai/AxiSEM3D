@@ -200,7 +200,7 @@ public:
             boost::mpi::all_gather(*sWorld, value, total);
             return total;
         #else 
-            return std::vector<Type>(value, 1);
+            return std::vector<Type>(1, value);
         #endif
     };
     
@@ -211,7 +211,7 @@ public:
             boost::mpi::gather(*sWorld, value, total, 0);
             return total;
         #else 
-            return std::vector<Type>(value, 1);
+            return std::vector<Type>(1, value);
         #endif
     };
         
