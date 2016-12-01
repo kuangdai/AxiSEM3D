@@ -95,7 +95,7 @@ void SlicePlot::buildInparam(std::vector<SlicePlot *> &splots,
         std::stringstream ss;
         ss << "\n======================== Slice Plots =======================" << XMPI::endl;
         ss << "  Number of Plots   =   " << nplots << XMPI::endl;
-        ss << "  List of Plots (PAR SAMPLE LAT LON REF):" << XMPI::endl;
+        ss << "  List of Plots (PAR SAMPLE LAT LON PHI REF):" << XMPI::endl;
         for (int i = 0; i < nplots; i++) ss << "    * " << splots[i]->verbose() << XMPI::endl;
         ss << "======================== Slice Plots =======================\n" << XMPI::endl;
         XMPI::cout << ss.str();
@@ -313,7 +313,7 @@ std::string SlicePlot::verbose(char sp) const {
         if (mSampleType == SampleTypes::Vertex) ss << sp << "vertex";
         if (mSampleType == SampleTypes::GLLPnt) ss << sp << "gllpnt";
     } 
-    if (narg >= 4) ss << sp << mLat << sp << mLon;
+    if (narg >= 4) ss << sp << mLat << sp << mLon << sp << mPhi;
     if (narg >= 5) {
         if (mRefType == PropertyRefTypes::Property1D) ss << sp << "1D";
         if (mRefType == PropertyRefTypes::Property3D) ss << sp << "3D";
