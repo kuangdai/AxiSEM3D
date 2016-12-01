@@ -87,7 +87,7 @@ void Volumetric3D_crust1::initialize() {
                 // halve the limit for surface
                 if (ised == colSurf) limitLayerThick /= 2.;
                 double sed = mRl(row, ised) - mRl(row, ised + 1);
-                if (sed > 1. && sed < limitLayerThick) {
+                if (sed < limitLayerThick) {
                     mVp(row, ised) = mVp(row, ised + 1);
                     mVs(row, ised) = mVs(row, ised + 1);
                     mRh(row, ised) = mRh(row, ised + 1);
@@ -154,7 +154,7 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
                     double vs_read = mVs(rowdata, iLayer - 1);
                     double rh_read = mRh(rowdata, iLayer - 1);
                     // make sure we don't read a zero thickness layer
-                    if (vp_read < 1. || vs_read < 1. || rh_read < 1.)
+                    if (r >= mRl(rowdata, iLayer - 1))
                         throw std::runtime_error("Volumetric3D_crust1::get3dProperties || Invalid radius.");
                     vpv += vp_read * weight;
                     vsv += vs_read * weight;
