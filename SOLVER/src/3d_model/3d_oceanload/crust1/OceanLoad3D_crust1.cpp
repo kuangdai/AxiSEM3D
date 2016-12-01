@@ -37,6 +37,9 @@ void OceanLoad3D_crust1::initialize() {
     if (mBenchmarkSPECFEM) {
         // determine ocean depth ONLY by elevation 
         RDColX depthVec = elevation.col(2) * 1e3;
+        mGaussianOrder = 0;
+        mNPointInterp = 2;
+        mIncludeIceAsWater = false;
         mGeographic = false;
     }
     
@@ -125,6 +128,7 @@ std::string OceanLoad3D_crust1::verbose() const {
     ss << "  Num. Interp. Points   =   " << mNPointInterp << std::endl;
     ss << "  Use Geographic        =   " << (mGeographic ? "YES" : "NO") << std::endl;
     ss << "  Add Ice as Water      =   " << (mIncludeIceAsWater ? "YES" : "NO") << std::endl;
+    if (mBenchmarkSPECFEM) ss << "  Using SPECFEM method, determining ocean depth by elevation." << std::endl;
     ss << "======================= 3D OceanLoad ======================\n" << std::endl;
     return ss.str();
 }
