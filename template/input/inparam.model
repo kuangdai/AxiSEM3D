@@ -96,7 +96,7 @@ MODEL_2D_LONGITUDE                          30.
 # TYPE: integer
 # NOTE: dump mesh and model parameters on a slice for visualization;
 #       see results in output/slice_plots/, one slice one file
-MODEL_PLOT_SLICES_NUM                       2
+MODEL_PLOT_SLICES_NUM                       0
 
 # WHAT: list of slices to be ploted
 # TYPE: list of ParSeries <see top notes>
