@@ -239,7 +239,7 @@ std::string Geometric3D_crust1::verbose() const {
     ss << "  Model Name            =   Crust 1.0" << std::endl;
     ss << "  Scope                 =   crust" << std::endl;
     ss << "  Radii (km)            =   [" << mRBase / 1e3 << ", " << mRSurf / 1e3 << "]" << std::endl;
-    ss << "  RMoho (km)            =   " << mRMoho << std::endl;
+    ss << "  RMoho (km)            =   " << mRMoho / 1e3 << std::endl;
     ss << "  Include Ice           =   " << (mIncludeIce ? "YES" : "NO") << std::endl;
     ss << "  Include Sediment      =   " << (mIncludeSediment ? "YES" : "NO") << std::endl;
     ss << "  Surface Factor        =   " << mSurfFactor << std::endl;
