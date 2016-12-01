@@ -5,9 +5,12 @@
 
 #include "Volumetric3D_s40rts.h"
 #include <sstream>
+#include <fstream>
+#include "XMPI.h"
 
 extern "C" {
-    void __s40rts_MOD_initialize_s40rts(double *rcmb, double *rmoho, double *rearth);
+    void __s40rts_MOD_initialize_s40rts(double *rcmb, double *rmoho, double *rearth, 
+        double meta_data_p12[], double meta_data_s40[]);
     void __s40rts_MOD_finalize_s40rts();
     bool __s40rts_MOD_perturb_s40rts(double *r, double *theta, double *phi, double *r_center,
         double *vp, double *vs);
@@ -15,7 +18,22 @@ extern "C" {
 
 
 void Volumetric3D_s40rts::initialize() {
-    __s40rts_MOD_initialize_s40rts(&mRCMB, &mRMoho, &mRSurf);
+    const int np12 = 3549;
+    const int ns40 = 35301;
+    double meta_data_p12[np12], meta_data_s40[ns40];
+    if (XMPI::root()) {
+        std::string path = projectDirectory + "/src/3d_model/3d_volumetric/s20_s40rts/data";
+        std::fstream fs;
+        fs.open(path + "/P12.dat", std::fstream::in);
+        for (int i = 0; i < np12; i++) fs >> meta_data_p12[i];
+        fs.close();
+        fs.open(path + "/s40RTS.dat", std::fstream::in);
+        for (int i = 0; i < ns40; i++) fs >> meta_data_s40[i];
+        fs.close();
+    }
+    XMPI::bcast(meta_data_p12, np12);
+    XMPI::bcast(meta_data_s40, ns40);
+    __s40rts_MOD_initialize_s40rts(&mRCMB, &mRMoho, &mRSurf, meta_data_p12, meta_data_s40);
 }
 
 void Volumetric3D_s40rts::initialize(const std::vector<double> &params) {

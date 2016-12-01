@@ -79,13 +79,12 @@ contains
     !--------------------------------------------------------------------------------------------------
     !
     
-    subroutine initialize_s40rts(rcmb, rmoho, rearth)
-        
-        use sX0rts_meta_data
+    subroutine initialize_s40rts(rcmb, rmoho, rearth, meta_data_p12, meta_data_s40)
         
         implicit none
         
         double precision, intent(in) :: rcmb, rmoho, rearth
+        double precision, intent(in) :: meta_data_p12(3549), meta_data_s40(35301)
         integer :: k, l, m, pos
         
         RCMB_Par = rcmb
@@ -93,9 +92,6 @@ contains
         REARTH_Par = rearth
         
         if (allocated(S40RTS_V_dvs_a)) return 
-        
-        ! initialize meta data
-        call initialize_sX0rts_meta_data
         
         allocate(S40RTS_V_dvs_a(0:NK_20, 0:NS_40, 0:NS_40), &
         S40RTS_V_dvs_b(0:NK_20, 0:NS_40, 0:NS_40), &
@@ -137,9 +133,6 @@ contains
         
         ! set up the splines used as radial basis functions by Ritsema
         call s40rts_splhsetup
-        
-        ! delete meta data
-        call finalize_sX0rts_meta_data
         
     end subroutine initialize_s40rts
     
