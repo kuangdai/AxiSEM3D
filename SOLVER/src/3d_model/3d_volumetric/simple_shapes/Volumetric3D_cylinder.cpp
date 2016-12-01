@@ -38,7 +38,7 @@ void Volumetric3D_cylinder::initialize(const std::vector<std::string> &params) {
     else if (boost::iequals(params[10], "ReferencePerturb") || boost::iequals(params[10], "RefPerturb") || boost::iequals(params[10], "Perturb")) 
         mReferenceType = ReferenceTypes::ReferencePerturb;        
     else 
-        throw std::runtime_error("Volumetric3D_bubble::initialize || Unknown reference type: " + params[10] + ".");
+        throw std::runtime_error("Volumetric3D_cylinder::initialize || Unknown reference type: " + params[10] + ".");
         
     try {
         int ipar = 11;
