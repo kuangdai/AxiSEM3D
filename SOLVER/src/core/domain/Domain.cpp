@@ -194,7 +194,6 @@ void Domain::dumpLeft() const {
     #endif
 }
 
-#include "XMath.h"
 void Domain::checkStability(double dt, int tstep, double t) const {
     #ifdef _MEASURE_TIMELOOP
         mTimerOthers->resume();
@@ -217,14 +216,16 @@ void Domain::checkStability(double dt, int tstep, double t) const {
     
     if (unstable) {
         const RDCol2 &sz = unstable_point->getCoords() / 1e3;
+        double r = sz.norm();
+        double theta = (r < tinyDouble) ? 0. : acos(sz(1) / r);
         const RDCol2 &rtheta = XMath::rtheta(sz);
         XMPI::cout.setp(XMPI::rank());
         XMPI::cout << "\n*****************************************" << XMPI::endl;
         XMPI::cout << "  SIMULATION BLEW UP! AXISEM3D ABORTED!" << XMPI::endl << XMPI::endl;
         XMPI::cout << "  Where instability occured " << XMPI::endl;
         XMPI::cout << "    (s, z) / km    =   (" << sz(0) << ", " << sz(1) << ")" << XMPI::endl;
-        XMPI::cout << "    Radius / km    =   " << rtheta(0) << XMPI::endl;
-        XMPI::cout << "    Dist / degr    =   " << rtheta(1) / degree << XMPI::endl;
+        XMPI::cout << "    Radius / km    =   " << r << XMPI::endl;
+        XMPI::cout << "    Dist / degr    =   " << theta / degree << XMPI::endl;
         XMPI::cout << "  When instability occured " << XMPI::endl;
         XMPI::cout << "    Current time   =   " << t << XMPI::endl;
         XMPI::cout << "    Current step   =   " << tstep << XMPI::endl;
