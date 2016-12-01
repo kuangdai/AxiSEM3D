@@ -122,15 +122,15 @@ double OceanLoad3D_crust1::getOceanDepth(double theta, double phi) const {
 
 std::string OceanLoad3D_crust1::verbose() const {
     std::stringstream ss;
-    ss << "\n======================= 3D OceanLoad ======================" << std::endl;
+    ss << "\n======================= 3D OceanLoad =======================" << std::endl;
     ss << "  Model Name            =   Crust 1.0" << std::endl;
     ss << "  Smoothing Order       =   " << mGaussianOrder << std::endl;
     ss << "  Smoothing Intensity   =   " << mGaussianDev << std::endl;
     ss << "  Num. Interp. Points   =   " << mNPointInterp << std::endl;
     ss << "  Use Geographic        =   " << (mGeographic ? "YES" : "NO") << std::endl;
     ss << "  Add Ice as Water      =   " << (mIncludeIceAsWater ? "YES" : "NO") << std::endl;
-    if (mBenchmarkSPECFEM) ss << "  Using SPECFEM method, determining ocean depth by elevation." << std::endl;
-    ss << "======================= 3D OceanLoad ======================\n" << std::endl;
+    if (mBenchmarkSPECFEM) ss << "  Using SPECFEM method, computing ocean depth by elevation." << std::endl;
+    ss << "======================= 3D OceanLoad =======================\n" << std::endl;
     return ss.str();
 }
 

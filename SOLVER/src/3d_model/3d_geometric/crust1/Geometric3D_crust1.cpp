@@ -235,7 +235,7 @@ double Geometric3D_crust1::getDeltaR(double r, double theta, double phi, double 
 
 std::string Geometric3D_crust1::verbose() const {
     std::stringstream ss;
-    ss << "\n======================= 3D Geometric ======================" << std::endl;
+    ss << "\n======================= 3D Geometric =======================" << std::endl;
     ss << "  Model Name            =   Crust 1.0" << std::endl;
     ss << "  Scope                 =   crust" << std::endl;
     ss << "  Radii (km)            =   [" << mRBase / 1e3 << ", " << mRSurf / 1e3 << "]" << std::endl;
@@ -248,7 +248,7 @@ std::string Geometric3D_crust1::verbose() const {
     ss << "  Smoothing Intensity   =   " << mGaussianDev << std::endl;
     ss << "  Num. Interp. Points   =   " << mNPointInterp << std::endl;
     ss << "  Use Geographic        =   " << (mGeographic ? "YES" : "NO") << std::endl;
-    ss << "======================= 3D Geometric ======================\n" << std::endl;
+    ss << "======================= 3D Geometric =======================\n" << std::endl;
     return ss.str();
 }
 
