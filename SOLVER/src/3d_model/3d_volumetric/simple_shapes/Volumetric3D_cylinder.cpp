@@ -6,41 +6,45 @@
 #include "XMath.h"
 #include <sstream>
 
-void Volumetric3D_cylinder::initialize(const std::vector<double> &params) {
+void Volumetric3D_cylinder::initialize(const std::vector<std::string> &params) {
     // need at least 6 parameters to make a cylinder
     if (params.size() < 11) throw std::runtime_error("Volumetric3D_cylinder::initialize || "
         "Not enough parameters to initialize a Volumetric3D_cylinder object.");
+        
+    const std::string source = "Volumetric3D_cylinder::initialize";
     
     // initialize location    
-    mD1 = params[0] * 1e3;
-    mLat1 = params[1];
-    mLon1 = params[2];
-    
-    mD2 = params[3] * 1e3;
-    mLat2 = params[4];
-    mLon2 = params[5];
+    XMath::castValue(mD1, params[0], source); mD1 *= 1e3;
+    XMath::castValue(mLat1, params[1], source);
+    XMath::castValue(mLon1, params[2], source);
+
+    XMath::castValue(mD2, params[3], source); mD2 *= 1e3;
+    XMath::castValue(mLat2, params[4], source);
+    XMath::castValue(mLon2, params[5], source);
     
     // initialize Gaussian parameters
-    mRadius = params[6] * 1e3;
-    mHWHM_lateral = params[7] * 1e3;
-    mHWHM_top_bot = params[8] * 1e3;
-    mMaxAxis = params[9];
+    XMath::castValue(mRadius, params[6], source); mRadius *= 1e3;
+    XMath::castValue(mHWHM_lateral, params[7], source); mHWHM_lateral *= 1e3;
+    XMath::castValue(mHWHM_top_bot, params[8], source); mHWHM_top_bot *= 1e3;
+    XMath::castValue(mMaxAxis, params[9], source);
     
     // initialize reference type
-    if (params[10] < 0.5) 
+    if (boost::iequals(params[10], "Absolute") || boost::iequals(params[10], "Abs")) 
         mReferenceType = ReferenceTypes::Absolute;
-    else if (params[10] < 1.5) 
+    else if (boost::iequals(params[10], "Reference1D") || boost::iequals(params[10], "Ref1D") || boost::iequals(params[10], "1D")) 
         mReferenceType = ReferenceTypes::Reference1D;
-    else if (params[10] < 2.5)
-        mReferenceType = ReferenceTypes::ReferenceDiff;
+    else if (boost::iequals(params[10], "Reference3D") || boost::iequals(params[10], "Ref3D") || boost::iequals(params[10], "3D")) 
+        mReferenceType = ReferenceTypes::Reference3D;
+    else if (boost::iequals(params[10], "ReferencePerturb") || boost::iequals(params[10], "RefPerturb") || boost::iequals(params[10], "Perturb")) 
+        mReferenceType = ReferenceTypes::ReferencePerturb;        
     else 
-        mReferenceType = ReferenceTypes::Reference3D; 
+        throw std::runtime_error("Volumetric3D_bubble::initialize || Unknown reference type: " + params[10] + ".");
         
     try {
         int ipar = 11;
-        mChangeVp = (params.at(ipar++) > tinyDouble);
-        mChangeVs = (params.at(ipar++) > tinyDouble);
-        mChangeRho = (params.at(ipar++) > tinyDouble);
+        XMath::castValue(mChangeVp, params[ipar++], source);
+        XMath::castValue(mChangeVs, params[ipar++], source);
+        XMath::castValue(mChangeRho, params[ipar++], source);
     } catch (std::out_of_range) {
         // nothing
     }    

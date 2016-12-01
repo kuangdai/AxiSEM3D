@@ -7,6 +7,7 @@
 #include <sstream>
 #include <fstream>
 #include "XMPI.h"
+#include "XMath.h"
 
 extern "C" {
     void __s20rts_MOD_initialize_s20rts(double *rcmb, double *rmoho, double *rearth, 
@@ -36,13 +37,14 @@ void Volumetric3D_s20rts::initialize() {
     __s20rts_MOD_initialize_s20rts(&mRCMB, &mRMoho, &mRSurf, meta_data_p12, meta_data_s20);
 }
 
-void Volumetric3D_s20rts::initialize(const std::vector<double> &params) {
+void Volumetric3D_s20rts::initialize(const std::vector<std::string> &params) {
     try {
         int ipar = 0;
-        mScaleRho = params.at(ipar++);
-        mRCMB = params.at(ipar++) * 1e3;
-        mRMoho = params.at(ipar++) * 1e3;
-        mRSurf = params.at(ipar++) * 1e3;
+        const std::string source = "Volumetric3D_s20rts::initialize";
+        XMath::castValue(mScaleRho, params.at(ipar++), source);
+        XMath::castValue(mRCMB, params.at(ipar++), source); mRCMB *= 1e3;
+        XMath::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
+        XMath::castValue(mRSurf, params.at(ipar++), source); mRSurf *= 1e3;
     } catch (std::out_of_range) {
         // nothing
     }

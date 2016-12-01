@@ -13,7 +13,7 @@ class Geometric3D_crust1: public Geometric3D {
 public:
 
     void initialize();
-    void initialize(const std::vector<double> &params);
+    void initialize(const std::vector<std::string> &params);
     
     double getDeltaR(double r, double theta, double phi, double rElemCenter) const;
     

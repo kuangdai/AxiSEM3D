@@ -106,16 +106,17 @@ void Volumetric3D_crust1::initialize() {
     }
 }
 
-void Volumetric3D_crust1::initialize(const std::vector<double> &params) {
+void Volumetric3D_crust1::initialize(const std::vector<std::string> &params) {
     try {
         int ipar = 0;
-        mIncludeSediment = (params.at(ipar++) > tinyDouble);
-        mNumElementLayersInCrust = params.at(ipar++);
-        mNPointInterp = round(params.at(ipar++));
-        mGeographic = (params.at(ipar++) > tinyDouble);
-        mRMoho = params.at(ipar++) * 1e3;
-        mRSurf = params.at(ipar++) * 1e3;
-        mIncludeIce = (params.at(ipar++) > tinyDouble);
+        const std::string source = "Volumetric3D_crust1::initialize";
+        XMath::castValue(mIncludeSediment, params.at(ipar++), source);
+        XMath::castValue(mNumElementLayersInCrust, params.at(ipar++), source);
+        XMath::castValue(mNPointInterp, params.at(ipar++), source);
+        XMath::castValue(mGeographic, params.at(ipar++), source);
+        XMath::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
+        XMath::castValue(mRSurf, params.at(ipar++), source); mRSurf *= 1e3;
+        XMath::castValue(mIncludeIce, params.at(ipar++), source);
     } catch (std::out_of_range) {
         // nothing
     }

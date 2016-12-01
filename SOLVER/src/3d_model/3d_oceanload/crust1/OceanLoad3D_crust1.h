@@ -12,7 +12,7 @@ class OceanLoad3D_crust1: public OceanLoad3D {
 public:
 
     void initialize();
-    void initialize(const std::vector<double> &params);
+    void initialize(const std::vector<std::string> &params);
     
     double getOceanDepth(double theta, double phi) const;
     

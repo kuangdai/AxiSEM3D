@@ -6,36 +6,40 @@
 #include "XMath.h"
 #include <sstream>
 
-void Volumetric3D_bubble::initialize(const std::vector<double> &params) {
+void Volumetric3D_bubble::initialize(const std::vector<std::string> &params) {
     // need at least 6 parameters to make a bubble
     if (params.size() < 7) throw std::runtime_error("Volumetric3D_bubble::initialize || "
         "Not enough parameters to initialize a Volumetric3D_bubble object.");
     
-    // initialize location    
-    mDepth = params[0] * 1e3;
-    mLat = params[1];
-    mLon = params[2];
+    const std::string source = "Volumetric3D_bubble::initialize";
+    
+    // initialize location 
+    XMath::castValue(mDepth, params[0], source); mDepth *= 1e3;
+    XMath::castValue(mLat, params[1], source);
+    XMath::castValue(mLon, params[2], source);
     
     // initialize Gaussian parameters
-    mRadius = params[3] * 1e3;
-    mHWHM = params[4] * 1e3;
-    mMax = params[5];
+    XMath::castValue(mRadius, params[3], source); mRadius *= 1e3;
+    XMath::castValue(mHWHM, params[4], source); mHWHM *= 1e3;
+    XMath::castValue(mMax, params[5], source);
     
     // initialize reference type
-    if (params[6] < 0.5) 
+    if (boost::iequals(params[6], "Absolute") || boost::iequals(params[6], "Abs")) 
         mReferenceType = ReferenceTypes::Absolute;
-    else if (params[6] < 1.5) 
+    else if (boost::iequals(params[6], "Reference1D") || boost::iequals(params[6], "Ref1D") || boost::iequals(params[6], "1D")) 
         mReferenceType = ReferenceTypes::Reference1D;
-    else if (params[6] < 2.5)
-        mReferenceType = ReferenceTypes::ReferenceDiff;
-    else 
+    else if (boost::iequals(params[6], "Reference3D") || boost::iequals(params[6], "Ref3D") || boost::iequals(params[6], "3D")) 
         mReferenceType = ReferenceTypes::Reference3D;
+    else if (boost::iequals(params[6], "ReferencePerturb") || boost::iequals(params[6], "RefPerturb") || boost::iequals(params[6], "Perturb")) 
+        mReferenceType = ReferenceTypes::ReferencePerturb;        
+    else 
+        throw std::runtime_error("Volumetric3D_bubble::initialize || Unknown reference type: " + params[6] + ".");
         
     try {
         int ipar = 7;
-        mChangeVp = (params.at(ipar++) > tinyDouble);
-        mChangeVs = (params.at(ipar++) > tinyDouble);
-        mChangeRho = (params.at(ipar++) > tinyDouble);
+        XMath::castValue(mChangeVp, params[ipar++], source);
+        XMath::castValue(mChangeVs, params[ipar++], source);
+        XMath::castValue(mChangeRho, params[ipar++], source);
     } catch (std::out_of_range) {
         // nothing
     }    

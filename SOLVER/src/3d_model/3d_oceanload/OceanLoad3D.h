@@ -16,7 +16,7 @@ public:
     
     // initialize internal variables if needed
     virtual void initialize() {};
-    virtual void initialize(const std::vector<double> &params) {initialize();};
+    virtual void initialize(const std::vector<std::string> &params) {initialize();};
     
     // finalize internal variables if needed
     virtual void finalize() {};

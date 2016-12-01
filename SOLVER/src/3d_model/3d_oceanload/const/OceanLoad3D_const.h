@@ -8,7 +8,7 @@
 class OceanLoad3D_const: public OceanLoad3D {
 public:
 
-    void initialize(const std::vector<double> &params);
+    void initialize(const std::vector<std::string> &params);
     
     double getOceanDepth(double theta, double phi) const {return mDepth;};
     

@@ -139,20 +139,21 @@ void Geometric3D_crust1::initialize() {
     //////////// generate SPECFEM topo_bathy ////////////  
 }
 
-void Geometric3D_crust1::initialize(const std::vector<double> &params) {
+void Geometric3D_crust1::initialize(const std::vector<std::string> &params) {
     try {
         int ipar = 0;
-        mIncludeSediment = (params.at(ipar++) > tinyDouble);
-        mSurfFactor = params.at(ipar++);
-        mMohoFactor = params.at(ipar++);
-        mGaussianOrder = round(params.at(ipar++));
-        mGaussianDev = params.at(ipar++);
-        mNPointInterp = round(params.at(ipar++));
-        mGeographic = (params.at(ipar++) > tinyDouble);
-        mRBase = params.at(ipar++) * 1e3;
-        mRMoho = params.at(ipar++) * 1e3;
-        mRSurf = params.at(ipar++) * 1e3;
-        mIncludeIce = (params.at(ipar++) > tinyDouble);
+        const std::string source = "Geometric3D_crust1::initialize";
+        XMath::castValue(mIncludeSediment, params.at(ipar++), source);
+        XMath::castValue(mSurfFactor, params.at(ipar++), source);
+        XMath::castValue(mMohoFactor, params.at(ipar++), source);
+        XMath::castValue(mGaussianOrder, params.at(ipar++), source);
+        XMath::castValue(mGaussianDev, params.at(ipar++), source);
+        XMath::castValue(mNPointInterp, params.at(ipar++), source);
+        XMath::castValue(mGeographic, params.at(ipar++), source);
+        XMath::castValue(mRBase, params.at(ipar++), source); mRBase *= 1e3;
+        XMath::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
+        XMath::castValue(mRSurf, params.at(ipar++), source); mRSurf *= 1e3;
+        XMath::castValue(mIncludeIce, params.at(ipar++), source);
     } catch (std::out_of_range) {
         // nothing
     }

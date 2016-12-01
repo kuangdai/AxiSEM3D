@@ -10,7 +10,7 @@ class Volumetric3D_s20rts: public Volumetric3D {
 public:
     
     void initialize();
-    void initialize(const std::vector<double> &params);
+    void initialize(const std::vector<std::string> &params);
     
     void finalize();
     

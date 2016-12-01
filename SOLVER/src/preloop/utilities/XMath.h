@@ -5,6 +5,10 @@
 #include "eigenp.h"
 #include "eigenc.h"
 
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
+#include <typeinfo>
+
 class XMath {
 public:
     ////////////////// coordinate related //////////////////
@@ -91,6 +95,24 @@ public:
     
     //////////////// clock ////////////////
     static double getClockResolution(bool user);
+    
+    /////////////// string cast ////////////////
+    template<typename parType>
+    static void castValue(parType &result, const std::string &val_in, const std::string &source) {
+        try {
+            // special care of bool
+            std::string val = val_in;
+            if (typeid(parType) == typeid(bool)) {
+                boost::to_upper<std::string>(val);
+                if (val == "TRUE" || val == "YES" || val == "ON") val = "1";
+                if (val == "FALSE" || val == "NO" || val == "OFF") val = "0";
+            }
+            result = boost::lexical_cast<parType>(val);
+        } catch(std::exception) {
+            throw std::runtime_error("XMath::castValue || "
+                "Invalid argument encountered in " + source + ", arg = " + val_in + ".");
+        }
+    };
     
     //////////////// Ellipticity ////////////////
     static void setEllipticity(double flattening, double router, 

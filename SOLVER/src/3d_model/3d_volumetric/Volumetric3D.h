@@ -12,15 +12,15 @@ class Parameters;
 class Volumetric3D {
 public:
     // reference type
-    enum ReferenceTypes {Absolute, Reference1D, Reference3D, ReferenceDiff};
+    enum ReferenceTypes {Absolute, Reference1D, Reference3D, ReferencePerturb};
     const std::string ReferenceTypesString[4] 
-        {"Absolute", "Reference1D", "Reference3D", "ReferenceDiff"};
+        {"Absolute", "Reference1D", "Reference3D", "ReferencePerturb"};
     
     virtual ~Volumetric3D() {finalize();};
     
     // initialize internal variables if needed
     virtual void initialize() {};
-    virtual void initialize(const std::vector<double> &params) {initialize();};
+    virtual void initialize(const std::vector<std::string> &params) {initialize();};
     
     // finalize internal variables if needed
     virtual void finalize() {};

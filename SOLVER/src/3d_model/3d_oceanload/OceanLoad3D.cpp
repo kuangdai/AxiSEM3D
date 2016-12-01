@@ -30,14 +30,8 @@ void OceanLoad3D::buildInparam(OceanLoad3D *&model,
         boost::trim_if(mstr, boost::is_any_of("\t "));
         boost::split(strs, mstr, boost::is_any_of("$"), boost::token_compress_on);
         std::string name = strs[0];
-        std::vector<double> params;
-        try { 
-            for (int i = 1; i < strs.size(); i++) 
-                params.push_back(boost::lexical_cast<double>(strs[i]));
-        } catch (std::exception) {
-            throw std::runtime_error("OceanLoad3D::buildInparam || "
-                "Invalid parameter following ocean load model " + name + ".");
-        }
+        std::vector<std::string> params;
+        for (int i = 1; i < strs.size(); i++) params.push_back(strs[i]);
         
         if (boost::iequals(name, "constant")) {
             model = new OceanLoad3D_const();

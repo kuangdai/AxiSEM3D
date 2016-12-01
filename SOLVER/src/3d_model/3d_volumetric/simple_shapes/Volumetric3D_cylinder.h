@@ -8,7 +8,7 @@
 class Volumetric3D_cylinder: public Volumetric3D {
 public:
     
-    void initialize(const std::vector<double> &params);
+    void initialize(const std::vector<std::string> &params);
     
     bool get3dProperties(double r, double theta, double phi, double rElemCenter,
         double &dvpv, double &dvph, double &dvsv, double &dvsh, double &drho) const;

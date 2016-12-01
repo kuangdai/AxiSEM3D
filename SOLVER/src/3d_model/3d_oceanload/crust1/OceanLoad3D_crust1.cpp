@@ -79,15 +79,16 @@ void OceanLoad3D_crust1::initialize() {
     
 }
 
-void OceanLoad3D_crust1::initialize(const std::vector<double> &params) {
+void OceanLoad3D_crust1::initialize(const std::vector<std::string> &params) {
     try {
         int ipar = 0;
-        mGaussianOrder = round(params.at(ipar++));
-        mGaussianDev = params.at(ipar++);
-        mNPointInterp = round(params.at(ipar++));
-        mGeographic = (params.at(ipar++) > tinyDouble);
-        mIncludeIceAsWater = (params.at(ipar++) > tinyDouble);
-        mBenchmarkSPECFEM = (params.at(ipar++) > tinyDouble);
+        const std::string source = "OceanLoad3D_crust1::initialize";
+        XMath::castValue(mGaussianOrder, params.at(ipar++), source);
+        XMath::castValue(mGaussianDev, params.at(ipar++), source);
+        XMath::castValue(mNPointInterp, params.at(ipar++), source);
+        XMath::castValue(mGeographic, params.at(ipar++), source);
+        XMath::castValue(mIncludeIceAsWater, params.at(ipar++), source);
+        XMath::castValue(mBenchmarkSPECFEM, params.at(ipar++), source);
     } catch (std::out_of_range) {
         // nothing
     }

@@ -14,7 +14,7 @@ class Volumetric3D_crust1: public Volumetric3D {
 public:
     
     void initialize();
-    void initialize(const std::vector<double> &params);
+    void initialize(const std::vector<std::string> &params);
     
     bool get3dProperties(double r, double theta, double phi, double rElemCenter,
         double &vpv, double &vph, double &vsv, double &vsh, double &rho) const;
