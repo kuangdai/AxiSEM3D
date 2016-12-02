@@ -152,7 +152,6 @@ void Geometric3D_crust1::initialize(const std::vector<std::string> &params) {
         XMath::castValue(mGeographic, params.at(ipar++), source);
         XMath::castValue(mRBase, params.at(ipar++), source); mRBase *= 1e3;
         XMath::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
-        XMath::castValue(mRSurf, params.at(ipar++), source); mRSurf *= 1e3;
         XMath::castValue(mIncludeIce, params.at(ipar++), source);
     } catch (std::out_of_range) {
         // nothing

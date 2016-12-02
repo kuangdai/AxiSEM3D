@@ -44,7 +44,6 @@ void Volumetric3D_s20rts::initialize(const std::vector<std::string> &params) {
         XMath::castValue(mScaleRho, params.at(ipar++), source);
         XMath::castValue(mRCMB, params.at(ipar++), source); mRCMB *= 1e3;
         XMath::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
-        XMath::castValue(mRSurf, params.at(ipar++), source); mRSurf *= 1e3;
     } catch (std::out_of_range) {
         // nothing
     }
