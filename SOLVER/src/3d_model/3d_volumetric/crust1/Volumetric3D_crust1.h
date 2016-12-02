@@ -26,6 +26,9 @@ public:
     // set outer radius
     void setROuter(double router) {mRSurf = router;};
     
+    // obtain more mesh information from ExodusModel
+    void setupExodusModel(const ExodusModel *exModel);
+    
 private:
     
     int columnSurf() const {
@@ -61,6 +64,9 @@ private:
     int mNPointInterp = 2;
     // use geocentric or geographic
     bool mGeographic = false;
+    
+    // element boundaries in mesh
+    std::vector<double> mElementBoundaries;
     
     // data mapped onto reference sphere
     RDMatXX mRl;

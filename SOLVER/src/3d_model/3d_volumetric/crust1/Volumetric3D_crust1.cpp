@@ -111,15 +111,35 @@ void Volumetric3D_crust1::initialize(const std::vector<std::string> &params) {
         int ipar = 0;
         const std::string source = "Volumetric3D_crust1::initialize";
         XMath::castValue(mIncludeSediment, params.at(ipar++), source);
-        XMath::castValue(mNumElementLayersInCrust, params.at(ipar++), source);
         XMath::castValue(mNPointInterp, params.at(ipar++), source);
         XMath::castValue(mGeographic, params.at(ipar++), source);
         XMath::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
-        XMath::castValue(mRSurf, params.at(ipar++), source); mRSurf *= 1e3;
         XMath::castValue(mIncludeIce, params.at(ipar++), source);
     } catch (std::out_of_range) {
         // nothing
     }
+    
+    // delete element boundaries out of crust
+    for (int i = 0; i < mElementBoundaries.size(); i++) {
+        if (mElementBoundaries[i] < mRMoho - 1.) {
+            mElementBoundaries.erase(mElementBoundaries.begin() + i, mElementBoundaries.end());
+            break;
+        }
+    }
+    
+    // check size
+    if (mElementBoundaries.size() < 2) 
+        throw std::runtime_error("Volumetric3D_crust1::setupExodusModel || No element layer found in crust.");
+    // check mRMoho and mRSurf
+    if (std::abs(mRMoho - mElementBoundaries[mElementBoundaries.size() - 1]) > 1.)
+        throw std::runtime_error("Volumetric3D_crust1::setupExodusModel || Conflict in Moho radius.");
+    if (std::abs(mRSurf - mElementBoundaries[0]) > 1.)
+        throw std::runtime_error("Volumetric3D_crust1::setupExodusModel || Conflict in surface radius.");
+        
+    // number of element layers
+    mNumElementLayersInCrust = mElementBoundaries.size() - 1;
+    
+    // initialize
     initialize();
 }
 
@@ -261,6 +281,18 @@ void Volumetric3D_crust1::interpThetaPhi(double theta, double phi, int np,
         lon_all[closest_ilon] = 1e100; // set to crazy value
     }
     XMath::interpLagrange(lon, np, closest_lons.data(), wlon.data());
+}
+
+#include <algorithm>
+#include "ExodusModel.h"
+void Volumetric3D_crust1::setupExodusModel(const ExodusModel *exModel) {
+    // find all z-coordinates on the axis
+    for (int i = 0; i < exModel->getNumNodes(); i++) {
+        double s = exModel->getNodalS(i);
+        double z = exModel->getNodalZ(i);
+        if (s <= tinyDouble && z > 0) mElementBoundaries.push_back(z);
+    }
+    std::sort(mElementBoundaries.begin(), mElementBoundaries.end(), std::greater<double>());
 }
 
 
