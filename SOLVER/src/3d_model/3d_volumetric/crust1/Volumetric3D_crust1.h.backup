@@ -56,10 +56,10 @@ private:
     double mRMoho = 6346600.0;
     
     // options
-    // include ice or not
-    bool mIncludeIce = false;
     // include sediment or not
+    bool mIncludeIce = false;
     bool mIncludeSediment = true;
+    int mNumElementLayersInCrust = 2;
     // number of interpolation points 
     int mNPointInterp = 2;
     // use geocentric or geographic
@@ -68,15 +68,9 @@ private:
     // element boundaries in mesh
     std::vector<double> mElementBoundaries;
     
-    // original data mapped onto reference sphere
+    // data mapped onto reference sphere
     RDMatXX mRl;
     RDMatXX mVp;
     RDMatXX mVs;
-    RDMatXX mRh;
-    
-    // thickness weighted data mapped onto reference sphere
-    RDColX mRlGLL;
-    RDMatXX mVpGLL;
-    RDMatXX mVsGLL;
-    RDMatXX mRhGLL;
+    RDMatXX mRh;    
 };

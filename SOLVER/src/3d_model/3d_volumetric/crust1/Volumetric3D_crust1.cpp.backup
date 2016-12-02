@@ -8,9 +8,6 @@
 #include <fstream>
 #include "XMPI.h"
 #include "XMath.h"
-#include "SpectralConstants.h"
-#include <algorithm>
-#include "ExodusModel.h"
 
 const int Volumetric3D_crust1::sNLayer = 9;
 const int Volumetric3D_crust1::sNLat = 180;
@@ -79,6 +76,25 @@ void Volumetric3D_crust1::initialize() {
     if (mIncludeIce) mIncludeSediment = true;
     int colSurf = columnSurf();
     int colMoho = 8;
+    
+    // check sediment thickness to avoid too thin sediment layers
+    if (colSurf < 5) {
+        for (int row = 0; row < mRl.rows(); row++) {
+            double totalThick = mRl(row, colSurf) - mRl(row, colMoho);
+            double limitLayerThick = totalThick / (mNumElementLayersInCrust * nPol) * .5; // 0.5 is empirical
+            // check from bottom to up
+            for (int ised = 4; ised >= colSurf; ised--) {
+                // halve the limit for surface
+                if (ised == colSurf) limitLayerThick /= 2.;
+                double sed = mRl(row, ised) - mRl(row, ised + 1);
+                if (sed < limitLayerThick) {
+                    mVp(row, ised) = mVp(row, ised + 1);
+                    mVs(row, ised) = mVs(row, ised + 1);
+                    mRh(row, ised) = mRh(row, ised + 1);
+                }
+            }
+        }
+    }
 
     // linear mapping to sphere
     const RDColX &rmoho = RDColX::Constant(nrow + sNLon, mRMoho);
@@ -88,79 +104,43 @@ void Volumetric3D_crust1::initialize() {
     for (int i = 0; i < sNLayer; i++) {
         mRl.col(i).array() = rdiff.array() * (copyRl.col(i) - copyRl.col(colMoho)).array() + rmoho.array();
     }
+}
+
+void Volumetric3D_crust1::initialize(const std::vector<std::string> &params) {
+    try {
+        int ipar = 0;
+        const std::string source = "Volumetric3D_crust1::initialize";
+        XMath::castValue(mIncludeSediment, params.at(ipar++), source);
+        XMath::castValue(mNPointInterp, params.at(ipar++), source);
+        XMath::castValue(mGeographic, params.at(ipar++), source);
+        XMath::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
+        XMath::castValue(mIncludeIce, params.at(ipar++), source);
+    } catch (std::out_of_range) {
+        // nothing
+    }
     
-    // above: physical layers
-    ///////////////////////////////////////////////////////
-    // blow: elemental layers
-    
-    // form gll boundaries
-    int nEleCrust = mElementBoundaries.size() - 1;
-    const RDColP &eta = SpectralConstants::getP_GLL();
-    int numGll = 1 + nPol * nEleCrust;
-    mRlGLL = RDColX(numGll);
-    mRlGLL(0) = mRSurf; // surface
-    int index = 1;
-    for (int iele = 0; iele < nEleCrust; iele++) {
-        double eBoundTop = mElementBoundaries[iele];
-        double eBoundBot = mElementBoundaries[iele + 1];
-        double eHeight = eBoundTop - eBoundBot;
-        for (int jpol = 1; jpol <= nPol; jpol++) {
-            double z = eBoundTop - (eta(jpol) - eta(0)) / (eta(nPol) - eta(0)) * eHeight;
-            mRlGLL(index++) = z;
+    // delete element boundaries out of crust
+    for (int i = 0; i < mElementBoundaries.size(); i++) {
+        if (mElementBoundaries[i] < mRMoho - 1.) {
+            mElementBoundaries.erase(mElementBoundaries.begin() + i, mElementBoundaries.end());
+            break;
         }
     }
     
-    // zero properties
-    mVpGLL = mVsGLL = mRhGLL = RDMatXX::Zero(nrow + sNLon, numGll);
+    // check size
+    if (mElementBoundaries.size() < 2) 
+        throw std::runtime_error("Volumetric3D_crust1::setupExodusModel || No element layer found in crust.");
+    // check mRMoho and mRSurf
+    if (std::abs(mRMoho - mElementBoundaries[mElementBoundaries.size() - 1]) > 1.)
+        throw std::runtime_error("Volumetric3D_crust1::setupExodusModel || Conflict in Moho radius.");
+    if (std::abs(mRSurf - mElementBoundaries[0]) > 1.)
+        throw std::runtime_error("Volumetric3D_crust1::setupExodusModel || Conflict in surface radius.");
+        
+    // number of element layers
+    mNumElementLayersInCrust = mElementBoundaries.size() - 1;
     
-    // form values at GLL boundaries
-    for (int igll = 0; igll < numGll; igll++) {
-        int itop = igll - 1;
-        int imid = igll;
-        int ibot = igll + 1;
-        if (itop < 0) itop = 0;
-        if (ibot > numGll - 1) ibot = numGll - 1;
-        double gll_top = mRlGLL[itop];
-        double gll_mid = mRlGLL[imid];
-        double gll_bot = mRlGLL[ibot];
-        double gll_mid_value = 2. / (gll_top - gll_bot);
-        for (int row = 0; row < mRl.rows(); row++) {
-            // integrate
-            for (int ilayer = colSurf; ilayer < colMoho; ilayer++) {
-                double phy_top = mRl(row, ilayer);
-                double phy_bot = mRl(row, ilayer + 1);
-                // top to mid
-                double top = std::min(phy_top, gll_top);
-                double bot = std::max(phy_bot, gll_mid);
-                if (top > bot) {
-                    double gllt = gll_mid_value / (gll_top - gll_mid) * (gll_top - top);
-                    double gllb = gll_mid_value / (gll_top - gll_mid) * (gll_top - bot);
-                    double area = .5 * (gllt + gllb) * (top - bot);
-                    mVpGLL(row, igll) += mVp(row, ilayer) * area;
-                    mVsGLL(row, igll) += mVs(row, ilayer) * area;
-                    mRhGLL(row, igll) += mRh(row, ilayer) * area; 
-                }
-                // mid to bot
-                top = std::min(phy_top, gll_mid);
-                bot = std::max(phy_bot, gll_bot);
-                if (top > bot) {
-                    double gllt = gll_mid_value / (gll_mid - gll_bot) * (top - gll_bot);
-                    double gllb = gll_mid_value / (gll_mid - gll_bot) * (bot - gll_bot);
-                    double area = .5 * (gllt + gllb) * (top - bot);
-                    mVpGLL(row, igll) += mVp(row, ilayer) * area;
-                    mVsGLL(row, igll) += mVs(row, ilayer) * area;
-                    mRhGLL(row, igll) += mRh(row, ilayer) * area; 
-                } 
-            }
-        }
-    }
-    
-    for (int row = 0; row < mRl.rows(); row++) {
-        std::cout << mRl.row(row).block(0, colSurf, 1, colMoho - colSurf + 1) << std::endl;
-        std::cout << mVp.row(row).block(0, colSurf, 1, colMoho - colSurf + 1) << std::endl;
-        std::cout << mRlGLL.transpose() << std::endl;
-        std::cout << mVpGLL.row(row) << std::endl << std::endl;
-    }
+    // initialize
+    initialize();
 }
 
 bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, double rElemCenter,
@@ -170,8 +150,7 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
         vpv = vph = vsv = vsh = rho = 0.;
         return false;
     }    
-    
-    // horizontal interpolation
+    // interpolation
     std::vector<int> ilat, ilon;
     std::vector<double> wlat, wlon;
     if (mGeographic) theta = pi / 2. - XMath::theta2Lat(theta, mRSurf - r) * degree;
@@ -184,42 +163,34 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
     vpv = 0.;
     vsv = 0.;
     rho = 0.;
+    int istart = columnSurf() + 1; 
     for (int i = 0; i < mNPointInterp; i++) {
         for (int j = 0; j < mNPointInterp; j++) {
             double weight = wlat[i] * wlon[j];
             int rowdata = ilat[i] * sNLon + ilon[j];
             bool found = false;
-            for (int iLayer = 1; iLayer < mRlGLL.size(); iLayer++) {
-                if (r >= mRlGLL(rowdata, iLayer)) {
-                    double vp_top = mVpGLL(rowdata, iLayer - 1);
-                    double vs_top = mVsGLL(rowdata, iLayer - 1);
-                    double rh_top = mRhGLL(rowdata, iLayer - 1);
-                    double vp_bot = mVpGLL(rowdata, iLayer);
-                    double vs_bot = mVsGLL(rowdata, iLayer);
-                    double rh_bot = mRhGLL(rowdata, iLayer);
-                    double top = mRlGLL(rowdata, iLayer - 1);
-                    double bot = mRlGLL(rowdata, iLayer);
-                    double vp = (vp_top - vp_bot) / (top - bot) * (r - bot) + vp_bot;
-                    double vs = (vs_top - vs_bot) / (top - bot) * (r - bot) + vs_bot;
-                    double rh = (rh_top - rh_bot) / (top - bot) * (r - bot) + rh_bot;
-                    if (vp < 1. || vs < 1. || rh < 1.)
-                        throw std::runtime_error("Volumetric3D_crust1::get3dProperties || Please report this bug.");
-                    vpv += vp * weight;
-                    vsv += vs * weight;
-                    rho += rh * weight;
+            for (int iLayer = istart; iLayer <= 8; iLayer++) {
+                if (r >= mRl(rowdata, iLayer)) {
+                    double vp_read = mVp(rowdata, iLayer - 1);
+                    double vs_read = mVs(rowdata, iLayer - 1);
+                    double rh_read = mRh(rowdata, iLayer - 1);
+                    // make sure we don't read a zero thickness layer
+                    if (r >= mRl(rowdata, iLayer - 1))
+                        throw std::runtime_error("Volumetric3D_crust1::get3dProperties || Invalid radius.");
+                    vpv += vp_read * weight;
+                    vsv += vs_read * weight;
+                    rho += rh_read * weight;
                     found = true;
                     break;
                 }
             } 
-            if (!found) throw std::runtime_error("Volumetric3D_crust1::get3dProperties || Please report this bug.");
+            if (!found) throw std::runtime_error("Volumetric3D_crust1::get3dProperties || Invalid radius.");
         }
     }
-    
-    // when sediment is considered, Vs at some locations 
+    // when sediment is considered, Vs at some spots  
     // could be too small to keep the simulation stable
     vsv = std::max(vsv, 500.);
     vpv = std::max(vpv, sqrt(2) * vsv);
-    
     // isotropic
     vph = vpv;
     vsh = vsv;
@@ -237,7 +208,7 @@ std::string Volumetric3D_crust1::verbose() const {
     ss << "  Anisotropic           =   NO" << std::endl;
     ss << "  Include Ice           =   " << (mIncludeIce ? "YES" : "NO") << std::endl;
     ss << "  Include Sediment      =   " << (mIncludeSediment ? "YES" : "NO") << std::endl;
-    ss << "  Num. Element Layers   =   " << mElementBoundaries.size() - 1 << std::endl;
+    ss << "  Num. Element Layers   =   " << mNumElementLayersInCrust << std::endl;
     ss << "  Num. Interp. Points   =   " << mNPointInterp << std::endl;
     ss << "  Use Geographic        =   " << (mGeographic ? "YES" : "NO") << std::endl;
     ss << "======================= 3D Volumetric ======================\n" << std::endl;
@@ -312,6 +283,8 @@ void Volumetric3D_crust1::interpThetaPhi(double theta, double phi, int np,
     XMath::interpLagrange(lon, np, closest_lons.data(), wlon.data());
 }
 
+#include <algorithm>
+#include "ExodusModel.h"
 void Volumetric3D_crust1::setupExodusModel(const ExodusModel *exModel) {
     // find all z-coordinates on the axis
     for (int i = 0; i < exModel->getNumNodes(); i++) {
@@ -322,36 +295,4 @@ void Volumetric3D_crust1::setupExodusModel(const ExodusModel *exModel) {
     std::sort(mElementBoundaries.begin(), mElementBoundaries.end(), std::greater<double>());
 }
 
-void Volumetric3D_crust1::initialize(const std::vector<std::string> &params) {
-    try {
-        int ipar = 0;
-        const std::string source = "Volumetric3D_crust1::initialize";
-        XMath::castValue(mIncludeSediment, params.at(ipar++), source);
-        XMath::castValue(mNPointInterp, params.at(ipar++), source);
-        XMath::castValue(mGeographic, params.at(ipar++), source);
-        XMath::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
-        XMath::castValue(mIncludeIce, params.at(ipar++), source);
-    } catch (std::out_of_range) {
-        // nothing
-    }
-    
-    // delete element boundaries out of crust
-    for (int i = 0; i < mElementBoundaries.size(); i++) {
-        if (mElementBoundaries[i] < mRMoho - 1.) {
-            mElementBoundaries.erase(mElementBoundaries.begin() + i, mElementBoundaries.end());
-            break;
-        }
-    }
-    
-    // check boundaries
-    if (mElementBoundaries.size() < 2) 
-        throw std::runtime_error("Volumetric3D_crust1::setupExodusModel || No element layer found in crust.");
-    if (std::abs(mRSurf - mElementBoundaries[0]) > 1.)
-        throw std::runtime_error("Volumetric3D_crust1::setupExodusModel || Conflict in surface radius.");    
-    if (std::abs(mRMoho - mElementBoundaries[mElementBoundaries.size() - 1]) > 1.)
-        throw std::runtime_error("Volumetric3D_crust1::setupExodusModel || Conflict in Moho radius.");
-        
-    // initialize
-    initialize();
-}
 
