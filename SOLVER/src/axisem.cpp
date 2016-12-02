@@ -44,7 +44,7 @@ int axisem_main(int argc, char *argv[]) {
         
         //////// 3D models 
         XTimer::begin("3D Models", 0);
-        Volumetric3D::buildInparam(pl.mVolumetric3D, *(pl.mParameters), verbose);
+        Volumetric3D::buildInparam(pl.mVolumetric3D, *(pl.mParameters), pl.mExodusModel, verbose);
         Geometric3D::buildInparam(pl.mGeometric3D, *(pl.mParameters), verbose);
         OceanLoad3D::buildInparam(pl.mOceanLoad3D, *(pl.mParameters), verbose);
         XTimer::end("3D Models", 0);

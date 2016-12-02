@@ -8,6 +8,7 @@
 #include <vector>
 
 class Parameters;
+class ExodusModel;
 
 class Volumetric3D {
 public:
@@ -45,8 +46,11 @@ public:
     // set outer radius
     virtual void setROuter(double router) {};
     
+    // obtain more mesh information from ExodusModel
+    virtual void setupExodusModel(const ExodusModel *exModel) {};
+    
     // build from input parameters
     static void buildInparam(std::vector<Volumetric3D *> &models, 
-        const Parameters &par, int verbose);
+        const Parameters &par, const ExodusModel *exModel, int verbose);
 
 };
