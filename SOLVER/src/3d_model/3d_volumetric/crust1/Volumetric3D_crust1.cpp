@@ -234,15 +234,15 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
             int rowdata = ilat[i] * sNLon + ilon[j];
             bool found = false;
             for (int iLayer = 1; iLayer < mRlGLL.rows(); iLayer++) {
-                if (r > mRlGLL(rowdata, iLayer)) {
+                if (r > mRlGLL(iLayer)) {
                     double vp_top = mVpGLL(rowdata, iLayer - 1);
                     double vs_top = mVsGLL(rowdata, iLayer - 1);
                     double rh_top = mRhGLL(rowdata, iLayer - 1);
                     double vp_bot = mVpGLL(rowdata, iLayer);
                     double vs_bot = mVsGLL(rowdata, iLayer);
                     double rh_bot = mRhGLL(rowdata, iLayer);
-                    double top = mRlGLL(rowdata, iLayer - 1);
-                    double bot = mRlGLL(rowdata, iLayer);
+                    double top = mRlGLL(iLayer - 1);
+                    double bot = mRlGLL(iLayer);
                     double vp = (vp_top - vp_bot) / (top - bot) * (r - bot) + vp_bot;
                     double vs = (vs_top - vs_bot) / (top - bot) * (r - bot) + vs_bot;
                     double rh = (rh_top - rh_bot) / (top - bot) * (r - bot) + rh_bot;
@@ -253,7 +253,9 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
                     break;
                 }
             } 
-            if (!found) throw std::runtime_error("Volumetric3D_crust1::get3dProperties || Please report this bug.");
+            if (!found) {
+                throw std::runtime_error("Volumetric3D_crust1::get3dProperties || Please report this bug.");
+            }
         }
     }
     
