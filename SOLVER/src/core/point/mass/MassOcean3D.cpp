@@ -33,9 +33,10 @@ void MassOcean3D::computeAccel(CMatX3 &stiff) const {
     accelR.col(1) = stiffR.col(1).schur(mInvMass);
     accelR.col(2) = stiffR.col(2).schur(mInvMass);
     
-    const RColX &fn = stiffR.col(0).schur(mNormal_scal.col(0)) 
-                    + stiffR.col(1).schur(mNormal_scal.col(1))
-                    + stiffR.col(2).schur(mNormal_scal.col(2));
+    RColX &fn = SolverFFTW_1::getR2C_RMat(Nr);
+    fn = stiffR.col(0).schur(mNormal_scal.col(0)) 
+       + stiffR.col(1).schur(mNormal_scal.col(1))
+       + stiffR.col(2).schur(mNormal_scal.col(2));
     
     accelR.col(0) -= fn.schur(mNormal_scal.col(0));
     accelR.col(1) -= fn.schur(mNormal_scal.col(1));
