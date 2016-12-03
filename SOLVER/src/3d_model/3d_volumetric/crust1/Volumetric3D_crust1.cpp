@@ -120,9 +120,9 @@ void Volumetric3D_crust1::initialize() {
         int ibot = igll + 1;
         if (itop < 0) itop = 0;
         if (ibot > numGll - 1) ibot = numGll - 1;
-        double gll_top = mRlGLL[itop];
-        double gll_mid = mRlGLL[imid];
-        double gll_bot = mRlGLL[ibot];
+        double gll_top = mRlGLL(itop);
+        double gll_mid = mRlGLL(imid);
+        double gll_bot = mRlGLL(ibot);
         double gll_mid_value = 2. / (gll_top - gll_bot);
         for (int row = 0; row < mRl.rows(); row++) {
             // integrate
@@ -155,12 +155,56 @@ void Volumetric3D_crust1::initialize() {
         }
     }
     
-    for (int row = 0; row < mRl.rows(); row++) {
-        std::cout << mRl.row(row).block(0, colSurf, 1, colMoho - colSurf + 1) << std::endl;
-        std::cout << mVp.row(row).block(0, colSurf, 1, colMoho - colSurf + 1) << std::endl;
-        std::cout << mRlGLL.transpose() << std::endl;
-        std::cout << mVpGLL.row(row) << std::endl << std::endl;
-    }
+    // double xmax = -1e100;
+    // int rmax = -1;
+    // double xmin = 1e100;
+    // int rmin = -1;
+    // for (int row = 0; row < mRl.rows(); row++) {
+    //     double xdiff = mRhGLL(row, 0);
+    //     if (xdiff > xmax) {
+    //         xmax = xdiff;
+    //         rmax = row;
+    //     }
+    //     if (xdiff < xmin) {
+    //         xmin = xdiff;
+    //         rmin = row;
+    //     }
+    // }
+    // std::cout << rmin << std::endl;
+    // std::cout << rmax << std::endl;
+    // 
+    // exit(0);
+    // std::fstream fs;
+    // for (int row = 0; row < mRl.rows(); row++) {
+    //     std::stringstream ss;
+    //     ss << "x/vp/" << row << ".txt";
+    //     fs.open(ss.str(), std::fstream::out);
+    //     fs << mRl.row(row).block(0, colSurf, 1, colMoho - colSurf + 1) << std::endl;
+    //     fs << mVp.row(row).block(0, colSurf, 1, colMoho - colSurf + 1) << std::endl;
+    //     fs << mRlGLL.transpose() << std::endl;
+    //     fs << mVpGLL.row(row) << std::endl << std::endl;
+    //     fs.close();
+    // }
+    // for (int row = 0; row < mRl.rows(); row++) {
+    //     std::stringstream ss;
+    //     ss << "x/vs/" << row << ".txt";
+    //     fs.open(ss.str(), std::fstream::out);
+    //     fs << mRl.row(row).block(0, colSurf, 1, colMoho - colSurf + 1) << std::endl;
+    //     fs << mVs.row(row).block(0, colSurf, 1, colMoho - colSurf + 1) << std::endl;
+    //     fs << mRlGLL.transpose() << std::endl;
+    //     fs << mVsGLL.row(row) << std::endl << std::endl;
+    //     fs.close();
+    // }
+    // for (int row = 0; row < mRl.rows(); row++) {
+    //     std::stringstream ss;
+    //     ss << "x/rho/" << row << ".txt";
+    //     fs.open(ss.str(), std::fstream::out);
+    //     fs << mRl.row(row).block(0, colSurf, 1, colMoho - colSurf + 1) << std::endl;
+    //     fs << mRh.row(row).block(0, colSurf, 1, colMoho - colSurf + 1) << std::endl;
+    //     fs << mRlGLL.transpose() << std::endl;
+    //     fs << mRhGLL.row(row) << std::endl << std::endl;
+    //     fs.close();
+    // }
 }
 
 bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, double rElemCenter,
@@ -189,8 +233,8 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
             double weight = wlat[i] * wlon[j];
             int rowdata = ilat[i] * sNLon + ilon[j];
             bool found = false;
-            for (int iLayer = 1; iLayer < mRlGLL.size(); iLayer++) {
-                if (r >= mRlGLL(rowdata, iLayer)) {
+            for (int iLayer = 1; iLayer < mRlGLL.rows(); iLayer++) {
+                if (r > mRlGLL(rowdata, iLayer)) {
                     double vp_top = mVpGLL(rowdata, iLayer - 1);
                     double vs_top = mVsGLL(rowdata, iLayer - 1);
                     double rh_top = mRhGLL(rowdata, iLayer - 1);
@@ -202,8 +246,6 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
                     double vp = (vp_top - vp_bot) / (top - bot) * (r - bot) + vp_bot;
                     double vs = (vs_top - vs_bot) / (top - bot) * (r - bot) + vs_bot;
                     double rh = (rh_top - rh_bot) / (top - bot) * (r - bot) + rh_bot;
-                    if (vp < 1. || vs < 1. || rh < 1.)
-                        throw std::runtime_error("Volumetric3D_crust1::get3dProperties || Please report this bug.");
                     vpv += vp * weight;
                     vsv += vs * weight;
                     rho += rh * weight;
