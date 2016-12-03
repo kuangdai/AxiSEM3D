@@ -16,7 +16,7 @@ mInv_s(inv_s), mAxial(axial) {
 void PreloopGradient::gradScalar(const vec_CDMatPP &u, vec_ar3_CDMatPP &u_i, int Nu, int nyquist) const {
     static CDMatPP GU, UG;
     for (int alpha = 0; alpha <= Nu - nyquist; alpha++) {
-        Complex iialpha = (Real)alpha * ii;
+        ComplexD iialpha = (double)alpha * iid;
         GU = (mAxial ? sGT_GLJ : sGT_GLL) * u[alpha];  
         UG = u[alpha] * sG_GLL;
         u_i[alpha][0] = mDzDeta.schur(GU) + mDzDxii.schur(UG);
@@ -29,7 +29,7 @@ void PreloopGradient::gradScalar(const vec_CDMatPP &u, vec_ar3_CDMatPP &u_i, int
         u_i[0][0].row(0).setZero();
         u_i[0][1].row(0).setZero();
         if (Nu >= 1) {
-            u_i[1][1].row(0) = ii * u_i[1][0].row(0);
+            u_i[1][1].row(0) = iid * u_i[1][0].row(0);
             u_i[1][2].row(0).setZero();
         }
         for (int alpha = 2; alpha <= Nu; alpha++) {
