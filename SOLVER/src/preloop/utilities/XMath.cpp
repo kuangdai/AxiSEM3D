@@ -75,6 +75,17 @@ RDCol3 XMath::toSpherical(const RDCol3 &xyz, bool &defined) {
 double XMath::lat2Theta(double lat, double depth) {
     double flattening = getFlattening(sROuter - depth);
     double one_minus_f_squared = (1. - flattening) * (1. - flattening);
+    // take care of poles
+    double limit_round = 90. - tinyDouble;
+    double limit_bound = 90.1;
+    if (lat > limit_round) {
+        if (lat > limit_bound) throw std::runtime_error("XMath::lat2Theta || Latitude our of range [-90, 90]");
+        lat = limit_round;
+    }
+    if (lat < -limit_round) {
+        if (lat < -limit_bound) throw std::runtime_error("XMath::lat2Theta || Latitude our of range [-90, 90]");
+        lat = -limit_round;
+    }
     return pi / 2. - atan(one_minus_f_squared * tan(lat * degree));
 }
 
@@ -86,7 +97,19 @@ double XMath::lon2Phi(double lon) {
 double XMath::theta2Lat(double theta, double depth) {
     double flattening = getFlattening(sROuter - depth);
     double inv_one_minus_f_squared = 1. / (1. - flattening) / (1. - flattening);
-    return atan(inv_one_minus_f_squared * tan(pi / 2. - theta)) / degree;
+    // take care of poles
+    double lat = pi / 2. - theta;
+    double limit_round = (90. - tinyDouble) * degree;
+    double limit_bound = 90.1 * degree;
+    if (lat > limit_round) {
+        if (lat > limit_bound) throw std::runtime_error("XMath::theta2Lat || Theta our of range [0, pi]");
+        lat = limit_round;
+    }
+    if (lat < -limit_round) {
+        if (lat < -limit_bound) throw std::runtime_error("XMath::theta2Lat || Theta our of range [0, pi]");
+        lat = -limit_round;
+    }
+    return atan(inv_one_minus_f_squared * tan(lat)) / degree;
 }
 
 double XMath::phi2Lon(double phi) {
