@@ -36,7 +36,7 @@ void OceanLoad3D_crust1::initialize() {
     RDColX depthVec = (elevation.col(0) - elevation.col(colWaterBot)) * 1e3;
     if (mBenchmarkSPECFEM) {
         // determine ocean depth ONLY by elevation 
-        RDColX depthVec = elevation.col(2) * 1e3;
+        depthVec = elevation.col(2) * 1e3;
         mGaussianOrder = 0;
         mNPointInterp = 2;
         mIncludeIceAsWater = false;
