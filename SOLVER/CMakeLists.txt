@@ -263,14 +263,13 @@ add_executable(
 
     src/preloop/source/Source.cpp
     src/preloop/source/Earthquake.cpp
-    src/preloop/source/pointf.cpp
+    src/preloop/source/PointForce.cpp
     src/preloop/source/NullSource.cpp
     src/preloop/source/stf/STF.cpp
     src/preloop/source/stf/ErfSTF.cpp
     src/preloop/source/stf/FileSTF.cpp
     src/preloop/source/stf/GaussSTF.cpp
     src/preloop/source/stf/RickerSTF.cpp
-    src/preloop/source/stf/DiracSTF.cpp
     src/preloop/receiver/Receiver.cpp
     src/preloop/receiver/ReceiverCollection.cpp
 

@@ -70,6 +70,7 @@ void Parameters::registerAll() {
     registerPar("TIME_RECORD_LENGTH");
     registerPar("SOURCE_TYPE");
     registerPar("SOURCE_FILE");
+    registerPar("SOURCE_TIME_FUNCTION");
     registerPar("OUT_STATIONS_FILE");
     registerPar("OUT_STATIONS_SYSTEM");
     registerPar("OUT_STATIONS_FORMAT");

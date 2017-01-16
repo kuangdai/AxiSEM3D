@@ -1,6 +1,6 @@
-// ErfSTF.h
-// created by Kuangdai on 9-May-2016
-// error function
+// RickerSTF.h
+// created by Alex on 8-May-2016
+// Ricker stf
 
 #pragma once
 

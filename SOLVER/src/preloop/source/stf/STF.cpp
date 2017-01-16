@@ -17,7 +17,6 @@ void STF::release(Domain &domain) const {
 #include <fstream>
 #include "GaussSTF.h"
 #include "RickerSTF.h"
-#include "DiracSTF.h"
 
 void STF::buildInparam(STF *&stf, const Parameters &par, double dt, int verbose) {
     if (stf) delete stf;
@@ -52,8 +51,6 @@ void STF::buildInparam(STF *&stf, const Parameters &par, double dt, int verbose)
     }
     XMPI::bcast(hdur);
 
-
-
     if (hdur < 5. * dt) hdur = 5. * dt;
     double decay = 1.628;
     double duration = par.getValue<double>("TIME_RECORD_LENGTH");
@@ -61,33 +58,20 @@ void STF::buildInparam(STF *&stf, const Parameters &par, double dt, int verbose)
     std::string mstf = par.getValue<std::string>("SOURCE_TIME_FUNCTION");
     if (boost::iequals(mstf,"erf")) {
         // Heaviside
-    stf = new ErfSTF(dt, duration, hdur, decay, maxTotalSteps);
-    // verbose
-    if (verbose == 2) XMPI::cout << stf->verbose();
-
-  } else if (boost::iequals(mstf,"gauss")) {
-       //gauss
-       stf = new GaussSTF(dt, duration, hdur, decay);
+        stf = new ErfSTF(dt, duration, hdur, decay, maxTotalSteps);
         // verbose
         if (verbose == 2) XMPI::cout << stf->verbose();
-} else if (boost::iequals(mstf,"ricker")){
-    //Ricker
-    stf = new RickerSTF(dt, duration, hdur, decay);
-    // verbose
-    if (verbose == 2) XMPI::cout << stf->verbose();
-
-} else {
-//Dirac : we take Na=T0/a (whera T0 period of the mesh, and thus half width of the gaussian, and a half width of Dirac) =12.
-//Based on Kernel paper from Tarje.
-
-stf = new DiracSTF(dt, duration, hdur/12, decay);
-//verbose
-if (verbose==2) XMPI::cout << stf->verbose();
-
-
-}
-
-
-
-
+    } else if (boost::iequals(mstf,"gauss")) {
+        //gauss
+        stf = new GaussSTF(dt, duration, hdur, decay);
+        // verbose
+        if (verbose == 2) XMPI::cout << stf->verbose();
+    } else if (boost::iequals(mstf,"ricker")){
+        //Ricker
+        stf = new RickerSTF(dt, duration, hdur, decay);
+        // verbose
+        if (verbose == 2) XMPI::cout << stf->verbose();
+    } else {
+        throw std::runtime_error("STF::buildInparam || Unknown stf type: " + mstf);
+    }
 }

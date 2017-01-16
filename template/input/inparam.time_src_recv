@@ -27,13 +27,16 @@ TIME_RECORD_LENGTH                          3600.0
 # ================================ source ================================
 # WHAT: source type
 # TYPE: earthquake / point_force
-# NOTE: the source type also determines the source time function
 SOURCE_TYPE                                 earthquake
 
 # WHAT: source file
 # TYPE: string (path to file)
-# NOTE: the file format for "earthquake" is CMTSOLUTION
+# NOTE: the file format for "earthquake" and "point_force" is CMTSOLUTION
 SOURCE_FILE                                 CMTSOLUTION
+
+# WHAT: source time function
+# TYPE: erf / gauss / ricker
+SOURCE_TIME_FUNCTION                        erf
 
 
 

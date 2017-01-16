@@ -13,7 +13,7 @@
 #include "XMath.h"
 #include "SpectralConstants.h"
 #include "XMPI.h"
-#include "pointf.h"
+#include "PointForce.h"
 #include "XTimer.h"
 
 Source::Source(double depth, double lat, double lon):
@@ -110,7 +110,7 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
         double Mrr, Mtt, Mpp, Mrt, Mrp, Mtp;
         if (XMPI::root()) {
             std::fstream fs(cmtfile, std::fstream::in);
-            if (!fs) throw std::runtime_error("Earthquake::Earthquake || "
+            if (!fs) throw std::runtime_error("Source::buildInparam || "
                 "Error opening CMT data file: ||" + cmtfile);
             std::string junk;
             std::getline(fs, junk);
@@ -146,37 +146,38 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
         XMPI::bcast(Mtp);
         src = new Earthquake(depth, lat, lon, Mrr, Mtt, Mpp, Mrt, Mrp, Mtp);
         if (verbose) XMPI::cout << src->verbose();
-    } else {
+    } else if (boost::iequals(src_type, "point_force")) {
         // point force
         std::string pointffile = Parameters::sInputDirectory + "/" + src_file;
-  double depth, lat, lon;
-  double f1, f2, f3;
-  if (XMPI::root()) {
-      std::fstream fs(pointffile, std::fstream::in);
-      if (!fs) throw std::runtime_error("pointf::pointf || "
-          "Error opening point force data file: ||" + pointffile);
-      std::string junk;
-      std::getline(fs, junk);
-      std::getline(fs, junk);
-      std::getline(fs, junk);
-      std::getline(fs, junk);
-      fs >> junk >> lat;
-      fs >> junk >> lon;
-      fs >> junk >> depth;
-      fs >> junk >> f1;
-      fs >> junk >> f2;
-      fs >> junk >> f3;
-      depth *= 1e3;
-      fs.close();
-  }
-  XMPI::bcast(depth);
-  XMPI::bcast(lat);
-  XMPI::bcast(lon);
-  XMPI::bcast(f1);
-  XMPI::bcast(f2);
-  XMPI::bcast(f3);
-  src = new pointf(depth, lat, lon, f1,f2,f3);
-  if (verbose) XMPI::cout << src->verbose();
-
+        double depth, lat, lon;
+        double f1, f2, f3;
+        if (XMPI::root()) {
+            std::fstream fs(pointffile, std::fstream::in);
+            if (!fs) throw std::runtime_error("Source::buildInparam || "
+                "Error opening point force data file: ||" + pointffile);
+            std::string junk;
+            std::getline(fs, junk);
+            std::getline(fs, junk);
+            std::getline(fs, junk);
+            std::getline(fs, junk);
+            fs >> junk >> lat;
+            fs >> junk >> lon;
+            fs >> junk >> depth;
+            fs >> junk >> f1;
+            fs >> junk >> f2;
+            fs >> junk >> f3;
+            depth *= 1e3;
+            fs.close();
+        }
+        XMPI::bcast(depth);
+        XMPI::bcast(lat);
+        XMPI::bcast(lon);
+        XMPI::bcast(f1);
+        XMPI::bcast(f2);
+        XMPI::bcast(f3);
+        src = new PointForce(depth, lat, lon, f1, f2, f3);
+        if (verbose) XMPI::cout << src->verbose();
+    } else {
+         throw std::runtime_error("Source::buildInparam || Unknown source type: " + src_type);
     }
 }

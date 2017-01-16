@@ -1,6 +1,6 @@
-// ErfSTF.cpp
-// created by Kuangdai on 9-May-2016
-// error function
+// GaussSTF.cpp
+// created by Alex on 8-May-2016
+// gaussian stf
 
 #include "GaussSTF.h"
 #include <cmath>

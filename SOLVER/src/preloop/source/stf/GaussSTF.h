@@ -1,6 +1,6 @@
-// ErfSTF.h
-// created by Alex on 9-May-2016
-// error function
+// GaussSTF.h
+// created by Alex on 8-May-2016
+// gaussian stf
 
 #pragma once
 
