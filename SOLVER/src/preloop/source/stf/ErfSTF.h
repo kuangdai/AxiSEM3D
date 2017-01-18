@@ -8,7 +8,7 @@
 
 class ErfSTF: public STF {
 public: 
-    ErfSTF(double dt, double length, double hdur, double decay, int maxTotalSteps);
+    ErfSTF(double dt, double length, double hdur, double decay);
     std::string verbose() const;
 
 private:    

@@ -7,7 +7,7 @@
 #include <string>
 #include <sstream>
 
-ErfSTF::ErfSTF(double dt, double duration, double hdur, double decay, int maxTotalSteps): 
+ErfSTF::ErfSTF(double dt, double duration, double hdur, double decay): 
 mHalfDuration(hdur), mDecay(decay) {
     mDeltaT = dt;
     int nStepBeforeZero = ceil(1.5 * mHalfDuration / mDeltaT);
@@ -18,7 +18,6 @@ mHalfDuration(hdur), mDecay(decay) {
         double t = -mShift + i * mDeltaT;
         mSTF.push_back(erf(mDecay / mHalfDuration * t) * 0.5 + 0.5);
     }
-    if (mSTF.size() > maxTotalSteps) mSTF.resize(maxTotalSteps);
 }
 
 std::string ErfSTF::verbose() const {
