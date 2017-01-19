@@ -155,6 +155,7 @@ include_directories(
     src/3d_model/3d_geometric
     src/3d_model/3d_geometric/ellipticity
     src/3d_model/3d_geometric/crust1
+    src/3d_model/3d_geometric/internal
     src/3d_model/3d_oceanload
     src/3d_model/3d_oceanload/const
     src/3d_model/3d_oceanload/crust1
@@ -285,6 +286,7 @@ add_executable(
     src/3d_model/3d_geometric/Geometric3D.cpp
     src/3d_model/3d_geometric/ellipticity/Ellipticity.cpp
     src/3d_model/3d_geometric/crust1/Geometric3D_crust1.cpp
+    src/3d_model/3d_geometric/internal/Geometric3D_Internal.cpp
 
     src/3d_model/3d_oceanload/OceanLoad3D.cpp
     src/3d_model/3d_oceanload/const/OceanLoad3D_const.cpp

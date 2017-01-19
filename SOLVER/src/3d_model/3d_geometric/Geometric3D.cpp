@@ -14,6 +14,7 @@
 /////////////////////////////// user-defined models here
 #include "Ellipticity.h"
 #include "Geometric3D_crust1.h"
+#include "Geometric3D_Internal.h"
 /////////////////////////////// user-defined models here
 
 void Geometric3D::buildInparam(std::vector<Geometric3D *> &models, 
@@ -41,6 +42,9 @@ void Geometric3D::buildInparam(std::vector<Geometric3D *> &models,
         Geometric3D * m;
         if (boost::iequals(name, "crust1")) {
             m = new Geometric3D_crust1();
+            
+        } else if (boost::iequals(name, "internal")) {
+            m = new Geometric3D_Internal();
             
         /////////////////////////////// 
         // user-defined models here
