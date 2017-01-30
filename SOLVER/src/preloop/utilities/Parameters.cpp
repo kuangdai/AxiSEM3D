@@ -104,7 +104,8 @@ void Parameters::parseLine(const std::string &line_in) {
     if (key == "#") return;
     auto it = mKeyValues.find(key);
     if (it != mKeyValues.end()) 
-        it->second = std::vector<std::string>(strs.begin() + 1, strs.end());
+        it->second.insert(it->second.end(), strs.begin() + 1, strs.end());
+        // it->second = std::vector<std::string>(strs.begin() + 1, strs.end());
 }
 
 void Parameters::registerPar(const std::string &key) {
