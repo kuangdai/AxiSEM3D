@@ -21,10 +21,10 @@ SET(CMAKE_Fortran_COMPILER     mpif90)
 # uncomment and edit the following lines to specify preferred prefix
 # SET(EIGEN3_ROOT           edit_here)
 # SET(FFTW_ROOT             edit_here)
-#SET(BOOST_ROOT            edit_here)
+# SET(BOOST_ROOT            edit_here)
 # SET(METIS_ROOT            edit_here)
-#SET(EXODUS_ROOT           edit_here)
-#SET(HDF5_ROOT             edit_here)
+# SET(EXODUS_ROOT           edit_here)
+# SET(HDF5_ROOT             edit_here)
 
 # polynomial order of spectral elements (from 1 to 8)
 SET(NPOL 4)
