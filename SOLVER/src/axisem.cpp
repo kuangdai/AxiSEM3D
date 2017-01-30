@@ -42,13 +42,6 @@ int axisem_main(int argc, char *argv[]) {
         initializeSolverStatic(*(pl.mNrField)); 
         XTimer::end("FFTW", 0);
         
-        //////// 3D models 
-        XTimer::begin("3D Models", 0);
-        Volumetric3D::buildInparam(pl.mVolumetric3D, *(pl.mParameters), pl.mExodusModel, verbose);
-        Geometric3D::buildInparam(pl.mGeometric3D, *(pl.mParameters), verbose);
-        OceanLoad3D::buildInparam(pl.mOceanLoad3D, *(pl.mParameters), verbose);
-        XTimer::end("3D Models", 0);
-        
         //////// source
         XTimer::begin("Source", 0);
         Source::buildInparam(pl.mSource, *(pl.mParameters), verbose);
@@ -56,6 +49,14 @@ int axisem_main(int argc, char *argv[]) {
         double srcLon = pl.mSource->getLongitude();
         double srcDep = pl.mSource->getDepth();
         XTimer::end("Source", 0);
+        
+        //////// 3D models 
+        XTimer::begin("3D Models", 0);
+        Volumetric3D::buildInparam(pl.mVolumetric3D, *(pl.mParameters), pl.mExodusModel, 
+            srcLat, srcLon, srcDep, verbose);
+        Geometric3D::buildInparam(pl.mGeometric3D, *(pl.mParameters), verbose);
+        OceanLoad3D::buildInparam(pl.mOceanLoad3D, *(pl.mParameters), verbose);
+        XTimer::end("3D Models", 0);
         
         //////// mesh, phase 1
         // define mesh

@@ -45,12 +45,14 @@ public:
     
     // set outer radius
     virtual void setROuter(double router) {};
+    virtual void setSource(double srcLat, double srcLon, double srcDep) {};
     
     // obtain more mesh information from ExodusModel
     virtual void setupExodusModel(const ExodusModel *exModel) {};
     
     // build from input parameters
     static void buildInparam(std::vector<Volumetric3D *> &models, 
-        const Parameters &par, const ExodusModel *exModel, int verbose);
+        const Parameters &par, const ExodusModel *exModel, 
+        double srcLat, double srcLon, double srcDep, int verbose);
 
 };

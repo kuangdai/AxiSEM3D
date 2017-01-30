@@ -20,7 +20,8 @@
 /////////////////////////////// user-defined models here
 
 void Volumetric3D::buildInparam(std::vector<Volumetric3D *> &models, 
-    const Parameters &par, const ExodusModel *exModel, int verbose) {
+    const Parameters &par, const ExodusModel *exModel, 
+    double srcLat, double srcLon, double srcDep, int verbose) {
     for (const auto &m: models) delete m;     
     models.clear();
     // first check size
@@ -64,6 +65,7 @@ void Volumetric3D::buildInparam(std::vector<Volumetric3D *> &models,
         
         // initialize
         m->setROuter(XMath::getROuter());
+        m->setSource(srcLat, srcLon, srcDep);
         m->setupExodusModel(exModel);
         m->initialize(params);
         if (verbose) XMPI::cout << m->verbose();

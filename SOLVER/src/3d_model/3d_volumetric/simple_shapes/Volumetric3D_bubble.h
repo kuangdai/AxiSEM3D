@@ -17,6 +17,12 @@ public:
     
     std::string verbose() const;
     
+    void setSource(double srcLat, double srcLon, double srcDep) {
+        mSrcLat = srcLat;
+        mSrcLon = srcLon;
+        mSrcDep = srcDep;
+    }
+    
 private:
     // center of the bubble
     double mDepth;
@@ -30,6 +36,12 @@ private:
     
     // reference type
     ReferenceTypes mReferenceType;
+    
+    // source-centered
+    bool mSourceCentered = false;
+    double mSrcLat = 0.;
+    double mSrcLon = 0.;
+    double mSrcDep = 0.;
     
     // optional 
     bool mChangeVp = true;

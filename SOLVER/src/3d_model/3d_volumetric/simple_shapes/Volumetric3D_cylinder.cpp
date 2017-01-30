@@ -42,6 +42,7 @@ void Volumetric3D_cylinder::initialize(const std::vector<std::string> &params) {
         
     try {
         int ipar = 11;
+        XMath::castValue(mSourceCentered, params[ipar++], source);
         XMath::castValue(mChangeVp, params[ipar++], source);
         XMath::castValue(mChangeVs, params[ipar++], source);
         XMath::castValue(mChangeRho, params[ipar++], source);
@@ -57,12 +58,25 @@ bool Volumetric3D_cylinder::get3dProperties(double r, double theta, double phi, 
     
     // distance from point to axis
     RDCol3 rtpPoint1, rtpPoint2, rtpTarget;
-    rtpPoint1(0) = XMath::getROuter() - mD1;
-    rtpPoint1(1) = XMath::lat2Theta(mLat1, mD1);
-    rtpPoint1(2) = XMath::lon2Phi(mLon1);
-    rtpPoint2(0) = XMath::getROuter() - mD2;
-    rtpPoint2(1) = XMath::lat2Theta(mLat2, mD2);
-    rtpPoint2(2) = XMath::lon2Phi(mLon2);
+    if (mSourceCentered) {
+        RDCol3 rtpPoint1Src, rtpPoint2Src;
+        rtpPoint1Src(0) = XMath::getROuter() - mD1;
+        rtpPoint1Src(1) = mLat1 * degree;
+        rtpPoint1Src(2) = mLon1 * degree;
+        rtpPoint1 = XMath::rotateSrc2Glob(rtpPoint1Src, mSrcLat, mSrcLon, mSrcDep);
+        rtpPoint2Src(0) = XMath::getROuter() - mD2;
+        rtpPoint2Src(1) = mLat2 * degree;
+        rtpPoint2Src(2) = mLon2 * degree;
+        rtpPoint2 = XMath::rotateSrc2Glob(rtpPoint2Src, mSrcLat, mSrcLon, mSrcDep);
+    } else {
+        rtpPoint1(0) = XMath::getROuter() - mD1;
+        rtpPoint1(1) = XMath::lat2Theta(mLat1, mD1);
+        rtpPoint1(2) = XMath::lon2Phi(mLon1);
+        rtpPoint2(0) = XMath::getROuter() - mD2;
+        rtpPoint2(1) = XMath::lat2Theta(mLat2, mD2);
+        rtpPoint2(2) = XMath::lon2Phi(mLon2);
+    }
+    
     rtpTarget(0) = r;
     rtpTarget(1) = theta;
     rtpTarget(2) = phi;
@@ -110,21 +124,21 @@ bool Volumetric3D_cylinder::get3dProperties(double r, double theta, double phi, 
 std::string Volumetric3D_cylinder::verbose() const {
     std::stringstream ss;
     ss << "\n======================= 3D Volumetric ======================" << std::endl;
-    ss << "  Model Name             =   cylinder" << std::endl;
-    ss << "  Depth_1 / km           =   " << mD1 / 1e3 << std::endl;
-    ss << "  Lat_1 / degree         =   " << mLat1 << std::endl;
-    ss << "  Lon_1 / degree         =   " << mLon1 << std::endl;
-    ss << "  Depth_2 / km           =   " << mD2 / 1e3 << std::endl;
-    ss << "  Lat_2 / degree         =   " << mLat2 << std::endl;
-    ss << "  Lon_2 / degree         =   " << mLon2 << std::endl;
-    ss << "  Cylinder Radius / km   =   " << mRadius / 1e3 << std::endl;
-    ss << "  HWHM lateral / km      =   " << mHWHM_lateral / 1e3 << std::endl;
-    ss << "  HWHM top & bot / km    =   " << mHWHM_top_bot / 1e3 << std::endl;
-    ss << "  Maximum on Axis        =   " << mMaxAxis << std::endl;
-    ss << "  Reference Type         =   " << ReferenceTypesString[mReferenceType] << std::endl;
-    ss << "  Affect VP              =   " << (mChangeVp ? "YES" : "NO") << std::endl;
-    ss << "  Affect VS              =   " << (mChangeVs ? "YES" : "NO") << std::endl;
-    ss << "  Affect Density         =   " << (mChangeRho ? "YES" : "NO") << std::endl;
+    ss << "  Model Name               =   cylinder" << std::endl;
+    ss << "  Depth_1 / km             =   " << mD1 / 1e3 << std::endl;
+    ss << "  Lat_1 or Theta_1 / deg   =   " << mLat1 << std::endl;
+    ss << "  Lon_1 or Phi_1 / deg     =   " << mLon1 << std::endl;
+    ss << "  Depth_2 / km             =   " << mD2 / 1e3 << std::endl;
+    ss << "  Lat_2 or Theta_2 / deg   =   " << mLat2 << std::endl;
+    ss << "  Lon_2 or Phi_2 / deg     =   " << mLon2 << std::endl;
+    ss << "  Cylinder Radius / km     =   " << mRadius / 1e3 << std::endl;
+    ss << "  HWHM lateral / km        =   " << mHWHM_lateral / 1e3 << std::endl;
+    ss << "  HWHM top & bot / km      =   " << mHWHM_top_bot / 1e3 << std::endl;
+    ss << "  Maximum on Axis          =   " << mMaxAxis << std::endl;
+    ss << "  Reference Type           =   " << ReferenceTypesString[mReferenceType] << std::endl;
+    ss << "  Affect VP                =   " << (mChangeVp ? "YES" : "NO") << std::endl;
+    ss << "  Affect VS                =   " << (mChangeVs ? "YES" : "NO") << std::endl;
+    ss << "  Affect Density           =   " << (mChangeRho ? "YES" : "NO") << std::endl;
     ss << "======================= 3D Volumetric ======================\n" << std::endl;
     return ss.str();
 }

@@ -37,6 +37,7 @@ void Volumetric3D_bubble::initialize(const std::vector<std::string> &params) {
         
     try {
         int ipar = 7;
+        XMath::castValue(mSourceCentered, params[ipar++], source);
         XMath::castValue(mChangeVp, params[ipar++], source);
         XMath::castValue(mChangeVs, params[ipar++], source);
         XMath::castValue(mChangeRho, params[ipar++], source);
@@ -50,9 +51,18 @@ bool Volumetric3D_bubble::get3dProperties(double r, double theta, double phi, do
     
     // find the distance between bubble center and target point
     RDCol3 rtpBubble, rtpTarget;
-    rtpBubble(0) = XMath::getROuter() - mDepth;
-    rtpBubble(1) = XMath::lat2Theta(mLat, mDepth);
-    rtpBubble(2) = XMath::lon2Phi(mLon);
+    if (mSourceCentered) {
+        RDCol3 rtpBubbleSrc;
+        rtpBubbleSrc(0) = XMath::getROuter() - mDepth;
+        rtpBubbleSrc(1) = mLat * degree;
+        rtpBubbleSrc(2) = mLon * degree;
+        rtpBubble = XMath::rotateSrc2Glob(rtpBubbleSrc, mSrcLat, mSrcLon, mSrcDep);
+    } else {
+        rtpBubble(0) = XMath::getROuter() - mDepth;
+        rtpBubble(1) = XMath::lat2Theta(mLat, mDepth);
+        rtpBubble(2) = XMath::lon2Phi(mLon);    
+    }
+    
     const RDCol3 &xyzBubble = XMath::toCartesian(rtpBubble);
     rtpTarget(0) = r;
     rtpTarget(1) = theta;
@@ -85,17 +95,18 @@ bool Volumetric3D_bubble::get3dProperties(double r, double theta, double phi, do
 std::string Volumetric3D_bubble::verbose() const {
     std::stringstream ss;
     ss << "\n======================= 3D Volumetric ======================" << std::endl;
-    ss << "  Model Name          =   bubble" << std::endl;
-    ss << "  Depth / km          =   " << mDepth / 1e3 << std::endl;
-    ss << "  Lat / degree        =   " << mLat << std::endl;
-    ss << "  Lon / degree        =   " << mLon << std::endl;
-    ss << "  Bubble Radius / km  =   " << mRadius / 1e3 << std::endl;
-    ss << "  HWHM / km           =   " << mHWHM / 1e3 << std::endl;
-    ss << "  Maximum at Center   =   " << mMax << std::endl;
-    ss << "  Reference Type      =   " << ReferenceTypesString[mReferenceType] << std::endl;
-    ss << "  Affect VP           =   " << (mChangeVp ? "YES" : "NO") << std::endl;
-    ss << "  Affect VS           =   " << (mChangeVs ? "YES" : "NO") << std::endl;
-    ss << "  Affect Density      =   " << (mChangeRho ? "YES" : "NO") << std::endl;
+    ss << "  Model Name           =   bubble" << std::endl;
+    ss << "  Depth / km           =   " << mDepth / 1e3 << std::endl;
+    ss << "  Lat or Theta / deg   =   " << mLat << std::endl;
+    ss << "  Lon or Phi / deg     =   " << mLon << std::endl;
+    ss << "  Bubble Radius / km   =   " << mRadius / 1e3 << std::endl;
+    ss << "  HWHM / km            =   " << mHWHM / 1e3 << std::endl;
+    ss << "  Maximum at Center    =   " << mMax << std::endl;
+    ss << "  Reference Type       =   " << ReferenceTypesString[mReferenceType] << std::endl;
+    ss << "  Source-centered      =   " << (mSourceCentered ? "YES" : "NO") << std::endl;
+    ss << "  Affect VP            =   " << (mChangeVp ? "YES" : "NO") << std::endl;
+    ss << "  Affect VS            =   " << (mChangeVs ? "YES" : "NO") << std::endl;
+    ss << "  Affect Density       =   " << (mChangeRho ? "YES" : "NO") << std::endl;
     ss << "======================= 3D Volumetric ======================\n" << std::endl;
     return ss.str();
 }
