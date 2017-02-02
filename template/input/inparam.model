@@ -22,7 +22,7 @@ MODEL_1D_EXODUS_MESH_FILE                   prem_ani_one_crust_spherical_2D_50s.
 # WHAT: number of volumetric 3D models
 # TYPE: integer
 # NOTE: Use the first MODEL_3D_VOLUMETRIC_NUM models in MODEL_3D_VOLUMETRIC_LIST
-#       while ingoring the rests.
+#       while ingoring the rest.
 MODEL_3D_VOLUMETRIC_NUM                     0
 
 # WHAT: list of volumetric 3D models
@@ -34,7 +34,7 @@ MODEL_3D_VOLUMETRIC_LIST                    s40rts crust1
 # WHAT: number of geometric 3D models
 # TYPE: integer
 # NOTE: Use the first MODEL_3D_GEOMETRIC_NUM models in MODEL_3D_GEOMETRIC_LIST
-#       while ingoring the rests.
+#       while ingoring the rest.
 MODEL_3D_GEOMETRIC_NUM                      0
 
 # WHAT: list of geometric 3D models
