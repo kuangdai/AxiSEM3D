@@ -3,6 +3,7 @@
 // wisdom nr field
 
 #include "WisdomNrField.h"
+#include "NrFieldEnhance.h"
 #include "XMath.h"
 #include <sstream>
 
@@ -20,12 +21,8 @@ WisdomNrField::~WisdomNrField() {
 
 int WisdomNrField::getNrAtPoint(const RDCol2 &coords) const {
     int nu = round(mNuWisdom->getNu(coords(0), coords(1), mNumInterpPoints) * mFactor);
-    return nu * 2 + 1;
-}
-
-int WisdomNrField::getMaxNr() const {
-    int nu = round(mNuWisdom->getMaxNu() * mFactor);
-    return nu * 2 + 1;
+    int nr = nu * 2 + 1;
+    return enhancedNr(coords, nr);
 }
 
 std::string WisdomNrField::verbose() const {
@@ -35,7 +32,6 @@ std::string WisdomNrField::verbose() const {
     ss << "  Wisdom File              =   " << mFileName << std::endl;
     ss << "  Wisdom Factor            =   " << mFactor << std::endl;
     ss << "  Compression Ratio        =   " << mNuWisdom->getCompressionRatio() << std::endl;
-    ss << "  Maximum Order            =   " << getMaxNr() / 2 << std::endl;
     ss << "  Use FFTW Lucky Numbers   =   " << (mUseLuckyNumber ? "YES" : "NO") << std::endl;
     ss << "================= Fourier Expansion Order ==================\n" << std::endl;
     return ss.str();

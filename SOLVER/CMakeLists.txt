@@ -139,6 +139,7 @@ include_directories(
 
     src/preloop/nrfield
     src/preloop/nrfield/wisdom
+    src/preloop/nrfield/enhance
 
     src/preloop/physics/attenuation
     src/preloop/physics/material
@@ -253,6 +254,8 @@ add_executable(
     src/preloop/nrfield/EmpNrField.cpp
     src/preloop/nrfield/wisdom/WisdomNrField.cpp
     src/preloop/nrfield/wisdom/NuWisdom.cpp
+    src/preloop/nrfield/enhance/NrFieldEnhance.cpp
+    src/preloop/nrfield/enhance/NrFieldEnhanceCircle.cpp
 
     src/preloop/physics/attenuation/AttBuilder.cpp
     src/preloop/physics/attenuation/AttSimplex.cpp

@@ -12,16 +12,10 @@ std::vector<CDColX> PreloopFFTW::sR2C_CMats;
 std::vector<RDColX> PreloopFFTW::sC2R_RMats;
 std::vector<CDColX> PreloopFFTW::sC2R_CMats;
 
-void PreloopFFTW::initialize(int Nmax) {
+void PreloopFFTW::checkAndInit(int nr) {
+    if (nr <= sNmax) return;
     int xx = 1;
-    sNmax = Nmax;
-    sR2CPlans.reserve(Nmax);
-    sC2RPlans.reserve(Nmax);
-    sR2C_RMats.reserve(Nmax);
-    sR2C_CMats.reserve(Nmax);
-    sC2R_RMats.reserve(Nmax);
-    sC2R_CMats.reserve(Nmax);
-    for (int NR = 1; NR <= Nmax; NR++) {
+    for (int NR = sNmax + 1; NR <= nr; NR++) {
         int NC = NR / 2 + 1;
         int n[] = {NR};
         sR2C_RMats.push_back(RDColX(NR, 1));
@@ -37,6 +31,7 @@ void PreloopFFTW::initialize(int Nmax) {
         sC2RPlans.push_back(fftw_plan_many_dft_c2r(
             1, n, xx, reinterpret_cast<fftw_complex*>(c2r_c), n, 1, NC, c2r_r, n, 1, NR, FFTW_ESTIMATE)); 
     }
+    sNmax = nr;
 }
 
 void PreloopFFTW::finalize() {
@@ -48,11 +43,13 @@ void PreloopFFTW::finalize() {
 }
 
 void PreloopFFTW::computeR2C(int nr) {
+    checkAndInit(nr); 
     fftw_execute(sR2CPlans[nr - 1]);
     double inv_nr = one / (double)nr;
     sR2C_CMats[nr - 1] *= inv_nr;
 }
 
 void PreloopFFTW::computeC2R(int nr) {
+    checkAndInit(nr); 
     fftw_execute(sC2RPlans[nr - 1]);
 }

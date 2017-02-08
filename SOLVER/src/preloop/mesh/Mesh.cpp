@@ -528,3 +528,9 @@ Mesh::DDParameters::DDParameters(const Parameters &par) {
     if (mNPartMetis <= 0) mNPartMetis = 10;
 }
 
+int Mesh::getMaxNr() const {
+    int maxNr = -1;
+    for (int i = 0; i < getNumQuads(); i++) 
+        maxNr = std::max(maxNr, mQuads[i]->getNr());
+    return XMPI::max(maxNr);
+}

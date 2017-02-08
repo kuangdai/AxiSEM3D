@@ -3,6 +3,7 @@
 // constant nr integer field
 
 #include "ConstNrField.h"
+#include "NrFieldEnhance.h"
 #include "XMath.h"
 #include <sstream>
 
@@ -12,11 +13,8 @@ NrField(useLucky), mNu(nu) {
 }
 
 int ConstNrField::getNrAtPoint(const RDCol2 &coords) const {
-    return getMaxNr();
-}
-
-int ConstNrField::getMaxNr() const {
-    return 2 * mNu + 1;
+    int nr = 2 * mNu + 1;
+    return enhancedNr(coords, nr);
 }
 
 std::string ConstNrField::verbose() const {
@@ -24,7 +22,6 @@ std::string ConstNrField::verbose() const {
     ss << "\n================= Fourier Expansion Order ==================" << std::endl;
     ss << "  Type                     =   Constant" << std::endl;
     ss << "  Specified Order          =   " << mNu << std::endl;
-    ss << "  Maximum Order            =   " << getMaxNr() / 2 << std::endl;
     ss << "  Use FFTW Lucky Numbers   =   " << (mUseLuckyNumber ? "YES" : "NO") << std::endl;
     ss << "================= Fourier Expansion Order ==================\n" << std::endl;
     return ss.str();

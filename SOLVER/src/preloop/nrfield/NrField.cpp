@@ -6,10 +6,15 @@
 #include "ConstNrField.h"
 #include "EmpNrField.h"
 #include "WisdomNrField.h"
+#include "NrFieldEnhance.h"
 
 #include "Parameters.h"
 #include "XMPI.h"
 #include <boost/algorithm/string.hpp>
+
+NrField::~NrField() {
+    for (const auto &m: mEnhance) delete m;
+}
 
 void NrField::buildInparam(NrField *&nrf, const Parameters &par, 
     double router, int verbose) {
@@ -45,5 +50,13 @@ void NrField::buildInparam(NrField *&nrf, const Parameters &par,
     }
     
     if (verbose == 2) XMPI::cout << nrf->verbose();
+    
+    // enhanced
+    NrFieldEnhance::buildInparam(nrf->mEnhance, par, verbose);
 }
 
+int NrField::enhancedNr(const RDCol2 &coords, int nr_base) const {
+    int nr_cur = nr_base;
+    for (const auto &m: mEnhance) m->updateNrAtPoint(coords, nr_base, nr_cur);
+    return nr_cur;
+}

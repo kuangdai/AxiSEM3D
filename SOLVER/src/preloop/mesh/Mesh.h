@@ -66,6 +66,9 @@ public:
     double zMax() const {return mZMax;};
     double zMin() const {return mZMin;};
     
+    // get max. Nr to initialize solver
+    int getMaxNr() const;
+    
 private:
     
     // build local

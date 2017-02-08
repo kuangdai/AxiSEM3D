@@ -3,6 +3,7 @@
 // constant nr integer field
 
 #include "EmpNrField.h"
+#include "NrFieldEnhance.h"
 #include "XMath.h"
 #include <sstream>
 
@@ -16,16 +17,7 @@ mScaleS(scaleS), mScaleT(scaleT), mScaleD(scaleD),
 mROuter(router), mPowS(powS), 
 mFactPI(factPI), mStartT(startT), mPowT(powT),
 mFactD0(factD0), mStartD(startD), mEndD(endD) {
-    // find maximum
-    RDCol2 sz;
-    int n = 3600;
-    mMaxNr = -1;
-    for (int i = 0; i <= n; i++) {
-        double theta = pi * i / n;
-        sz(0) = mROuter * sin(theta);
-        sz(1) = mROuter * cos(theta);
-        mMaxNr = std::max(mMaxNr, getNrAtPoint(sz));
-    }
+    // nothing
 }
 
 int EmpNrField::getNrAtPoint(const RDCol2 &coords) const {
@@ -50,11 +42,7 @@ int EmpNrField::getNrAtPoint(const RDCol2 &coords) const {
     // minimum value
     int nr = 2 * std::max(mNuMin, (int)ceil(nu)) + 1;
     if (nr <= 0) throw std::runtime_error("EmpNrField::getNrAtPoint || Non-positive Nr.");
-    return nr;
-}
-
-int EmpNrField::getMaxNr() const {
-    return mMaxNr;
+    return enhancedNr(coords, nr);
 }
 
 std::string EmpNrField::verbose() const {
@@ -67,7 +55,6 @@ std::string EmpNrField::verbose() const {
     ss << "    a) Distance to Axis      =   " << (mScaleS ? "YES" : "NO") << std::endl;
     ss << "    b) Epicentral Distance   =   " << (mScaleT ? "YES" : "NO") << std::endl;
     ss << "    c) Surface Enhancement   =   " << (mScaleD ? "YES" : "NO") << std::endl;
-    ss << "  Maximum Order              =   " << getMaxNr() / 2 << std::endl;
     ss << "  Use FFTW Lucky Numbers     =   " << (mUseLuckyNumber ? "YES" : "NO") << std::endl;
     ss << "================= Fourier Expansion Order ==================\n" << std::endl;
     return ss.str();

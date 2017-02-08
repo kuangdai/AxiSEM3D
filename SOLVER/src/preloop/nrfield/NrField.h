@@ -6,16 +6,15 @@
 #include "eigenp.h"
 
 class Parameters;
+class NrFieldEnhance;
 
 class NrField {
 public:
-    virtual ~NrField() {};
     
     NrField(bool useLucky): mUseLuckyNumber(useLucky) {};
+    virtual ~NrField();
     
     virtual int getNrAtPoint(const RDCol2 &coords) const = 0;
-    
-    virtual int getMaxNr() const = 0;
     
     virtual std::string verbose() const = 0;
     
@@ -24,7 +23,10 @@ public:
         
     virtual bool useLuckyNumber() const {return mUseLuckyNumber;};
     
+    int enhancedNr(const RDCol2 &coords, int nr_base) const;
+    
 protected:
     bool mUseLuckyNumber;
+    std::vector<NrFieldEnhance *> mEnhance;
 };
 

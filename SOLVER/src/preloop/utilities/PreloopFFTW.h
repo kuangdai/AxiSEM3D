@@ -10,16 +10,16 @@
 
 class PreloopFFTW {
 public:
-    // initialize plans
-    static void initialize(int Nmax);
+    // check size and initialize plans
+    static void checkAndInit(int nr);
     // finalize plans
     static void finalize();
     
     // get input and output
-    static RDColX &getR2C_RMat(int nr) {return sR2C_RMats[nr - 1];};
-    static CDColX &getR2C_CMat(int nr) {return sR2C_CMats[nr - 1];};
-    static RDColX &getC2R_RMat(int nr) {return sC2R_RMats[nr - 1];};    
-    static CDColX &getC2R_CMat(int nr) {return sC2R_CMats[nr - 1];};
+    static RDColX &getR2C_RMat(int nr) {checkAndInit(nr); return sR2C_RMats[nr - 1];};
+    static CDColX &getR2C_CMat(int nr) {checkAndInit(nr); return sR2C_CMats[nr - 1];};
+    static RDColX &getC2R_RMat(int nr) {checkAndInit(nr); return sC2R_RMats[nr - 1];};    
+    static CDColX &getC2R_CMat(int nr) {checkAndInit(nr); return sC2R_CMats[nr - 1];};
      
     // forward, real => complex
     static void computeR2C(int nr);

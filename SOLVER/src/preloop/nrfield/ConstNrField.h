@@ -11,8 +11,6 @@ public:
     
     int getNrAtPoint(const RDCol2 &coords) const;
     
-    int getMaxNr() const;
-    
     std::string verbose() const;
     
 private:

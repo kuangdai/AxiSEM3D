@@ -130,3 +130,26 @@ NU_WISDOM_REUSE_INPUT                       name.nu_wisdom
 NU_WISDOM_REUSE_FACTOR                      1.0
 
 
+
+# =================================== local ==================================
+# Locally increases Nu at some positions
+
+# WHAT: number of enhanced areas
+# TYPE: integer
+# NOTE: Use the first NU_ENHANCE_NUM areas in NU_ENHANCE_LIST while ingoring the rest.
+NU_ENHANCE_NUM                              1
+
+# WHAT: list of enhanced areas (currently only circle)
+# TYPE: list of ParSeries <see top notes>
+# NOTE: The order in this list matters. 
+#       Format:     circle$R$THETA$DIAMETER$HWHM$VALUE$REF$DECREASE
+#       Arguments:
+#       R, THETA -- position of the center in the 2D domain
+#       DIAMETER -- diameter of the circle
+#       HWHM     -- Nu decreases in Gassian style with the specified HWHM 
+#       VALUE    -- specified Nu inside the circle
+#       REF      -- abs (absolute) / base (ref_base) / cur (ref_current)
+#       DECREASE -- whether decrease Nu when the new value is smaller
+NU_ENHANCE_LIST                             circle$5171$30$320$320$180$abs$false
+
+

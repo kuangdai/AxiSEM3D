@@ -37,11 +37,6 @@ int axisem_main(int argc, char *argv[]) {
         NrField::buildInparam(pl.mNrField, *(pl.mParameters), pl.mExodusModel->getROuter(), verbose);
         XTimer::end("NrField", 0);
         
-        //////// static variables in solver, mainly FFTW
-        XTimer::begin("FFTW", 0);
-        initializeSolverStatic(*(pl.mNrField)); 
-        XTimer::end("FFTW", 0);
-        
         //////// source
         XTimer::begin("Source", 0);
         Source::buildInparam(pl.mSource, *(pl.mParameters), verbose);
@@ -71,6 +66,11 @@ int axisem_main(int argc, char *argv[]) {
         XTimer::begin("Unweighted Mesh", 0);
         pl.mMesh->buildUnweighted();
         XTimer::end("Unweighted Mesh", 0);
+        
+        //////// static variables in solver, mainly FFTW
+        XTimer::begin("Initialize FFTW", 0);
+        initializeSolverStatic(pl.mMesh->getMaxNr()); 
+        XTimer::end("Initialize FFTW", 0);
         
         //////// dt
         XTimer::begin("DT", 0);
@@ -193,17 +193,16 @@ int axisem_main(int argc, char *argv[]) {
 #include "SolidElement.h"
 #include "FluidElement.h"
 
-extern void initializeSolverStatic(const NrField &nrf) {
+extern void initializeSolverStatic(int maxNr) {
     // fftw
     SolverFFTW::importWisdom();
-    int maxNr = ceil(nrf.getMaxNr() * 1.1);
     SolverFFTW_1::initialize(maxNr);
     SolverFFTW_3::initialize(maxNr); 
     SolverFFTW_N3::initialize(maxNr);
     SolverFFTW_N6::initialize(maxNr);
     SolverFFTW_N9::initialize(maxNr);
     SolverFFTW::exportWisdom();
-    PreloopFFTW::initialize(maxNr);
+    // PreloopFFTW::initialize(maxNr);
     // element
     SolidElement::initWorkspace(maxNr / 2);
     FluidElement::initWorkspace(maxNr / 2);

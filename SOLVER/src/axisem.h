@@ -71,7 +71,7 @@ struct SolverVariables {
 
 //////////////////////////////// functons ////////////////////////////////
 int axisem_main(int argc, char *argv[]);
-void initializeSolverStatic(const NrField &nrf);
+void initializeSolverStatic(int maxNr);
 void finalizeSolverStatic();
 
 

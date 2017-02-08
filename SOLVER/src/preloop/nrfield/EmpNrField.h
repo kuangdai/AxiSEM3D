@@ -15,8 +15,6 @@ public:
     
     int getNrAtPoint(const RDCol2 &coords) const;
     
-    int getMaxNr() const;
-    
     std::string verbose() const;
     
 private:
@@ -39,8 +37,5 @@ private:
     // d = mEndD        -> factor = 1.0 
     bool mScaleD;
     double mFactD0, mStartD, mEndD; 
-    
-    // maximum value
-    int mMaxNr;
 };
 
