@@ -137,7 +137,7 @@ NU_WISDOM_REUSE_FACTOR                      1.0
 # WHAT: number of enhanced areas
 # TYPE: integer
 # NOTE: Use the first NU_ENHANCE_NUM areas in NU_ENHANCE_LIST while ingoring the rest.
-NU_ENHANCE_NUM                              1
+NU_ENHANCE_NUM                              0
 
 # WHAT: list of enhanced areas (currently only circle)
 # TYPE: list of ParSeries <see top notes>
