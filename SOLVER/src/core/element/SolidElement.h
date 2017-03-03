@@ -18,7 +18,7 @@ public:
     void computeStiff() const;
     
     // measure cost 
-    double measure(int count, bool user) const;
+    double measure(int count) const;
     
     // test stiffness 
     void test() const;

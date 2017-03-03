@@ -6,7 +6,7 @@
 #include "Acoustic.h"
 #include "Point.h"
 #include "Gradient.h"
-#include <boost/timer/timer.hpp>
+#include "XTimer.h"
 
 FluidElement::FluidElement(Gradient *grad, const std::array<Point *, nPntElem> &points, 
     Acoustic *acous): 
@@ -35,7 +35,7 @@ void FluidElement::computeStiff() const {
             mPoints[ipnt++]->gatherStiffFromElement(sStiff, ipol, jpol);
 }
 
-double FluidElement::measure(int count, bool user) const {
+double FluidElement::measure(int count) const {
     // random disp
     int ipnt = 0;
     for (int ipol = 0; ipol <= nPol; ipol++)
@@ -43,9 +43,10 @@ double FluidElement::measure(int count, bool user) const {
             mPoints[ipnt++]->randomDispl((Real)1e-6);
     
     // measure stiffness
-    boost::timer::cpu_timer timer;
+    MyBoostTimer timer;
+    timer.start();
     for (int i = 0; i < count; i++) computeStiff();
-    double elapsed_time = user ? timer.elapsed().user * 1.0 : timer.elapsed().wall * 1.0;
+    double elapsed_time = timer.elapsed();
     
     // reset point
     ipnt = 0;

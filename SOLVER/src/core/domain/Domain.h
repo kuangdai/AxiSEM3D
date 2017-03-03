@@ -7,7 +7,7 @@
 #include "global.h"
 
 #ifdef _MEASURE_TIMELOOP
-    #include <boost/timer/timer.hpp>
+    #include "XTimer.h"
 #endif
 
 class Point;
@@ -103,11 +103,11 @@ private:
     
     // timers 
     #ifdef _MEASURE_TIMELOOP
-        boost::timer::cpu_timer *mTimerElemts;
-        boost::timer::cpu_timer *mTimerPoints;
-        boost::timer::cpu_timer *mTimerAssemb;
-        boost::timer::cpu_timer *mTimerAsWait;
-        boost::timer::cpu_timer *mTimerOthers;
+        MyBoostTimer *mTimerElemts;
+        MyBoostTimer *mTimerPoints;
+        MyBoostTimer *mTimerAssemb;
+        MyBoostTimer *mTimerAsWait;
+        MyBoostTimer *mTimerOthers;
     #endif
     
     // wisdom

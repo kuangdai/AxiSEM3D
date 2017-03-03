@@ -31,7 +31,7 @@ public:
     std::string verbose() const;
     
     // measure cost 
-    double measure(int count, bool user);
+    double measure(int count);
     
     // test mass
     void test();

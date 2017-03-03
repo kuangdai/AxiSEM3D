@@ -7,7 +7,7 @@
 #include "FluidPoint.h"
 #include "SFCoupling.h"
 #include "Mass.h"
-#include <boost/timer/timer.hpp>
+#include "XTimer.h"
 
 SolidFluidPoint::SolidFluidPoint(SolidPoint *sp, FluidPoint *fp, SFCoupling *couple): 
 mSolidPoint(sp), mFluidPoint(fp), mSFCoupling(couple),
@@ -52,14 +52,14 @@ std::string SolidFluidPoint::verbose() const {
         + "$" + mFluidPoint->mMass->verbose() + "$" + mSFCoupling->verbose();
 } 
 
-double SolidFluidPoint::measure(int count, bool user) {
+double SolidFluidPoint::measure(int count) {
     double cost = 0.;
     // solid
-    cost += mSolidPoint->measure(count, user);
+    cost += mSolidPoint->measure(count);
     // fluid
-    cost += mFluidPoint->measure(count, user);
+    cost += mFluidPoint->measure(count);
     // coupling
-    cost += measureCoupling(count, user);
+    cost += measureCoupling(count);
     return cost;
 }
 
@@ -108,11 +108,12 @@ void SolidFluidPoint::coupleSolidFluid() {
     mSFCoupling->coupleFluidToSolid(mFluidPoint->mStiff, mSolidPoint->mStiff);
 }
 
-double SolidFluidPoint::measureCoupling(int count, bool user) {
+double SolidFluidPoint::measureCoupling(int count) {
     mSolidPoint->randomDispl((Real)1e-6);
-    boost::timer::cpu_timer timer;
+    MyBoostTimer timer;
+    timer.start();
     for (int i = 0; i < count; i++) coupleSolidFluid();
-    double elapsed_time = user ? timer.elapsed().user * 1.0 : timer.elapsed().wall * 1.0;
+    double elapsed_time = timer.elapsed();
     resetZero();
     return elapsed_time / count;
 }

@@ -353,27 +353,6 @@ RDRowN XMath::computeFourierAtPhi(const RDMatXN &data, double phi) {
     return result;
 }
 
-#include <boost/timer/timer.hpp>
-double XMath::getClockResolution(bool user) {
-    boost::timer::cpu_timer cpu;
-    boost::timer::cpu_times start_time, current_time;
-    if (user) {
-        cpu.start();
-        start_time = cpu.elapsed();
-        current_time.user = start_time.user;
-        while (current_time.user == start_time.user)
-            current_time = cpu.elapsed();
-        return (current_time.user - start_time.user) * 1.;
-    } else {
-        cpu.start();
-        start_time = cpu.elapsed();
-        current_time.wall = start_time.wall;
-        while (current_time.wall == start_time.wall)
-            current_time = cpu.elapsed();
-        return (current_time.wall - start_time.wall) * 1.;
-    }
-}
-
 double XMath::sFlattening = 0.;
 double XMath::sROuter = 6371e3;
 RDColX XMath::sEllipKnots = RDColX::Zero(0);

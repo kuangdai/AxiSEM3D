@@ -93,9 +93,6 @@ public:
     // Fourier
     static RDRowN computeFourierAtPhi(const RDMatXN &data, double phi);
     
-    //////////////// clock ////////////////
-    static double getClockResolution(bool user);
-    
     /////////////// string cast ////////////////
     template<typename parType>
     static void castValue(parType &result, const std::string &val_in, const std::string &source) {

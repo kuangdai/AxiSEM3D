@@ -4,7 +4,7 @@
 
 #include "SolidPoint.h"
 #include "Mass.h"
-#include <boost/timer/timer.hpp>
+#include "XTimer.h"
 
 SolidPoint::SolidPoint(int nr, bool axial, const RDCol2 &crds, Mass *mass):
 Point(nr, axial, crds), mMass(mass) {
@@ -61,10 +61,11 @@ std::string SolidPoint::verbose() const {
     return "SolidPoint$" + mMass->verbose();
 }
 
-double SolidPoint::measure(int count, bool user) {
+double SolidPoint::measure(int count) {
     Real dt = .1;
     randomStiff((Real)1e6); 
-    boost::timer::cpu_timer timer;
+    MyBoostTimer timer;
+    timer.start();
     for (int i = 0; i < count; i++) {
         maskField(mStiff);
         mMass->computeAccel(mStiff);
@@ -76,7 +77,7 @@ double SolidPoint::measure(int count, bool user) {
         mDispl += dt * mVeloc + half_dt_dt * mAccel; 
         mVeloc.setZero();
     }
-    double elapsed_time = user ? timer.elapsed().user * 1.0 : timer.elapsed().wall * 1.0;
+    double elapsed_time = timer.elapsed();
     resetZero();
     return elapsed_time / count;
 }

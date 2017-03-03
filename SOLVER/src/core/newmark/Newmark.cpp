@@ -7,7 +7,7 @@
 #include "SourceTimeFunction.h"
 #include <sstream>
 #include "XMPI.h"
-#include <boost/timer/timer.hpp>
+#include "XTimer.h"
 
 Newmark::Newmark(Domain *&domain, int reportInterval, int checkStabInterval):
 mDomain(domain), mReportInterval(reportInterval), 
@@ -26,9 +26,10 @@ void Newmark::solve() const {
     Real dt = mDomain->getSTF().getDeltaT();
     int maxStep = mDomain->getSTF().getSize();
     mDomain->initDisplTinyRandom();
-    const double nanosec2h = 1. / 1000000000. / 3600.;
+    const double sec2h = 1. / 3600.;
     double elapsed_last = 0.;
-    boost::timer::cpu_timer timer;
+    MyBoostTimer timer;
+    timer.start();
     
     ////////////////////////// loop //////////////////////////
     for (int tstep = 1; tstep <= maxStep; tstep++) {
@@ -56,7 +57,7 @@ void Newmark::solve() const {
             mDomain->checkStability(dt, tstep, t);
         // screen info    
         if (tstep % mReportInterval == 0) {
-            double elapsed = timer.elapsed().wall * nanosec2h;
+            double elapsed = timer.elapsed() * sec2h;
             double speed = (elapsed - elapsed_last) / mReportInterval;
             double total = speed * maxStep;
             double left = speed * (maxStep - tstep);
@@ -79,7 +80,7 @@ void Newmark::solve() const {
     ////////////////////////// loop //////////////////////////
     mDomain->dumpLeft();
     mDomain->dumpWisdom();
-    double elapsed = timer.elapsed().wall * nanosec2h;
+    double elapsed = timer.elapsed() * sec2h;
     XMPI::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << XMPI::endl;
     XMPI::cout << "TTTTTTTTT  NEWMARK TIME LOOP FINISHES  TTTTTTTTT" << XMPI::endl;
     XMPI::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << XMPI::endl << XMPI::endl;

@@ -18,7 +18,7 @@ public:
     virtual void computeStiff() const = 0;
     
     // measure cost
-    virtual double measure(int count, bool user) const = 0;
+    virtual double measure(int count) const = 0;
     
     // test stiffness 
     virtual void test() const = 0;

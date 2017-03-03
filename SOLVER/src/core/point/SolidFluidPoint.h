@@ -31,7 +31,7 @@ public:
     std::string verbose() const;
     
     // measure cost
-    double measure(int count, bool user);
+    double measure(int count);
     
     // test mass
     void test();
@@ -62,7 +62,7 @@ public:
     int getNuWisdom() const;
     
 private:
-    double measureCoupling(int count, bool user);
+    double measureCoupling(int count);
     
     SolidPoint *mSolidPoint;
     FluidPoint *mFluidPoint;

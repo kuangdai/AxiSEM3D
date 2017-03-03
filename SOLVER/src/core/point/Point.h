@@ -30,7 +30,7 @@ public:
     virtual std::string verbose() const = 0;
     
     // measure cost
-    virtual double measure(int count, bool user) = 0;
+    virtual double measure(int count) = 0;
     
     // test mass
     virtual void test() = 0;

@@ -11,19 +11,15 @@
 #include "Station.h"
 #include "XMPI.h"
 #include "NuWisdom.h"
+#include "XTimer.h"
 
 Domain::Domain() {
     #ifdef _MEASURE_TIMELOOP
-        mTimerElemts = new boost::timer::cpu_timer();
-        mTimerPoints = new boost::timer::cpu_timer();
-        mTimerAssemb = new boost::timer::cpu_timer();
-        mTimerAsWait = new boost::timer::cpu_timer();
-        mTimerOthers = new boost::timer::cpu_timer();
-        mTimerElemts->stop();
-        mTimerPoints->stop();
-        mTimerAssemb->stop();
-        mTimerAsWait->stop();
-        mTimerOthers->stop();
+        mTimerElemts = new MyBoostTimer();
+        mTimerPoints = new MyBoostTimer();
+        mTimerAssemb = new MyBoostTimer();
+        mTimerAsWait = new MyBoostTimer();
+        mTimerOthers = new MyBoostTimer();
     #endif
 }
 
@@ -302,13 +298,13 @@ std::string Domain::verbose() const {
 
 std::string Domain::reportCost() const {
     #ifdef _MEASURE_TIMELOOP
-        const double nanosec2h = 1. / 1000000000. / 3600.;
+        const double sec2h = 1. / 3600.;
         std::stringstream ss;
-        double costE = mTimerElemts->elapsed().wall * nanosec2h;
-        double costP = mTimerPoints->elapsed().wall * nanosec2h;
-        double costA = mTimerAssemb->elapsed().wall * nanosec2h;
-        double costW = mTimerAsWait->elapsed().wall * nanosec2h;
-        double costO = mTimerOthers->elapsed().wall * nanosec2h;
+        double costE = mTimerElemts->elapsed() * sec2h;
+        double costP = mTimerPoints->elapsed() * sec2h;
+        double costA = mTimerAssemb->elapsed() * sec2h;
+        double costW = mTimerAsWait->elapsed() * sec2h;
+        double costO = mTimerOthers->elapsed() * sec2h;
         double costT = costE + costP + costA + costO;
         ss.precision(4);
         ss << std::setw(10) << std::left << XMPI::rank() << "   ";

@@ -4,9 +4,25 @@
 
 #pragma once
 
-#include <boost/timer/timer.hpp>
 #include <vector>
 #include <fstream>
+#include <chrono>
+
+class MyBoostTimer {
+public:
+    void stop();
+    void resume();
+    void clear();
+    double elapsed(); // in seconds
+    void start() {clear(); resume();};
+    
+    bool running() {return mTimePoints.size() % 2 == 1;};
+    static double getClockResolution();
+    
+private:
+    std::vector<std::chrono::high_resolution_clock::time_point> mTimePoints;
+};
+
 
 class XTimer {
 public:
@@ -22,7 +38,7 @@ public:
 private:
     static void openFile();
     static std::string mFileName;
-    static std::vector<boost::timer::cpu_timer> mTimers;
+    static std::vector<MyBoostTimer> mTimers;
     static std::fstream mFile; 
     static bool mEnabled;
 };

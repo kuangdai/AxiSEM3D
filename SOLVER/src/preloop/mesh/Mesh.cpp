@@ -331,9 +331,8 @@ void Mesh::measure(DecomposeOption &measured) {
     release(domain);
     
     // user clock resolution
-    bool useClockUser = false;
-    double clockFactor = useClockUser ? 1e2 : 1e4;
-    double clockResolution = XMath::getClockResolution(useClockUser);
+    double clockFactor = 1e4;
+    double clockResolution = MyBoostTimer::getClockResolution();
     // minimum number of steps to be measured 
     int minStep = 5;
     // how may elements of the same kind will be measured
@@ -357,9 +356,9 @@ void Mesh::measure(DecomposeOption &measured) {
         // perform measurement only if it is new (measure = -1.)
         if (elemCostLibrary.at(coststr) < 0.) {
             // find how may steps are needed to use USER clock
-            double wall = elem->measure(minStep, false);
+            double wall = elem->measure(minStep);
             int nstep = std::max(minStep, (int)(clockResolution * clockFactor / wall) + 1);
-            elemCostLibrary.at(coststr) = elem->measure(nstep, useClockUser);
+            elemCostLibrary.at(coststr) = elem->measure(nstep);
             // find elements with the same signature
             int sameKindFound = 0;
             for (int jloc = iloc + 1; jloc < getNumQuads(); jloc++) {
@@ -367,7 +366,7 @@ void Mesh::measure(DecomposeOption &measured) {
                 Element *elemOther = domain.getElement(elemTagOther);
                 if (elemOther->costSignature() == coststr) {
                     // use minimum
-                    elemCostLibrary.at(coststr) = std::min(elemOther->measure(nstep, useClockUser), 
+                    elemCostLibrary.at(coststr) = std::min(elemOther->measure(nstep), 
                         elemCostLibrary.at(coststr));
                     if (++sameKindFound == nMeasureSameKind) break;
                 }
@@ -419,15 +418,15 @@ void Mesh::measure(DecomposeOption &measured) {
         // perform measurement only if it is new (measure = -1.)
         if (pointCostLibrary.at(coststr) < 0.) {
             // find how may steps are needed to use USER clock
-            double wall = point->measure(minStep, false);
+            double wall = point->measure(minStep);
             int nstep = std::max(minStep, (int)(clockResolution * clockFactor / 10. / wall) + 1);
-            pointCostLibrary.at(coststr) = point->measure(nstep, useClockUser);
+            pointCostLibrary.at(coststr) = point->measure(nstep);
             // find points with the same signature
             int sameKindFound = 0;
             for (int jp = ip + 1; jp < ngll; jp++) {
                 Point *pointOther = domain.getPoint(jp);
                 if (pointOther->costSignature() == coststr) {
-                    pointCostLibrary.at(coststr) = std::min(pointOther->measure(nstep, useClockUser),
+                    pointCostLibrary.at(coststr) = std::min(pointOther->measure(nstep),
                         pointCostLibrary.at(coststr));
                     if (++sameKindFound == nMeasureSameKind) break;
                 }
