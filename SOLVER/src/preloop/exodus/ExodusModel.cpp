@@ -23,224 +23,269 @@
 extern "C" {
     #include "hdf5.h"
 };
+#include "H5Reader.h"
+
 
 ExodusModel::ExodusModel(const std::string &fileName): mExodusFileName(fileName) {
-    // nothing
+    std::vector<std::string> substrs;
+    boost::split(substrs, mExodusFileName, boost::is_any_of("/"), boost::token_compress_on);
+    mExodusTitle = substrs[substrs.size() - 1];
+    boost::trim_if(mExodusTitle, boost::is_any_of("\t "));
 }
 
 void ExodusModel::initialize() {
     XTimer::begin("Read Exodus", 1);
-    if (XMPI::root()) {
-        int io_ws = 0;
-        int comp_ws = 8;
-        mExodusId = ex_open(mExodusFileName.c_str(), EX_READ, &comp_ws, &io_ws, &mExodusVersion);
-        if (mExodusId < 0) throw std::runtime_error("ExodusModel::initialize || "
-            "Error opening exodus model file: ||" + mExodusFileName);
-        
-        int nDim = 0;
-        int nBlock = 0;
-        int nNodeSets = 0;
-        ExodusModel::exodusError(
-            ex_get_init(mExodusId, mExodusTitle, &nDim, &mNumNodes, &mNumQuads,
-                &nBlock, &nNodeSets, &mNumSideSets), "ex_get_init");   
-        
-        if (nDim != 2 || nBlock != 1 || nNodeSets != 0)
-            throw std::runtime_error("ExodusModel::initialize || Invalid exodus model file: ||" + mExodusFileName);
-            
-        readGlobalVariables();
-        readConnectivity();
-        readCoordinates();
-        readElementalVariables();
-        readSideSets();
-        // close as exodus
-        ExodusModel::exodusError(ex_close(mExodusId), "ex_close");
-        // open as hdf5
-        readExternalH5();
-    }
+    if (XMPI::root()) readRawData();
     XTimer::end("Read Exodus", 1);
     
     XTimer::begin("Bcast Exodus", 1);
-    bcast();
+    bcastRawData();
     XTimer::end("Bcast Exodus", 1);
     
     XTimer::begin("Process Exodus", 1);
+    formStructured();
     finishReading();
     XTimer::end("Process Exodus", 1);
 }
 
-void ExodusModel::bcast() {
-    XMPI::bcast(mExodusId);
-    XMPI::bcast(mExodusVersion);
-    XMPI::bcast(mExodusTitle, MAX_LINE_LENGTH + 1);
-    XMPI::bcast(mNumNodes);
-    XMPI::bcast(mNumQuads);
-    XMPI::bcast(mGlobalVariables);
-    XMPI::bcast(mGlobalRecords);
-    XMPI::bcast(mConnectivity);
-    XMPI::bcast(mNodalS);
-    XMPI::bcast(mNodalZ);
-    XMPI::bcast(mElementalVariables);
-    XMPI::bcast(mNumSideSets);
-    XMPI::bcast(mSideSets);
-    // XMPI::bcast(mDistTolerance);
-    // XMPI::bcast(mROuter);
-    // XMPI::bcast(mAveGLLSpacing);
-    // XMPI::bcast(mVicinalAxis);
-    XMPI::bcast(mCartesian);
-    XMPI::bcast(mSSNameAxis);
-    XMPI::bcast(mSSNameSurface);
-    XMPI::bcast(mEllipKnots);
-    XMPI::bcast(mEllipCoeffs);
-}
+void ExodusModel::readRawData() {
+    /////////// open file
+    hid_t fid = H5Fopen(mExodusFileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    if (fid < 0) throw std::runtime_error("ExodusModel::readRawData || "
+        "Error opening exodus model file: ||" + mExodusFileName);
+    
+    /////////// file attr
+    H5Reader::getAttribute(fid, "version", &mExodusVersion);
+    
+    /////////// numbers
+    mNumNodes = H5Reader::getDimension1D(fid, "num_nodes");
+    mNumQuads = H5Reader::getDimension1D(fid, "num_elem");
+    
+    /////////// global var
+    int row, col;
+    H5Reader::getStringData(fid, "name_glo_var", mRawNumGlbVar, mRawLenGlbVarName, mRawGlbVarName);
+    H5Reader::getDoubleData(fid, "vals_glo_var", row, col, mRawGlbVarVals);
+    
+    /////////// global rec
+    H5Reader::getStringData(fid, "info_records", mRawNumGlbRec, mRawLenGlbRec, mRawGlbRec);
+    
+    /////////// connectivity
+    H5Reader::getIntData(fid, "connect1", row, col, mRawConnect);
+    
+    /////////// coords
+    H5Reader::getDoubleData(fid, "coordx", row, col, mRawNodalS);
+    H5Reader::getDoubleData(fid, "coordy", row, col, mRawNodalZ);
 
-void ExodusModel::readGlobalVariables() {
-    ///// float type /////
-    // get number of variables
-    int nVars = 0;
-    exodusError(ex_get_var_param(mExodusId, "g", &nVars), "ex_get_var_param");
-    // variable names 
-    char *varNames[nVars];
-    for (int i = 0; i < nVars; i++) varNames[i] = new char[256];
-    exodusError(ex_get_var_names(mExodusId, "g", nVars, varNames), "ex_get_var_names");
-    // variable values
-    std::vector<double> varValues(nVars);
-    exodusError(ex_get_glob_vars(mExodusId, 1, nVars, varValues.data()), "ex_get_glob_vars");
-    // insert to map
-    for (int i = 0; i < nVars; i++) {
-        std::string gname(varNames[i]);
-        // clarify here the meaning of dt
-        if (gname == "dt") gname = "dt (nPol = 1)";
-        mGlobalVariables.insert(std::pair<std::string, double>(gname, varValues[i]));
-        delete [] varNames[i];
+    /////////// elemental
+    H5Reader::getStringData(fid, "name_elem_var", mRawNumEleVar, mRawLenEleVarName, mRawEleVarName);
+    mRawEleVarVals = new double * [mRawNumEleVar];
+    mRawEleVarVals[0] = new double[mRawNumEleVar * mNumQuads];
+    for (int i = 1; i < mRawNumEleVar; i++) mRawEleVarVals[i] = mRawEleVarVals[0] + i * mNumQuads;
+    for (int i = 0; i < mRawNumEleVar; i++) {
+        std::stringstream ss;
+        ss << "vals_elem_var" << i + 1 << "eb1";
+        H5Reader::getDoubleData(fid, ss.str().c_str(), row, col, mRawEleVarVals[i], false);
     }
     
-    ///// string type /////
-    // get number of records
-    int nRecords = ex_inquire_int(mExodusId, EX_INQ_INFO);
-    // read records
-    char *records[nRecords];
-    for (int i = 0; i < nRecords; i++) records[i] = new char[256];
-    exodusError(ex_get_info(mExodusId, records), "ex_get_info");
-    // insert to map
-    for (int i = 0; i < nRecords; i++) {
-        // records to be excluded
-        // It may not feel good to see one's name present in the simulation info 
-        std::vector<std::string> excluded = {"cmdl 0", "cmdl 1", "host", "python version", "user"};
-        std::string recstr(records[i]);
-        delete [] records[i];
+    /////////// side sets
+    H5Reader::getStringData(fid, "ss_names", mRawNumSS, mRawLenSSName, mRawNameSS);
+    mRawNumPairsSS = new int[mRawNumSS];
+    mRawMaxPair = -1;
+    for (int i = 0; i < mRawNumSS; i++) {
+        std::stringstream ss;
+        ss << "num_side_ss" << i + 1;
+        mRawNumPairsSS[i] = H5Reader::getDimension1D(fid, ss.str().c_str());
+        mRawMaxPair = std::max(mRawMaxPair, mRawNumPairsSS[i]);
+    }
+    mRawElemSS = new int * [mRawNumSS];
+    mRawSideSS = new int * [mRawNumSS];
+    mRawElemSS[0] = new int[mRawNumSS * mRawMaxPair];
+    mRawSideSS[0] = new int[mRawNumSS * mRawMaxPair];
+    for (int i = 0; i < mRawNumSS * mRawMaxPair; i++) {
+        mRawElemSS[0][i] = -1;
+        mRawSideSS[0][i] = -1;
+    }
+    for (int i = 1; i < mRawNumSS; i++) {
+        mRawElemSS[i] = mRawElemSS[0] + i * mRawMaxPair;
+        mRawSideSS[i] = mRawSideSS[0] + i * mRawMaxPair;
+    }
+    for (int i = 0; i < mRawNumSS; i++) {
+        std::stringstream sse, sss;
+        sse << "elem_ss" << i + 1;
+        sss << "side_ss" << i + 1;
+        H5Reader::getIntData(fid, sse.str().c_str(), row, col, mRawElemSS[i], false);
+        H5Reader::getIntData(fid, sss.str().c_str(), row, col, mRawSideSS[i], false);
+    }
+    
+    /////////// ellipticity
+    H5Reader::getDoubleData(fid, "ellipticity", row, mRawEllipCol, mRawEllipData);
+    
+    /////////// close file
+    H5Reader::hdf5Error(H5Fclose(fid), "H5Dclose");
+}
+
+void ExodusModel::bcastRawData() {
+    /////////// file attr
+    XMPI::bcast(mExodusVersion);
+    
+    /////////// numbers
+    XMPI::bcast(mNumNodes);
+    XMPI::bcast(mNumQuads);
+    
+    /////////// global var
+    XMPI::bcast(mRawNumGlbVar);
+    XMPI::bcast(mRawLenGlbVarName);
+    
+    XMPI::bcast_alloc(mRawGlbVarName, mRawNumGlbVar * mRawLenGlbVarName);
+    XMPI::bcast_alloc(mRawGlbVarVals, mRawNumGlbVar);
+    
+    /////////// global rec
+    XMPI::bcast(mRawNumGlbRec);
+    XMPI::bcast(mRawLenGlbRec);
+    XMPI::bcast_alloc(mRawGlbRec, mRawNumGlbRec * mRawLenGlbRec);
+    
+    /////////// connectivity
+    XMPI::bcast_alloc(mRawConnect, mNumQuads * 4);
+    
+    /////////// coords
+    XMPI::bcast_alloc(mRawNodalS, mNumNodes);
+    XMPI::bcast_alloc(mRawNodalZ, mNumNodes);
+    
+    /////////// elemental
+    XMPI::bcast(mRawNumEleVar);
+    XMPI::bcast(mRawLenEleVarName);
+    XMPI::bcast_alloc(mRawEleVarName, mRawNumEleVar * mRawLenEleVarName);
+    if (!XMPI::root()) {
+        mRawEleVarVals = new double * [mRawNumEleVar];
+        mRawEleVarVals[0] = new double[mRawNumEleVar * mNumQuads];
+        for (int i = 1; i < mRawNumEleVar; i++) mRawEleVarVals[i] = mRawEleVarVals[0] + i * mNumQuads;
+    }
+    XMPI::bcast(mRawEleVarVals[0], mRawNumEleVar * mNumQuads);
+    
+    /////////// side sets
+    XMPI::bcast(mRawNumSS);
+    XMPI::bcast(mRawLenSSName);
+    XMPI::bcast(mRawMaxPair);
+    XMPI::bcast_alloc(mRawNameSS, mRawNumSS * mRawLenSSName);
+    XMPI::bcast_alloc(mRawNumPairsSS, mRawNumSS);
+    if (!XMPI::root()) {
+        mRawElemSS = new int * [mRawNumSS];
+        mRawSideSS = new int * [mRawNumSS];
+        mRawElemSS[0] = new int[mRawNumSS * mRawMaxPair];
+        mRawSideSS[0] = new int[mRawNumSS * mRawMaxPair];
+        for (int i = 1; i < mRawNumSS; i++) {
+            mRawElemSS[i] = mRawElemSS[0] + i * mRawMaxPair;
+            mRawSideSS[i] = mRawSideSS[0] + i * mRawMaxPair;
+        }
+    }
+    XMPI::bcast(mRawElemSS[0], mRawNumSS * mRawMaxPair);
+    XMPI::bcast(mRawSideSS[0], mRawNumSS * mRawMaxPair);
+    
+    /////////// ellipticity
+    XMPI::bcast(mRawEllipCol);
+    XMPI::bcast_alloc(mRawEllipData, mRawEllipCol * 2);
+}
+
+void ExodusModel::formStructured() {
+    /////////// global var
+    std::string all(mRawGlbVarName);
+    for (int i = 0; i < mRawNumGlbVar; i++) {
+        std::string varName = all.substr(i * mRawLenGlbVarName, mRawLenGlbVarName);
+        boost::trim_if(varName, boost::is_any_of("\t "));
+        if (varName == "dt") varName = "dt (nPol = 1)";
+        mGlobalVariables.insert(std::pair<std::string, double>(varName, mRawGlbVarVals[i]));
+    }
+    delete [] mRawGlbVarName;
+    delete [] mRawGlbVarVals;
+    
+    /////////// global rec
+    all = std::string(mRawGlbRec);
+    std::vector<std::string> included = {"crdsys", "model"};
+    for (int i = 0; i < mRawNumGlbRec; i++) {
+        std::string recstr = all.substr(i * mRawLenGlbRec, mRawLenGlbRec);
         std::vector<std::string> substrs;
         boost::trim_if(recstr, boost::is_any_of("\t "));
         boost::split(substrs, recstr, boost::is_any_of("="), boost::token_compress_on);
-        if (std::find(excluded.begin(), excluded.end(), boost::trim_copy(substrs[0])) == excluded.end()) {
+        if (std::find(included.begin(), included.end(), boost::trim_copy(substrs[0])) != included.end()) {
             mGlobalRecords.insert(std::pair<std::string, std::string>(
                 boost::trim_copy(substrs[0]), boost::trim_copy(substrs[1])));
             if (substrs[0].find("crdsys") != std::string::npos) 
                 mCartesian = (substrs[1].find("cartesian") != std::string::npos);
         }
     }
+    delete [] mRawGlbRec;
     // name of axis and surface sets
     mSSNameAxis = mCartesian ? "x0" : "t0";
     mSSNameSurface = mCartesian ? "y1" : "r1";
-}
-
-void ExodusModel::readConnectivity() {
+    
+    /////////// connectivity
     mConnectivity.resize(mNumQuads);
-    exodusError(ex_get_elem_conn(mExodusId, 1, mConnectivity.data()), "ex_get_elem_conn");
-    // let start from 0
-    for (auto && connect: mConnectivity) {
-        connect[0] -= 1;
-        connect[1] -= 1;
-        connect[2] -= 1;
-        connect[3] -= 1;
-    }    
-}
-
-void ExodusModel::readCoordinates() {
+    for (int i = 0; i < mNumQuads; i++) {
+        mConnectivity[i][0] = mRawConnect[i * 4 + 0] - 1;
+        mConnectivity[i][1] = mRawConnect[i * 4 + 1] - 1;
+        mConnectivity[i][2] = mRawConnect[i * 4 + 2] - 1;
+        mConnectivity[i][3] = mRawConnect[i * 4 + 3] - 1;
+    }
+    delete [] mRawConnect;
+    
+    /////////// coords
     mNodalS.resize(mNumNodes);
     mNodalZ.resize(mNumNodes);
-    exodusError(ex_get_coord(mExodusId, mNodalS.data(), mNodalZ.data(), NULL), "ex_get_coord");
-    
+    for (int i = 0; i < mNumNodes; i++) {
+        mNodalS[i] = mRawNodalS[i];
+        mNodalZ[i] = mRawNodalZ[i];
+    }
     // NOTE: we temporarily treat Cartesian meshes as special cases of spherical meshes
     //       by means of moving it to the "north pole". The introduced global 
     //       curvature should be ignorable, or the problem itself is ill-defined
     //       as a local problem.
     if (mCartesian) {
-        double R_EARTH = 6371e3;
+        double R_EARTH = mGlobalVariables.at("radius");
         double maxz = -1.;
         for (int i = 0; i < mNumNodes; i++) 
             maxz = std::max(maxz, mNodalZ[i]);
         for (int i = 0; i < mNumNodes; i++) 
             mNodalZ[i] += R_EARTH - maxz;
     }
-}
-
-
-void ExodusModel::readElementalVariables() {
-    // get number of variables
-    int nVars = 0;
-    exodusError(ex_get_var_param(mExodusId, "e", &nVars), "ex_get_var_param");
-    // variable names 
-    char *varNames[nVars];
-    for (int i = 0; i < nVars; i++) varNames[i] = new char[256];
-    exodusError(ex_get_var_names(mExodusId, "e", nVars, varNames), "ex_get_var_names");
-    // get variables
-    std::vector<double> buffer(mNumQuads);
-    for (int i = 0; i < nVars; i++) {
-        exodusError(ex_get_elem_var(
-            mExodusId, 1, (i + 1), 1, mNumQuads, buffer.data()), "ex_get_elem_var");
+    delete [] mRawNodalS;
+    delete [] mRawNodalZ;
+    
+    /////////// elemental
+    all = std::string(mRawEleVarName);
+    for (int i = 0; i < mRawNumEleVar; i++) {
+        std::string varName = all.substr(i * mRawLenEleVarName, mRawLenEleVarName);
+        boost::trim_if(varName, boost::is_any_of("\t "));
+        std::vector<double> buffer(mNumQuads);
+        for (int j = 0; j < mNumQuads; j++) buffer[j] = mRawEleVarVals[i][j];
         mElementalVariables.insert(std::pair<std::string, std::vector<double>>
-            (std::string(varNames[i]), buffer));
-        delete [] varNames[i];
+                    (std::string(varName), buffer));
     }
-}
-
-void ExodusModel::readSideSets() {
-    // get names of SideSets
-    char *ssNames[mNumSideSets];
-    for (int i = 0; i < mNumSideSets; i++) ssNames[i] = new char[256];
-    exodusError(ex_get_names(mExodusId, EX_SIDE_SET, ssNames), "ex_get_names");
-    // get SideSets
-    for (int i = 0; i < mNumSideSets; i++) {
-        int size, useless;
-        exodusError(ex_get_side_set_param(mExodusId, (i + 1), &size, &useless), "ex_get_side_set_param");
-        std::vector<int> ebuffer(size);
-        std::vector<int> sbuffer(size);
-        exodusError(ex_get_side_set(
-            mExodusId, (i + 1), ebuffer.data(), sbuffer.data()), "ex_get_elem_var");
+    delete [] mRawEleVarName;
+    delete [] mRawEleVarVals[0];
+    delete [] mRawEleVarVals;
+    
+    /////////// side sets 
+    all = std::string(mRawNameSS);
+    for (int i = 0; i < mRawNumSS; i++) {
+        std::string varName = all.substr(i * mRawLenSSName, mRawLenSSName);
+        boost::trim_if(varName, boost::is_any_of("\t "));
         std::vector<int> ss(mNumQuads, -1);
-        for (int j = 0; j < size; j++) ss[ebuffer[j] - 1] = sbuffer[j] - 1;
-        mSideSets.insert(std::pair<std::string, std::vector<int>>(std::string(ssNames[i]), ss));
-        delete [] ssNames[i];
+        for (int j = 0; j < mRawNumPairsSS[i]; j++) ss[mRawElemSS[i][j] - 1] = mRawSideSS[i][j] - 1;
+        mSideSets.insert(std::pair<std::string, std::vector<int>>(std::string(varName), ss));
     }
-}
-
-void ExodusModel::readExternalH5() {
-    // open file
-    hid_t file_id = H5Fopen(mExodusFileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    delete [] mRawNameSS;
+    delete [] mRawNumPairsSS;
+    delete [] mRawElemSS[0];
+    delete [] mRawSideSS[0];
+    delete [] mRawElemSS;
+    delete [] mRawSideSS;
     
-    ///////// read ellipticity /////////
-    if (!mCartesian) {
-        // read dimensions
-        hid_t dset_id = H5Dopen(file_id, "/ellipticity", H5P_DEFAULT);
-        hid_t dspace_id = H5Dget_space(dset_id);
-        hsize_t dims[2];
-        hdf5Error(H5Sget_simple_extent_dims(dspace_id, dims, NULL), "H5Sget_simple_extent_dims");
-        int ellip_dim = dims[1];
-        // read meta data
-        double *data = new double[2 * ellip_dim];
-        hdf5Error(H5Dread(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data), "H5Dread");
-        hdf5Error(H5Dclose(dset_id), "H5Dclose");
-        // copy to memory variables
-        for (int i = 0; i < ellip_dim; i++) {
-            mEllipKnots.push_back(data[i]);
-            mEllipCoeffs.push_back(data[i + ellip_dim]);
-        }
-        // delete meta data
-        delete [] data;
+    /////////// ellipticity
+    for (int i = 0; i < mRawEllipCol; i++) {
+        mEllipKnots.push_back(mRawEllipData[i]);
+        mEllipCoeffs.push_back(mRawEllipData[i + mRawEllipCol]);
     }
-    
-    // close file
-    hdf5Error(H5Fclose(file_id), "H5Dclose");
+    delete [] mRawEllipData;
 }
 
 void ExodusModel::finishReading() {
@@ -390,16 +435,6 @@ void ExodusModel::finishReading() {
     XTimer::end("Process Exodus Check Ocean", 2);
 }
 
-void ExodusModel::exodusError(const int retval, const std::string &func_name) {
-    if (retval) throw std::runtime_error("ExodusModel::exodusError || "
-        "Error in exodus function: " + func_name);
-}
-
-void ExodusModel::hdf5Error(const int retval, const std::string &func_name) {
-    if (retval < 0) throw std::runtime_error("ExodusModel::hdf5Error || "
-        "Error in exodus function: " + func_name);
-}
-
 std::string ExodusModel::verbose() const {
     std::stringstream ss;
     ss << "\n======================= Exodus Model =======================" << std::endl;
@@ -505,6 +540,4 @@ void ExodusModel::buildInparam(ExodusModel *&exModel, const Parameters &par,
         XMath::setEllipticity(1. / inv_f, exModel->mROuter, exModel->mEllipKnots, exModel->mEllipCoeffs);
     }
 }
-
-
 

@@ -14,7 +14,7 @@
 # WHAT: exodus file created by salvus_mesher
 # TYPE: string (path to file)
 # NOTE: mesh + 1D reference model
-MODEL_1D_EXODUS_MESH_FILE                   prem_ani_one_crust_spherical_2D_50s.e
+MODEL_1D_EXODUS_MESH_FILE                   AxiSEM_prem_ani_one_crust_50.e
 
 
 

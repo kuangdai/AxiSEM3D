@@ -23,7 +23,6 @@ SET(CMAKE_Fortran_COMPILER     mpif90)
 # SET(FFTW_ROOT             edit_here)
 # SET(BOOST_ROOT            edit_here)
 # SET(METIS_ROOT            edit_here)
-# SET(EXODUS_ROOT           edit_here)
 # SET(HDF5_ROOT             edit_here)
 
 # polynomial order of spectral elements (from 1 to 8)
@@ -87,9 +86,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 # metis
 find_package(METIS REQUIRED)
 include_directories(${METIS_INCLUDE_DIR})
-# exodus
-find_package(EXODUS REQUIRED)
-include_directories(${EXODUS_INCLUDE_DIR})
 # hdf5
 if (HDF5_ROOT)
     set(ENV{HDF5_ROOT} ${HDF5_ROOT})
@@ -242,6 +238,7 @@ add_executable(
     src/preloop/spectral/mapping/SemiSphericalMapping.cpp
 
     src/preloop/exodus/ExodusModel.cpp
+    src/preloop/exodus/H5Reader.cpp
     src/preloop/graph/DualGraph.cpp
     src/preloop/graph/Connectivity.cpp
     src/preloop/mesh/GLLPoint.cpp
@@ -303,6 +300,5 @@ target_link_libraries(
     ${FFTW_LIBRARIES}
     ${Boost_LIBRARIES}
     ${METIS_LIBRARIES}
-    ${EXODUS_LIBRARIES}
     ${HDF5_LIBRARIES}
 )

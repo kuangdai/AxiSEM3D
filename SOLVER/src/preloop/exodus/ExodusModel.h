@@ -15,16 +15,11 @@
 class Parameters;
 class AttParameters;
 
-extern "C" {
-#include "exodusII.h"
-};
-
 class ExodusModel {
     
 public:
     ExodusModel(const std::string &fileName);
     void initialize();
-    void bcast();
     
     // general
     bool isIsotropic() const {return mElementalVariables.find("VP_0") != mElementalVariables.end();};
@@ -58,29 +53,61 @@ public:
     
 private:
     
-    void readGlobalVariables();
-    void readConnectivity();
-    void readCoordinates();
-    void readElementalVariables();
-    void readSideSets();
-    void readExternalH5();
+    void readRawData();
+    void bcastRawData();
+    void formStructured();
     void finishReading();
-    
-    static void exodusError(const int retval, const std::string &func_name);
-    static void hdf5Error(const int retval, const std::string &func_name);
     
     // file name
     std::string mExodusFileName;
 
     // file properties
-    int mExodusId = -1;
+    std::string mExodusTitle;
     float mExodusVersion;
-    char mExodusTitle[MAX_LINE_LENGTH + 1];
     
     // numbers 
     int mNumNodes;
     int mNumQuads;
     
+    ///////////////////////////////////// raw data /////////////////////////////////////
+    // global variables
+    int mRawNumGlbVar;
+    int mRawLenGlbVarName;
+    char *mRawGlbVarName = 0;
+    double *mRawGlbVarVals = 0;
+    
+    // global records
+    int mRawNumGlbRec;
+    int mRawLenGlbRec;
+    char *mRawGlbRec = 0;
+    
+    // connectivity
+    int *mRawConnect = 0;
+    
+    // coords
+    double *mRawNodalS = 0;
+    double *mRawNodalZ = 0;
+    
+    // elemental
+    int mRawNumEleVar;
+    int mRawLenEleVarName;
+    char *mRawEleVarName = 0;
+    double **mRawEleVarVals = 0;
+    
+    // side sets
+    int mRawNumSS;
+    int mRawLenSSName;
+    int mRawMaxPair;
+    char *mRawNameSS = 0;
+    int *mRawNumPairsSS = 0;
+    int **mRawElemSS = 0;
+    int **mRawSideSS = 0;
+    
+    // ellipticity
+    int mRawEllipCol;
+    double *mRawEllipData = 0;
+    
+    ///////////////////////////////////// structured /////////////////////////////////////
     // global variables (dt)
     std::map<std::string, double> mGlobalVariables;
     std::map<std::string, std::string> mGlobalRecords;

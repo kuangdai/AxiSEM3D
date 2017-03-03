@@ -68,6 +68,18 @@ public:
         #endif
     };
     
+    template<typename Type>
+    static void bcast_alloc(Type *&buffer, int size) {
+        #ifndef _SERIAL_BUILD
+            bcast(size);
+            if (!root()) {
+                if (buffer != 0) delete [] buffer;
+                buffer = new Type[size];
+            }
+            boost::mpi::broadcast(*sWorld, buffer, size, 0);
+        #endif
+    };
+    
     // single
     template<typename Type>
     static void bcast(Type &buffer) {
