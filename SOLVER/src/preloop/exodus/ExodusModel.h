@@ -121,7 +121,6 @@ private:
     std::map<std::string, std::vector<double>> mElementalVariables;
     
     // side sets
-    int mNumSideSets;
     std::map<std::string, std::vector<int>> mSideSets;
     
     // others
