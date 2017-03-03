@@ -243,6 +243,10 @@ public:
     };
     static root_cout cout;
     static std::string endl;
+    
+    ////////////////////////////// dir utils //////////////////////////////
+    static bool dirExists(const std::string &path);
+    static void mkdir(const std::string &path);
         
 private:
     #ifndef _SERIAL_BUILD

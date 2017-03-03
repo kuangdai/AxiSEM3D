@@ -5,8 +5,6 @@
 #include "XMPI.h"
 #include <iomanip>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
 #include "Parameters.h"
 
 #ifndef _SERIAL_BUILD
@@ -16,6 +14,25 @@
 
 XMPI::root_cout XMPI::cout;
 std::string XMPI::endl = "\n";
+
+extern "C" {
+    #include <sys/types.h>
+    #include <sys/stat.h>
+};
+
+bool XMPI::dirExists(const std::string &path) {
+    struct stat info;
+    if (stat(path.c_str(), &info) != 0)
+        return false;
+    else if (info.st_mode & S_IFDIR)
+        return true;
+    else
+        return false;
+}
+
+void XMPI::mkdir(const std::string &path) {
+    if (!dirExists(path)) ::mkdir(path.c_str(), ACCESSPERMS);
+}
 
 void XMPI::initialize(int argc, char *argv[]) {
     #ifndef _SERIAL_BUILD
@@ -30,16 +47,12 @@ void XMPI::initialize(int argc, char *argv[]) {
     if (execDirectory.length() == 0) execDirectory = ".";
     Parameters::sInputDirectory = execDirectory + "/input";
     Parameters::sOutputDirectory = execDirectory + "/output";
-    if (!boost::filesystem::exists(Parameters::sInputDirectory)) 
+    if (!dirExists(Parameters::sInputDirectory)) 
         throw std::runtime_error("XMPI::initialize || Missing input directory: ||" + Parameters::sInputDirectory);
-    if (!boost::filesystem::exists(Parameters::sOutputDirectory)) 
-        boost::filesystem::create_directory(Parameters::sOutputDirectory);
-    if (!boost::filesystem::exists(Parameters::sOutputDirectory + "/stations")) 
-        boost::filesystem::create_directory(Parameters::sOutputDirectory + "/stations");    
-    if (!boost::filesystem::exists(Parameters::sOutputDirectory + "/plots")) 
-        boost::filesystem::create_directory(Parameters::sOutputDirectory + "/plots");
-    if (!boost::filesystem::exists(Parameters::sOutputDirectory + "/develop")) 
-        boost::filesystem::create_directory(Parameters::sOutputDirectory + "/develop");            
+    mkdir(Parameters::sOutputDirectory);
+    mkdir(Parameters::sOutputDirectory + "/stations");    
+    mkdir(Parameters::sOutputDirectory + "/plots");
+    mkdir(Parameters::sOutputDirectory + "/develop");            
 }
 
 void XMPI::finalize() {

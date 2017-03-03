@@ -78,9 +78,9 @@ include_directories(${FFTW_INCLUDE_DIR})
 # boost
 set(Boost_USE_MULTITHREADED ON)
 if (SERIAL_BUILD)
-    find_package(Boost COMPONENTS filesystem system timer chrono REQUIRED)
+    find_package(Boost COMPONENTS timer chrono REQUIRED)
 else ()
-    find_package(Boost COMPONENTS mpi serialization filesystem system timer chrono REQUIRED)
+    find_package(Boost COMPONENTS mpi serialization timer chrono REQUIRED)
 endif ()
 include_directories(${Boost_INCLUDE_DIRS})
 # metis

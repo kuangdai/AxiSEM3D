@@ -3,8 +3,6 @@
 // perform FFT using fftw
 
 #include "SolverFFTW.h"
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
 #include "XMPI.h"
 
 #include <fstream>
@@ -35,9 +33,8 @@ void SolverFFTW::importWisdom() {
 
 void SolverFFTW::exportWisdom() {
     if (XMPI::root()) {
-        if (!boost::filesystem::exists(fftwWisdomDirectory)) 
-            boost::filesystem::create_directory(fftwWisdomDirectory);
-        if (!boost::filesystem::exists(fftwWisdomDirectory)) 
+        XMPI::mkdir(fftwWisdomDirectory);
+        if (!XMPI::dirExists(fftwWisdomDirectory)) 
             throw std::runtime_error("SolverFFTW::exportWisdom || Error creating FFTW wisdom directory: ||" + fftwWisdomDirectory);    
         #ifdef _USE_DOUBLE
             fftw_export_wisdom_to_filename((fftwWisdomDirectory + "/fftw_wisdom.double").c_str());
