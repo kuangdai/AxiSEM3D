@@ -20,7 +20,7 @@ boost | 1.60 | Simply [download](https://sourceforge.net/projects/boost/files/bo
 eigen3 | 3.3-rc1 | Simply [download](http://bitbucket.org/eigen/eigen/get/3.3-rc1.tar.bz2) and unzip to your path of treasures. No need to build or install.
 fftw | 3.3 | Install both double- and single-precision (with _--enable-float_) versions to the same path. See [here](http://www.fftw.org/fftw2_doc/fftw_6.html).
 metis | 5.1 | [Download](http://glaros.dtc.umn.edu/gkhome/metis/metis/download) and install following `Install.txt`. Skip step 3 in `Install.txt` to use the 32-bit build. 
-HDF5 |---| See [here](https://support.hdfgroup.org/HDF5/).
+HDF5 |---| Install the latest stable verson of 1.8.xx (1.10.xx has some issues with Mac OSX). See [here](https://support.hdfgroup.org/HDF5/).
 
  Don't panic! All these popular packages may be handily installed with free package management software, such as [Conda](http://conda.pydata.org/docs/). Here we introduce the wizard `axisem3d_depends.sh`. 
 
