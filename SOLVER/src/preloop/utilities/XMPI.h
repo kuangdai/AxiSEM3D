@@ -5,14 +5,12 @@
 #pragma once 
 #include <iostream>
 #include "eigenc.h"
+#include <map>
 
 #ifndef _SERIAL_BUILD
-    #include <boost/mpi.hpp>
-    #include <boost/serialization/string.hpp>
-    #include <boost/serialization/array.hpp>
-    #include <boost/serialization/vector.hpp>
-    #include <boost/serialization/map.hpp>
-    #include <boost/serialization/complex.hpp>
+    extern "C" {
+        #include "mpi.h"
+    };
 #endif
 
 class XMPI {
@@ -27,7 +25,9 @@ public:
     // properties
     static int nproc() {
         #ifndef _SERIAL_BUILD
-            return sWorld->size();
+            int world_size;
+            MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+            return world_size;
         #else
             return 1;
         #endif
@@ -35,7 +35,9 @@ public:
     
     static int rank() {
         #ifndef _SERIAL_BUILD
-            return sWorld->rank();
+            int world_rank;
+            MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+            return world_rank;
         #else
             return 0;
         #endif
@@ -46,28 +48,27 @@ public:
     // barrier
     static void barrier() {
         #ifndef _SERIAL_BUILD
-            sWorld->barrier();
+            MPI_Barrier(MPI_COMM_WORLD);
         #endif
     };
     
     // abort
     static void abort(int err = 0) {
         #ifndef _SERIAL_BUILD
-            sEnv->abort(err);
+            MPI_Abort(MPI_COMM_WORLD, err);
         #else
-            exit(0);
+            exit(err);
         #endif
     };
     
     ////////////////////////////// broadcast //////////////////////////////
     // array
-    template<typename Type>
-    static void bcast(Type *buffer, int size) {
-        #ifndef _SERIAL_BUILD
-            boost::mpi::broadcast(*sWorld, buffer, size, 0);
-        #endif
-    };
-    
+    static void bcast(int *buffer, int size);
+    static void bcast(double *buffer, int size);
+    static void bcast(float *buffer, int size);
+    static void bcast(std::complex<float> *buffer, int size);
+    static void bcast(std::complex<double> *buffer, int size);
+    static void bcast(char *buffer, int size);
     template<typename Type>
     static void bcast_alloc(Type *&buffer, int size) {
         #ifndef _SERIAL_BUILD
@@ -76,154 +77,203 @@ public:
                 if (buffer != 0) delete [] buffer;
                 buffer = new Type[size];
             }
-            boost::mpi::broadcast(*sWorld, buffer, size, 0);
+            bcast(buffer, size);
         #endif
     };
     
     // single
-    template<typename Type>
-    static void bcast(Type &buffer) {
-        #ifndef _SERIAL_BUILD
-            boost::mpi::broadcast(*sWorld, buffer, 0);
-        #endif
-    };
-    
-    // single from iproc
-    template<typename Type>
-    static void bcastFromProc(Type &buffer, int iproc) {
-        #ifndef _SERIAL_BUILD
-            boost::mpi::broadcast(*sWorld, buffer, iproc);
-        #endif
-    };
+    static void bcast(int &buffer);
+    static void bcast(double &buffer);
+    static void bcast(float &buffer);
+    static void bcast(std::string &str);
     
     // Eigen::Matrix
     template<typename Type>
     static void bcastEigen(Type &buffer) {
         #ifndef _SERIAL_BUILD
-            int row, col;
-            if (root()) {row = buffer.rows(); col = buffer.cols();}
-            bcast(row);
-            bcast(col);
-            if (!root()) buffer = Type::Zero(row, col);
+            int dim[2];
+            if (root()) {dim[0] = buffer.rows(); dim[1] = buffer.cols();}
+            bcast(dim, 2);
+            if (!root()) buffer = Type::Zero(dim[0], dim[1]);
             bcast(buffer.data(), buffer.size());
         #endif
     };
     
-    ////////////////////////////// isend/irecv ////////////////////////////// 
-    // request typdef
-    #ifndef _SERIAL_BUILD
-        typedef boost::mpi::request Request; 
-    #else 
-        typedef int Request;
-    #endif
+    // std::vector
+    template<typename Type>
+    static void bcast(std::vector<Type> &buffer) {
+        #ifndef _SERIAL_BUILD
+            int size = 0;
+            if (root()) size = buffer.size();
+            bcast(size);
+            if (!root()) buffer.resize(size);
+            bcast(buffer.data(), size);
+        #endif
+    }
     
+    // special case
+    static void bcast(std::vector<std::string> &buffer);
+    
+    ////////////////////////////// isend/irecv ////////////////////////////// 
     // isend, only for Eigen::Matrix
     template<typename EigenMat>
-    static Request isend(int dest, const EigenMat &buffer) {
+    static void isendDouble(int dest, const EigenMat &buffer, MPI_Request &request) {
         #ifndef _SERIAL_BUILD
-            return sWorld->isend(dest, dest, buffer.data(), buffer.size());
-        #else
-            return 0;
+            MPI_Isend(buffer.data(), buffer.size(), 
+                MPI_DOUBLE, dest, dest, MPI_COMM_WORLD, &request);
         #endif
     };
     
     // irecv, only for Eigen::Matrix
     template<typename EigenMat>
-    static Request irecv(int source, EigenMat &buffer) {
+    static void irecvDouble(int source, EigenMat &buffer, MPI_Request &request) {
         #ifndef _SERIAL_BUILD
-            return sWorld->irecv(source, rank(), buffer.data(), buffer.size());
-        #else
-            return 0;
+            MPI_Irecv(buffer.data(), buffer.size(), 
+                MPI_DOUBLE, source, rank(), MPI_COMM_WORLD, &request);
+        #endif
+    };
+    
+    // isend, only for Eigen::Matrix
+    template<typename EigenMat>
+    static void isendComplex(int dest, const EigenMat &buffer, MPI_Request &request) {
+        #ifndef _SERIAL_BUILD
+            #ifdef _USE_DOUBLE
+                MPI_Isend(buffer.data(), buffer.size(), 
+                    MPI_C_DOUBLE_COMPLEX, dest, dest, MPI_COMM_WORLD, &request);
+            #else
+                MPI_Isend(buffer.data(), buffer.size(), 
+                    MPI_C_FLOAT_COMPLEX, dest, dest, MPI_COMM_WORLD, &request);
+            #endif
+        #endif
+    };
+    
+    // irecv, only for Eigen::Matrix
+    template<typename EigenMat>
+    static void irecvComplex(int source, EigenMat &buffer, MPI_Request &request) {
+        #ifndef _SERIAL_BUILD
+            #ifdef _USE_DOUBLE
+                MPI_Irecv(buffer.data(), buffer.size(), 
+                    MPI_C_DOUBLE_COMPLEX, source, rank(), MPI_COMM_WORLD, &request);
+            #else
+                MPI_Irecv(buffer.data(), buffer.size(), 
+                    MPI_C_FLOAT_COMPLEX, source, rank(), MPI_COMM_WORLD, &request);
+            #endif
         #endif
     };
     
     // wait_all
-    template<typename It>
-    static void wait_all(It first, It last) {
+    static void wait_all(int count, MPI_Request array_of_requests[]) {
         #ifndef _SERIAL_BUILD
-            boost::mpi::wait_all(first, last);
+            MPI_Waitall(count, array_of_requests, MPI_STATUSES_IGNORE);
         #endif
     };
+    
+    ////////////////////////////// gather ////////////////////////////// 
+    // string
+    static void gather(int buf, std::vector<int> &all_buf, bool all);
+    static void gather(const std::string &buf, std::vector<std::string> &all_buf, bool all);
+    static void gather(const std::vector<std::string> &buf, 
+        std::vector<std::vector<std::string>> &all_buf, bool all);
+        
+    template<typename Type>
+    static void gather(const std::vector<Type> &buf, 
+        std::vector<std::vector<Type>> &all_buf, MPI_Datatype mpitype, 
+        bool all) {
+        
+        #ifndef _SERIAL_BUILD
+            // size
+            int size = buf.size();
+            std::vector<int> all_size;
+            gather(size, all_size, all);
+            int total_size = 0;
+            for (auto &n : all_size) total_size += n;
+            int nproc = XMPI::nproc();
+            std::vector<int> disp(nproc, 0);
+            if (all || root()) {
+                for (int i = 1; i < nproc; i++) 
+                    for (int j = 0; j < i; j++) 
+                        disp[i] += all_size[j];
+            }
+
+            std::vector<Type> allBuf_flat;
+            if (all || root()) allBuf_flat.resize(total_size);
+            if (all) {
+                MPI_Allgatherv(buf.data(), size, mpitype, allBuf_flat.data(), all_size.data(), disp.data(), mpitype, MPI_COMM_WORLD);
+            } else {
+                MPI_Gatherv(buf.data(), size, mpitype, allBuf_flat.data(), all_size.data(), disp.data(), mpitype, 0, MPI_COMM_WORLD);
+            }
+            if (all || root()) {
+                all_buf.clear();
+                int pos = 0;
+                for (int i = 0; i < nproc; i++) {
+                    std::vector<Type> sub;
+                    for (int j = 0; j < all_size[i]; j++) sub.push_back(allBuf_flat[pos++]);
+                    all_buf.push_back(sub);
+                }
+            }
+            
+        #else
+            all_buf.clear();
+            all_buf.push_back(buf);
+        #endif
+    }
+    
+    template<typename Type>
+    static void gather(const std::map<std::string, Type> &buf, 
+        std::vector<std::map<std::string, Type>> &all_buf, 
+        MPI_Datatype mpitype, bool all) {
+        
+        std::vector<std::string> keys;
+        std::vector<Type> vals;
+        for (auto it = buf.begin(); it != buf.end(); it++) {
+            keys.push_back(it->first);
+            vals.push_back(it->second);
+        }
+        
+        std::vector<std::vector<std::string>> all_keys;
+        std::vector<std::vector<Type>> all_vals;
+        gather(keys, all_keys, all);
+        gather(vals, all_vals, mpitype, all);
+        
+        if (all || root()) {
+            all_buf.clear();
+            for (int i = 0; i < all_keys.size(); i++) {
+                std::map<std::string, Type> sub;
+                for (int j = 0; j < all_keys[i].size(); j++)
+                    sub.insert(std::pair<std::string, Type>(all_keys[i][j], all_vals[i][j]));
+                all_buf.push_back(sub);
+            }
+        }
+    }
     
     ////////////////////////////// reduce //////////////////////////////
-    // minimum
-    template<typename Type>
-    static Type min(const Type &value) {
-        #ifndef _SERIAL_BUILD
-            Type minimum;
-            boost::mpi::all_reduce(*sWorld, value, minimum, boost::mpi::minimum<Type>());
-            return minimum;
-        #else
-            return value;
-        #endif
-    };
-    
-    // maximum
-    template<typename Type>
-    static Type max(const Type &value) {
-        #ifndef _SERIAL_BUILD
-            Type maximum;
-            boost::mpi::all_reduce(*sWorld, value, maximum, boost::mpi::maximum<Type>());
-            return maximum;
-        #else
-            return value;
-        #endif
-    };
-    
-    // sum
-    template<typename Type>
-    static Type sum(const Type &value) {
-        #ifndef _SERIAL_BUILD
-            Type total;
-            boost::mpi::all_reduce(*sWorld, value, total, std::plus<Type>());
-            return total;
-        #else 
-            return value;
-        #endif
-    };
+    // simple
+    static int min(const int &value);
+    static double min(const double &value);
+    static int max(const int &value);
+    static double max(const double &value);
+    static int sum(const int &value);
+    static double sum(const double &value);
     
     // sum std::vector
-    template<typename Type>
-    static void sumVector(std::vector<Type> &value) {
-        #ifndef _SERIAL_BUILD
-            std::vector<Type> total(value.size());
-            boost::mpi::all_reduce(*sWorld, value.data(), value.size(), total.data(), 
-                std::plus<Type>());
-            value = total;
-        #endif
-    };
+    static void sumVector(std::vector<double> &value);
     
     // sum Eigen::Matrix
     template<typename Type>
-    static void sumEigen(Type &value) {
+    static void sumEigenDouble(Type &value) {
         #ifndef _SERIAL_BUILD
             Type total(value);
-            boost::mpi::all_reduce(*sWorld, value.data(), value.size(), total.data(), 
-                std::plus<typename Type::Scalar>());
+            MPI_Allreduce(value.data(), total.data(), value.size(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             value = total;
         #endif
     };
     
-    ////////////////////////////// gather //////////////////////////////
     template<typename Type>
-    static std::vector<Type> all_gather(const Type &value) {
+    static void sumEigenInt(Type &value) {
         #ifndef _SERIAL_BUILD
-            std::vector<Type> total;
-            boost::mpi::all_gather(*sWorld, value, total);
-            return total;
-        #else 
-            return std::vector<Type>(1, value);
-        #endif
-    };
-    
-    template<typename Type>
-    static std::vector<Type> gather(const Type &value) {
-        #ifndef _SERIAL_BUILD
-            std::vector<Type> total;
-            boost::mpi::gather(*sWorld, value, total, 0);
-            return total;
-        #else 
-            return std::vector<Type>(1, value);
+            Type total(value);
+            MPI_Allreduce(value.data(), total.data(), value.size(), MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+            value = total;
         #endif
     };
         
@@ -247,12 +297,7 @@ public:
     ////////////////////////////// dir utils //////////////////////////////
     static bool dirExists(const std::string &path);
     static void mkdir(const std::string &path);
-        
-private:
-    #ifndef _SERIAL_BUILD
-        static boost::mpi::environment *sEnv;
-        static boost::mpi::communicator *sWorld;
-    #endif
+    
 };
 
 // message info
@@ -266,8 +311,8 @@ struct MessagingInfo {
     // indecies of local points to be communicated for each proc
     std::vector<std::vector<int>> mILocalPoints;
     // mpi requests
-    std::vector<XMPI::Request> mReqSend;
-    std::vector<XMPI::Request> mReqRecv;
+    std::vector<MPI_Request> mReqSend;
+    std::vector<MPI_Request> mReqRecv;
 };
 
 // message buffer for solver

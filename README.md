@@ -15,25 +15,19 @@ AxiSEM3D has been built upon a few modern numerical packages for its performance
 
 name | version | build-from-source instructions
 --- | --- | --- 
-mpi | --- | Common implementations such as [open-mpi](https://www.open-mpi.org/) or [mpich2](http://www.mpich.org/) are recommended.
-boost | 1.60 | Install [Boost C++ Libraries](http://www.boost.org/) with _boost::mpi_, following [here](http://www.boost.org/doc/libs/1_62_0/doc/html/mpi/getting_started.html).
-eigen3 | 3.3-rc1 | Simply [download](http://bitbucket.org/eigen/eigen/get/3.3-rc1.tar.bz2) and unzip to your path of treasures.
+mpi | --- | Common implementations such as [open-mpi](https://www.open-mpi.org/) or [mpich2](http://www.mpich.org/).
+boost | 1.60 | Simply [download](https://sourceforge.net/projects/boost/files/boost/1.63.0/boost_1_63_0.tar.bz2) and unzip to your path of treasures. No need to build or install.
+eigen3 | 3.3-rc1 | Simply [download](http://bitbucket.org/eigen/eigen/get/3.3-rc1.tar.bz2) and unzip to your path of treasures. No need to build or install.
 fftw | 3.3 | Install both double- and single-precision (with _--enable-float_) versions to the same path. See [here](http://www.fftw.org/fftw2_doc/fftw_6.html).
 metis | 5.1 | [Download](http://glaros.dtc.umn.edu/gkhome/metis/metis/download) and install following `Install.txt`. Skip step 3 in `Install.txt` to use the 32-bit build. 
-Exodus |---| Must be built from source, upon both [HDF5](https://support.hdfgroup.org/HDF5/) and [NetCDF4](http://www.unidata.ucar.edu/blogs/news/entry/netcdf-4-4-1). Refer to `axisem3d_depends.sh`.
+HDF5 |---| See [here](https://support.hdfgroup.org/HDF5/).
 
- Don't panic! Most of these popular packages (except Exodus) may be handily installed with free package management software, such as [Homebrew](http://brew.sh/) for Mac OS X, [Linuxbrew](http://linuxbrew.sh/) for common Linux distributions, and [Conda](http://conda.pydata.org/docs/) for both. Here we introduce the wizard `axisem3d_depends.sh`. 
+ Don't panic! All these popular packages may be handily installed with free package management software, such as [Conda](http://conda.pydata.org/docs/). Here we introduce the wizard `axisem3d_depends.sh`. 
 
-* Get Brew (required)
-    * [Homebrew](http://brew.sh/) for Mac OS X
-    * [Linuxbrew](http://linuxbrew.sh/) for Linux (Finish all the three steps!)
-* Get [Conda](http://conda.pydata.org/docs/) (optional)  
+* Make sure your MPI works properly. 
+* Get [Conda](http://conda.pydata.org/docs/).  
 * Edit the first few lines in `axisem3d_depends.sh` and run it.
 * Check your `~/.bash_profile` (or `~/.bashrc`) and `~/.axisem3d_roots`. Grats, you are done!
-
-Some notes:
-* Depending on what you need and your network speed, `axisem3d_depends.sh` may take long time (especially for open-mpi and HDF5) to finish.
-* Installing HDF5 and NetCDF4 might be problematic on some systems. If Brew fails or AxiSEM3D shows I/O runtime error later on, reinstall them with conda (see options in `axisem3d_depends.sh`), and re-run `axisem3d_depends.sh`. If the problem persists, you have to build them from source. 
     
 
 ## 3 Building AxiSEM3D
@@ -108,11 +102,11 @@ Some notes:
         ```
 
 ## 4 The MESHER
-In the above examples, we use the mesh file `prem_ani_one_crust_spherical_2D_50s.e` (anisotropic PREM model with one crustal layer and a 50 s period), located at `SOLVER/template/input`. To generate an AxiSEM3D mesh like this, you will need the `salvus_mesher`, a python-based command-line tool to generate several types of 2-D and 3-D finite element meshes. 
+In the above examples, we use the mesh file `AxiSEM_prem_ani_one_crust_50.e` (anisotropic PREM model with one crustal layer and a 50 s period), located at `SOLVER/template/input`. To generate an AxiSEM3D mesh like this, you will need the `salvus_mesher`, a python-based command-line tool to generate several types of 2-D and 3-D finite element meshes. 
 
 Currently, the `salvus_mesher` is not published. Here we provide a stable version for AxiSEM3D:
 * Install [pyexodus](https://github.com/SalvusHub/pyexodus) (mainly by Lion Krischer at ETH Zurich)
-* Install [salvus_mesher](https://github.com/kuangdai/salvus_mesher_axisem3d) (mainly by van Driel Martin at ETH Zurich)
+* Install [salvus_mesher](https://gitlab.com/Salvus/salvus_mesher) (mainly by van Driel Martin at ETH Zurich)
 
 These two packages have their own requirements and manual. 
 

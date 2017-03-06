@@ -145,7 +145,7 @@ void SlicePlot::plotPhysicalProperties() const {
     }
     
     // sum MPI
-    XMPI::sumEigen(data);
+    XMPI::sumEigenDouble(data);
     
     // dump to file
     if (XMPI::root()) {
@@ -188,7 +188,7 @@ void SlicePlot::plotNu() const {
     }
     
     // sum MPI
-    XMPI::sumEigen(data);
+    XMPI::sumEigenInt(data);
     
     // dump to file
     if (XMPI::root()) {
@@ -215,7 +215,7 @@ void SlicePlot::plotRank(bool weighted) const {
     }
     
     // sum MPI
-    XMPI::sumEigen(data);
+    XMPI::sumEigenInt(data);
     
     // dump to file
     if (XMPI::root()) {
@@ -232,20 +232,31 @@ void SlicePlot::plotEleType(const Domain &domain) const {
     // data size
     int nrow = mMesh->mExModel->getNumQuads();
     std::vector<std::string> data(nrow, "");
+    std::vector<std::string> etype;
+    std::vector<int> etag;
     
     // gather local data
     for (int iloc = 0; iloc < mMesh->getNumQuads(); iloc++) {
         int elemTag = mMesh->mQuads[iloc]->getElementTag();
         int quadTag = mMesh->mQuads[iloc]->getQuadTag();
         Element *elem = domain.getElement(elemTag);
-        data[quadTag] = elem->verbose();
+        etype.push_back(elem->verbose());
+        etag.push_back(quadTag);
     }
     
     // sum MPI
-    XMPI::sumVector(data);
+    std::vector<std::vector<std::string>> all_etype;
+    XMPI::gather(etype, all_etype, false);
+    std::vector<std::vector<int>> all_etag;
+    XMPI::gather(etag, all_etag, MPI_INT, false);
     
     // dump to file
     if (XMPI::root()) {
+        for (int i = 0; i < all_etype.size(); i++) {
+            for (int j = 0; j < all_etype[i].size(); j++) {
+                data[all_etag[i][j]] = all_etype[i][j];
+            }
+        }
         std::string fname = Parameters::sOutputDirectory + "/plots/" + verbose('_') + ".txt";
         std::fstream fs(fname, std::fstream::out);
         for (int i = 0; i < nrow; i++) fs << data[i] << std::endl;

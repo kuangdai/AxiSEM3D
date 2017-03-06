@@ -14,14 +14,11 @@ std::string Parameters::sInputDirectory;
 std::string Parameters::sOutputDirectory;
 
 void Parameters::initReadBcast() {
-    if (XMPI::root()) {
-        registerAll();
-        readParFile(Parameters::sInputDirectory + "/inparam.model");
-        readParFile(Parameters::sInputDirectory + "/inparam.nu");
-        readParFile(Parameters::sInputDirectory + "/inparam.time_src_recv");
-        readParFile(Parameters::sInputDirectory + "/inparam.advanced");
-    }
-    XMPI::bcast(mKeyValues);
+    registerAll();
+    readParFile(Parameters::sInputDirectory + "/inparam.model");
+    readParFile(Parameters::sInputDirectory + "/inparam.nu");
+    readParFile(Parameters::sInputDirectory + "/inparam.time_src_recv");
+    readParFile(Parameters::sInputDirectory + "/inparam.advanced");
 }
 
 void Parameters::registerAll() {
@@ -116,12 +113,17 @@ void Parameters::registerPar(const std::string &key) {
 }
 
 void Parameters::readParFile(const std::string &fname) {
-    std::fstream fs(fname, std::fstream::in);
-    if (!fs) throw std::runtime_error("Parameters::readParFile || "
-        "Error opening parameter file: ||" + fname);
-    
-    std::string line;
-    while (getline(fs, line)) parseLine(line);
+    std::vector<std::string> all_lines;
+    if (XMPI::root()) {
+        std::string line;
+        std::fstream fs(fname, std::fstream::in);
+        if (!fs) throw std::runtime_error("Parameters::readParFile || "
+            "Error opening parameter file: ||" + fname);
+        while (getline(fs, line)) all_lines.push_back(line);
+        fs.close();
+    }
+    XMPI::bcast(all_lines);
+    for (int i = 0; i < all_lines.size(); i++) parseLine(all_lines[i]);
 }
 
 std::string Parameters::verbose() const {

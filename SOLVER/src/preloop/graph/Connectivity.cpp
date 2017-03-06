@@ -196,8 +196,9 @@ void Connectivity::decompose(const DecomposeOption &option,
         msg.mILocalPoints.push_back(gll_loc);
     }
     msg.mNProcComm = msg.mIProcComm.size();
-    msg.mReqSend = std::vector<XMPI::Request>(msg.mNProcComm, XMPI::Request());
-    msg.mReqRecv = std::vector<XMPI::Request>(msg.mNProcComm, XMPI::Request());
+    MPI_Request req;
+    msg.mReqSend = std::vector<MPI_Request>(msg.mNProcComm, req);
+    msg.mReqRecv = std::vector<MPI_Request>(msg.mNProcComm, req);
     XTimer::end("local messaging", 3);
 }
 

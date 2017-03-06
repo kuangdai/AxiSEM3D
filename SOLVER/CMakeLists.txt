@@ -76,12 +76,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(FFTW REQUIRED)
 include_directories(${FFTW_INCLUDE_DIR})
 # boost
-set(Boost_USE_MULTITHREADED ON)
-if (SERIAL_BUILD)
-    # find_package(Boost COMPONENTS timer chrono REQUIRED)
-else ()
-    find_package(Boost COMPONENTS mpi serialization REQUIRED)
-endif ()
+find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 # metis
 find_package(METIS REQUIRED)
@@ -298,7 +293,6 @@ target_link_libraries(
     axisem3d
     ${MPI_LIBRARIES}
     ${FFTW_LIBRARIES}
-    ${Boost_LIBRARIES}
     ${METIS_LIBRARIES}
     ${HDF5_LIBRARIES}
 )

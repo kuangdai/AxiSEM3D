@@ -288,12 +288,12 @@ void Mesh::buildLocal(const DecomposeOption &option) {
     
     // send and recv
     for (int i = 0; i < mMsgInfo->mNProcComm; i++) {
-        mMsgInfo->mReqSend[i] = XMPI::isend(mMsgInfo->mIProcComm[i], bufferGLLSend[i]);
-        mMsgInfo->mReqRecv[i] = XMPI::irecv(mMsgInfo->mIProcComm[i], bufferGLLRecv[i]);
+        XMPI::isendDouble(mMsgInfo->mIProcComm[i], bufferGLLSend[i], mMsgInfo->mReqSend[i]);
+        XMPI::irecvDouble(mMsgInfo->mIProcComm[i], bufferGLLRecv[i], mMsgInfo->mReqRecv[i]);
     }
     
     // wait recv
-    XMPI::wait_all(mMsgInfo->mReqRecv.begin(), mMsgInfo->mReqRecv.end());
+    XMPI::wait_all(mMsgInfo->mReqRecv.size(), mMsgInfo->mReqRecv.data());
     
     // extract buffer 
     for (int i = 0; i < mMsgInfo->mNProcComm; i++) {
@@ -304,7 +304,7 @@ void Mesh::buildLocal(const DecomposeOption &option) {
     }
     
     // wait send 
-    XMPI::wait_all(mMsgInfo->mReqSend.begin(), mMsgInfo->mReqSend.end());
+    XMPI::wait_all(mMsgInfo->mReqSend.size(), mMsgInfo->mReqSend.data());
     
     XTimer::end("Assemble Mass", 2);
 }
@@ -377,7 +377,8 @@ void Mesh::measure(DecomposeOption &measured) {
     
     // uniform measurements across procs
     XTimer::begin("Bcast Element Costs", 2);
-    std::vector<std::map<std::string, double>> all_elemCostLibrary = XMPI::all_gather(elemCostLibrary);
+    std::vector<std::map<std::string, double>> all_elemCostLibrary;
+    XMPI::gather(elemCostLibrary, all_elemCostLibrary, MPI_DOUBLE, true);
     std::map<std::string, double> elemCostLibraryGlobal;
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
         const std::map<std::string, double> &iproc_lib = all_elemCostLibrary[iproc];
@@ -437,7 +438,8 @@ void Mesh::measure(DecomposeOption &measured) {
     
     // uniform measurements across procs
     XTimer::begin("Bcast Point Costs", 2);
-    std::vector<std::map<std::string, double>> all_pointCostLibrary = XMPI::all_gather(pointCostLibrary);
+    std::vector<std::map<std::string, double>> all_pointCostLibrary;
+    XMPI::gather(pointCostLibrary, all_pointCostLibrary, MPI_DOUBLE, true);
     std::map<std::string, double> pointCostLibraryGlobal;
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
         const std::map<std::string, double> &iproc_lib = all_pointCostLibrary[iproc];
@@ -468,9 +470,9 @@ void Mesh::measure(DecomposeOption &measured) {
     }
     
     // sum up
-    XMPI::sumEigen(eWgtEle);
-    XMPI::sumEigen(eWgtPnt);
-    XMPI::sumEigen(eCommSize);
+    XMPI::sumEigenDouble(eWgtEle);
+    XMPI::sumEigenDouble(eWgtPnt);
+    XMPI::sumEigenInt(eCommSize);
     
     // create option 
     if (mDDPar->mBalanceEP) {

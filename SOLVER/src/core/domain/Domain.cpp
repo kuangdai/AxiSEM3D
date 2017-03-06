@@ -105,8 +105,8 @@ void Domain::assembleStiff(int phase) const {
         
         // send and recv
         for (int i = 0; i < mMsgInfo->mNProcComm; i++) {
-            mMsgInfo->mReqSend[i] = XMPI::isend(mMsgInfo->mIProcComm[i], mMsgBuffer->mBufferSend[i]);
-            mMsgInfo->mReqRecv[i] = XMPI::irecv(mMsgInfo->mIProcComm[i], mMsgBuffer->mBufferRecv[i]);
+            XMPI::isendComplex(mMsgInfo->mIProcComm[i], mMsgBuffer->mBufferSend[i], mMsgInfo->mReqSend[i]);
+            XMPI::irecvComplex(mMsgInfo->mIProcComm[i], mMsgBuffer->mBufferRecv[i], mMsgInfo->mReqRecv[i]);
         }
     }
     
@@ -115,7 +115,7 @@ void Domain::assembleStiff(int phase) const {
         #ifdef _MEASURE_TIMELOOP
             mTimerAsWait->resume();
         #endif
-        XMPI::wait_all(mMsgInfo->mReqRecv.begin(), mMsgInfo->mReqRecv.end());
+        XMPI::wait_all(mMsgInfo->mReqRecv.size(), mMsgInfo->mReqRecv.data());
         #ifdef _MEASURE_TIMELOOP
             mTimerAsWait->stop();
         #endif
@@ -131,7 +131,7 @@ void Domain::assembleStiff(int phase) const {
         #ifdef _MEASURE_TIMELOOP
             mTimerAsWait->resume();
         #endif
-        XMPI::wait_all(mMsgInfo->mReqSend.begin(), mMsgInfo->mReqSend.end());
+        XMPI::wait_all(mMsgInfo->mReqSend.size(), mMsgInfo->mReqSend.data());
         #ifdef _MEASURE_TIMELOOP
             mTimerAsWait->stop();
         #endif
@@ -235,7 +235,7 @@ void Domain::checkStability(double dt, int tstep, double t) const {
 #include <iomanip>
 std::string Domain::verbose() const {
     // elements
-    int nele = XMPI::sum(mElements.size());
+    int nele = XMPI::sum((int)mElements.size());
     std::map<std::string, int> eles;
     for (const auto &elem: mElements) {
         std::string estr = elem->verbose();
@@ -243,7 +243,8 @@ std::string Domain::verbose() const {
         eles.at(estr) += 1;
     }
     
-    std::vector<std::map<std::string, int>> all_eles = XMPI::gather(eles);
+    std::vector<std::map<std::string, int>> all_eles;
+    XMPI::gather(eles, all_eles, MPI_INT, false);
     if (XMPI::root()) {
         for (int iproc = 1; iproc < XMPI::nproc(); iproc++) {
             for (auto it = all_eles[iproc].begin(); it != all_eles[iproc].end(); it++) {
@@ -255,7 +256,7 @@ std::string Domain::verbose() const {
     }
     
     // points 
-    int npoint = XMPI::sum(mPoints.size());
+    int npoint = XMPI::sum((int)mPoints.size());
     std::map<std::string, int> points;
     for (const auto &point: mPoints) {
         std::string estr = point->verbose();
@@ -263,7 +264,8 @@ std::string Domain::verbose() const {
         points.at(estr) += 1;
     }
     
-    std::vector<std::map<std::string, int>> all_points = XMPI::gather(points);
+    std::vector<std::map<std::string, int>> all_points;
+    XMPI::gather(points, all_points, MPI_INT, false);
     if (XMPI::root()) {
         for (int iproc = 1; iproc < XMPI::nproc(); iproc++) {
             for (auto it = all_points[iproc].begin(); it != all_points[iproc].end(); it++) {
@@ -314,7 +316,8 @@ std::string Domain::reportCost() const {
         ss << std::setw(10) << std::left << costA - costW << "      ";
         ss << std::setw(10) << std::left << costW << "  ";
         ss << std::setw(10) << std::left << costO << std::endl;
-        std::vector<std::string> all_s = XMPI::gather(ss.str());
+        std::vector<std::string> all_s;
+        XMPI::gather(ss.str(), all_s, false);
         
         std::string s = "";
         if (XMPI::root()) {
@@ -363,7 +366,8 @@ void Domain::dumpWisdom() const {
         }
     }
     
-    std::vector<std::vector<double>> all_buffer = XMPI::gather(buffer);
+    std::vector<std::vector<double>> all_buffer;
+    XMPI::gather(buffer, all_buffer, MPI_DOUBLE, false);
     if (XMPI::root()) {
         for (int iproc = 1; iproc < XMPI::nproc(); iproc++) {
             buffer.insert(buffer.end(), all_buffer[iproc].begin(), all_buffer[iproc].end());
