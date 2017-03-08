@@ -79,7 +79,8 @@ contains
     !--------------------------------------------------------------------------------------------------
     !
     
-    subroutine initialize_s20rts(rcmb, rmoho, rearth, meta_data_p12, meta_data_s20)
+    subroutine initialize_s20rts(rcmb, rmoho, rearth, meta_data_p12, meta_data_s20) &
+        bind(C, name="__s20rts_MOD_initialize_s20rts")
         
         implicit none
         
@@ -140,7 +141,8 @@ contains
     !--------------------------------------------------------------------------------------------------
     !
     
-    subroutine finalize_s20rts
+    subroutine finalize_s20rts() &
+        bind(C, name="__s20rts_MOD_finalize_s20rts")
                 
         implicit none
         
@@ -158,7 +160,8 @@ contains
     !
     
     ! !! PASS ABSOLUTE radius to me
-    function perturb_s20rts(r_abs, theta, phi, r_center_abs, dvp, dvs)
+    function perturb_s20rts(r_abs, theta, phi, r_center_abs, dvp, dvs) &
+        bind(C, name="__s20rts_MOD_perturb_s20rts")
         
         implicit none
         

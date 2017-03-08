@@ -13,7 +13,8 @@ module simplex
     
 contains
     
-    pure subroutine simplex_fminsearch(tau_e, tau_s, nsls, f, nf, Qval, itercount, tolf, err)
+    pure subroutine simplex_fminsearch(tau_e, tau_s, nsls, f, nf, Qval, itercount, tolf, err) &
+        bind(C, name="__simplex_MOD_simplex_fminsearch")
         
         implicit none
         

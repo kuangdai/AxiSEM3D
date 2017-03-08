@@ -79,7 +79,8 @@ contains
     !--------------------------------------------------------------------------------------------------
     !
     
-    subroutine initialize_s40rts(rcmb, rmoho, rearth, meta_data_p12, meta_data_s40)
+    subroutine initialize_s40rts(rcmb, rmoho, rearth, meta_data_p12, meta_data_s40) &
+        bind(C, name="__s40rts_MOD_initialize_s40rts")
         
         implicit none
         
@@ -140,7 +141,8 @@ contains
     !--------------------------------------------------------------------------------------------------
     !
     
-    subroutine finalize_s40rts
+    subroutine finalize_s40rts() &
+        bind(C, name="__s40rts_MOD_finalize_s40rts")
                 
         implicit none
         
@@ -158,7 +160,8 @@ contains
     !
     
     ! !! PASS ABSOLUTE radius to me
-    function perturb_s40rts(r_abs, theta, phi, r_center_abs, dvp, dvs)
+    function perturb_s40rts(r_abs, theta, phi, r_center_abs, dvp, dvs) &
+        bind(C, name="__s40rts_MOD_perturb_s40rts")
         
         implicit none
         
