@@ -3,6 +3,7 @@
 // read hdf5
 
 #include "H5Reader.h"
+#include <stdexcept>
 
 extern "C" {
     #include "hdf5.h"
