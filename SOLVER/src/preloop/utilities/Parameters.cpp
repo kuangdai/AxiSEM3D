@@ -66,6 +66,7 @@ void Parameters::registerAll() {
     
     // inparam.time_src_recv
     registerPar("TIME_DELTA_T");
+    registerPar("TIME_DELTA_T_FACTOR");
     registerPar("TIME_RECORD_LENGTH");
     registerPar("SOURCE_TYPE");
     registerPar("SOURCE_FILE");
