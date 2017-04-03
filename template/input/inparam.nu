@@ -100,11 +100,13 @@ NU_EMP_DEPTH_END                            300.0
 # NOTE: Wisdom learning slows down the simulation, but does not affect results. 
 NU_WISDOM_LEARN                             false
 
-# WHAT: balance accuracy/performance of the learned Wisdom
-# TYPE: accurate / balance / fast
-# NOTE: here the accuracy and performance are relavent to subsequent simulations
-#       using the learned Wisdom, not the learning process
-NU_WISDOM_LEARN_AIM                         balance   
+# WHAT: convergence threshold of wavefield learning 
+# TYPE: real
+# NOTE: The smaller this threshold is, the more accurate but more expensive the learned 
+#       result will be. It does not affect performance of the learning simulation itself. 
+#       Allowed range   = [1e-5, 1e-1]
+#       Suggested range = [1e-4, 1e-2]
+NU_WISDOM_LEARN_EPSILON                     1e-3
 
 # WHAT: interval for Wisdom learning
 # TYPE: integer
