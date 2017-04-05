@@ -128,7 +128,7 @@ std::vector<RTreeValue> NuWisdom::queryKNN(const RTreePoint &target, int number)
 LearnParameters::LearnParameters(const Parameters &par) {
     mInvoked = par.getValue<bool>("NU_WISDOM_LEARN");
     double mCutoff = par.getValue<double>("NU_WISDOM_LEARN_EPSILON");
-    if (mCutoff > 1e-1) mCutoff = .1;
+    if (mCutoff > .1) mCutoff = .1;
     if (mCutoff < 1e-5) mCutoff = 1e-5;
     mInterval = par.getValue<int>("NU_WISDOM_LEARN_INTERVAL");
     if (mInterval <= 0) mInterval = 10;
