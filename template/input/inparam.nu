@@ -111,7 +111,7 @@ NU_WISDOM_LEARN_EPSILON                     1e-3
 # WHAT: interval for Wisdom learning
 # TYPE: integer
 # NOTE: a value from 10 to 200 is suggested
-NU_WISDOM_LEARN_INTERVAL                    100 
+NU_WISDOM_LEARN_INTERVAL                    5 
 
 # WHAT: a file to save the learned Wisdom
 # TYPE: string (path to file)
