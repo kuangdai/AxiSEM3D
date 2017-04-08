@@ -43,6 +43,7 @@ void NrField::buildInparam(NrField *&nrf, const Parameters &par,
     } else if (boost::iequals(type, "wisdom")) {
         std::string fname = Parameters::sInputDirectory + "/" + par.getValue<std::string>("NU_WISDOM_REUSE_INPUT");
         double factor = par.getValue<double>("NU_WISDOM_REUSE_FACTOR");
+        if (factor <= tinyDouble) factor = 1.0;
         nrf = new WisdomNrField(useLucky, fname, factor);
     } else {
         throw std::runtime_error("NrField::build || "
