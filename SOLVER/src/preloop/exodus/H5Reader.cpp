@@ -32,14 +32,16 @@ void H5Reader::getStringData(int fid, const char *key, int &num, int &len, char 
     hid_t dset_id = H5Dopen(fid, key, H5P_DEFAULT);
     hid_t dspace_id = H5Dget_space(dset_id);
     hsize_t dims[2];
+    dims[0] = dims[1] = 0;
     hdf5Error(H5Sget_simple_extent_dims(dspace_id, dims, NULL), "H5Sget_simple_extent_dims");
-    num = dims[0];
-    len = dims[1];
+    num = dims[0] > 0 ? dims[0] : 1;
+    len = dims[1] > 0 ? dims[1] : 1;
     if (alloc && data != 0) {
         delete [] data;
         data = 0;
     }
-    if (data == 0) data = new char[num * len];
+    if (data == 0) data = new char[num * len + 1];
+    data[num * len] = 0;
     hdf5Error(H5Dread(dset_id, H5T_FORTRAN_S1, H5S_ALL, H5S_ALL, H5P_DEFAULT, data), "H5Dread");
     hdf5Error(H5Dclose(dset_id), "H5Dclose");
 }
@@ -48,9 +50,10 @@ void H5Reader::getDoubleData(int fid, const char *key, int &num, int &len, doubl
     hid_t dset_id = H5Dopen(fid, key, H5P_DEFAULT);
     hid_t dspace_id = H5Dget_space(dset_id);
     hsize_t dims[2];
+    dims[0] = dims[1] = 0;
     hdf5Error(H5Sget_simple_extent_dims(dspace_id, dims, NULL), "H5Sget_simple_extent_dims");
-    num = dims[0];
-    len = dims[1];
+    num = dims[0] > 0 ? dims[0] : 1;
+    len = dims[1] > 0 ? dims[1] : 1;
     // read meta data
     if (alloc && data != 0) {
         delete [] data;
@@ -65,9 +68,10 @@ void H5Reader::getIntData(int fid, const char *key, int &num, int &len, int *&da
     hid_t dset_id = H5Dopen(fid, key, H5P_DEFAULT);
     hid_t dspace_id = H5Dget_space(dset_id);
     hsize_t dims[2];
+    dims[0] = dims[1] = 0;
     hdf5Error(H5Sget_simple_extent_dims(dspace_id, dims, NULL), "H5Sget_simple_extent_dims");
-    num = dims[0];
-    len = dims[1];
+    num = dims[0] > 0 ? dims[0] : 1;
+    len = dims[1] > 0 ? dims[1] : 1;
     // read meta data
     if (alloc && data != 0) {
         delete [] data;
