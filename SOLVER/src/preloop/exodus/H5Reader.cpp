@@ -5,9 +5,9 @@
 #include "H5Reader.h"
 #include <stdexcept>
 
-extern "C" {
-    #include "hdf5.h"
-};
+// extern "C" {
+#include "hdf5.h"
+// };
 
 void H5Reader::getAttribute(int fid, const char *key, void *result) {
     hid_t attr = H5Aopen_by_name(fid, ".", key, H5P_DEFAULT, H5P_DEFAULT);

@@ -4,6 +4,7 @@
 
 #include "XTimer.h"
 #include "XMPI.h"
+#include <fstream>
 
 std::string XTimer::mFileName;
 std::vector<MyBoostTimer> XTimer::mTimers;
