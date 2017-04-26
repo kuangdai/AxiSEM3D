@@ -254,8 +254,8 @@ void SolidPoint::learnWisdom(double cutoff) {
 }
 
 int SolidPoint::getNuWisdom() const {
-    int maxloc = 0;
-    mMaxDisplWisdom.maxCoeff(&maxloc);
-    return mNuWisdom(maxloc);
+    // int maxloc = 0;
+    // mMaxDisplWisdom.maxCoeff(&maxloc);
+    return mNuWisdom.maxCoeff();
 }
 

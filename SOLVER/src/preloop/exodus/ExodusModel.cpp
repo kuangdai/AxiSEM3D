@@ -20,9 +20,9 @@
 
 #include "XTimer.h"
 
-extern "C" {
-    #include "hdf5.h"
-};
+// extern "C" {
+#include "hdf5.h"
+// };
 #include "H5Reader.h"
 
 

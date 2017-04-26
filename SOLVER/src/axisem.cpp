@@ -119,6 +119,9 @@ int axisem_main(int argc, char *argv[]) {
         XTimer::begin("DT", 0);
         double dt = pl.mParameters->getValue<double>("TIME_DELTA_T");
         if (dt < tinyDouble) dt = pl.mMesh->getDeltaT();
+        double dt_fact = pl.mParameters->getValue<double>("TIME_DELTA_T_FACTOR");
+        if (dt_fact < tinyDouble) dt_fact = 1.0;
+        dt *= dt_fact;
         XTimer::end("DT", 0);
         
         //////// attenuation

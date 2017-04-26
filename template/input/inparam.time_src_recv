@@ -16,6 +16,11 @@
 # NOTE: deltaT will be computed automatically if TIME_DELTA_T <= 0.0
 TIME_DELTA_T                                0.0
 
+# WHAT: factor of time step
+# TYPE: real
+# NOTE: multiply the time step (computed or enforced) by this factor
+TIME_DELTA_T_FACTOR                         1.0
+
 # WHAT: record length in seconds
 # TYPE: real
 # NOTE: the actual simulation time will be slightly longer than the

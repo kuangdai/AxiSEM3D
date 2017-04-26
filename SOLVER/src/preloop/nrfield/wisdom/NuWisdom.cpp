@@ -127,16 +127,9 @@ std::vector<RTreeValue> NuWisdom::queryKNN(const RTreePoint &target, int number)
 
 LearnParameters::LearnParameters(const Parameters &par) {
     mInvoked = par.getValue<bool>("NU_WISDOM_LEARN");
-    std::string aim = par.getValue<std::string>("NU_WISDOM_LEARN_AIM");
-    if (boost::iequals(aim, "accurate")) {
-        mCutoff = 1e-8;        
-    } else if (boost::iequals(aim, "balance")) {
-        mCutoff = 1e-5;
-    } else if (boost::iequals(aim, "fast")) {
-        mCutoff = 1e-2;
-    } else {
-        throw std::runtime_error("LearnParameters::LearnParameters || Unknown keyword NU_WISDOM_LEARN_AIM.");
-    }
+    mCutoff = par.getValue<double>("NU_WISDOM_LEARN_EPSILON");
+    if (mCutoff > .1) mCutoff = .1;
+    if (mCutoff < 1e-5) mCutoff = 1e-5;
     mInterval = par.getValue<int>("NU_WISDOM_LEARN_INTERVAL");
     if (mInterval <= 0) mInterval = 10;
     mFileName = par.getValue<std::string>("NU_WISDOM_LEARN_OUTPUT");

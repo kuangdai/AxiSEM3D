@@ -22,7 +22,7 @@ void XTimer::initialize(std::string fileName, int nLevels) {
 
 void XTimer::openFile() {
     if (!XMPI::root()) return;
-    if (!mFile.is_open()) mFile = std::fstream(mFileName, std::fstream::out);
+    if (!mFile.is_open()) mFile.open(mFileName, std::fstream::out);
 }
 
 void XTimer::finalize() {
