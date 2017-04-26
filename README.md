@@ -18,7 +18,7 @@ name | version | build-from-source instructions
 mpi | --- | Common implementations such as [open-mpi](https://www.open-mpi.org/) or [mpich2](http://www.mpich.org/).
 boost | 1.60 | Simply [download](https://sourceforge.net/projects/boost/files/boost/1.63.0/boost_1_63_0.tar.bz2) and unzip to your path of treasures. No need to build or install.
 eigen3 | 3.3-rc1 | Simply [download](http://bitbucket.org/eigen/eigen/get/3.3-rc1.tar.bz2) and unzip to your path of treasures. No need to build or install.
-fftw | 3.3 | Install both double- and single-precision (with _--enable-float_) versions to the same path. See [here](http://www.fftw.org/fftw2_doc/fftw_6.html).
+fftw | 3.3 | Install both double-precision (without _--enable-float_) and single-precision (with _--enable-float_) versions to the same path. See [here](http://www.fftw.org/fftw2_doc/fftw_6.html).
 metis | 5.1 | [Download](http://glaros.dtc.umn.edu/gkhome/metis/metis/download) and install following `Install.txt`. Skip step 3 in `Install.txt` to use the 32-bit build. 
 HDF5 |---| Install the latest stable verson of 1.8.xx (1.10.xx has some issues with Mac OSX). See [here](https://support.hdfgroup.org/HDF5/).
 

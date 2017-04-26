@@ -20,45 +20,6 @@ int axisem_main(int argc, char *argv[]) {
         // initialize mpi
         XMPI::initialize(argc, argv);
         
-        // std::map<std::string, double> a;
-        // if (XMPI::root()) 
-        // {
-        //     a.insert(std::pair<std::string, double>("a", 1.));
-        //     a.insert(std::pair<std::string, double>("b", 2.));
-        // }
-        // else 
-        // {
-        //     a.insert(std::pair<std::string, double>("c", 3.));
-        //     a.insert(std::pair<std::string, double>("d", 4.));
-        // }
-        // 
-        // std::vector<std::map<std::string, double>> aa;
-        // XMPI::gather(a, aa, MPI_DOUBLE, true);
-        // 
-        // if (XMPI::rank() == 2) {
-        //     for (int i = 0; i < aa.size();i++){
-        //         for (auto it = aa[i].begin(); it != aa[i].end(); it++) {
-        //             std::cout << it->first << " " << it->second<<std::endl;
-        //         }
-        //         std::cout<<"-------"<< std::endl;
-        //     }
-        // }
-        // 
-        // exit(0);
-        
-        // std::vector<std::string> str;
-        // if (XMPI::root()) {
-        //     str.push_back("foo__");
-        //     str.push_back(" ba");
-        // }
-        // XMPI::sendRecvVector(0, 1, str, str);
-        // if (!XMPI::root()) {
-        //     std::cout << str.size() << std::endl;
-        //     std::cout << str[0] << std::endl;
-        //     std::cout << str[1] << std::endl;
-        //     exit(0);
-        // }
-        
         //////// spectral-element constants
         SpectralConstants::initialize(nPol);  
         

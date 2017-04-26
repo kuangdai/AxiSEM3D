@@ -20,6 +20,10 @@ if(NOT FFTW_INCLUDE_DIR OR NOT FFTW_LIBRARIES)
         PATH_SUFFIXES lib
     )
     
+    if(NOT FFTW_LIB)
+        message(STATUS "Double-precision FFTW library is not found. Install FFTW both with and without --enable-float.")
+    endif(NOT FFTW_LIB)
+
     find_library(
         FFTWF_LIB
         NAMES fftw3f
@@ -29,6 +33,10 @@ if(NOT FFTW_INCLUDE_DIR OR NOT FFTW_LIBRARIES)
         PATH_SUFFIXES lib
     )
     
+    if(NOT FFTWF_LIB)
+        message(STATUS "Single-precision FFTW library is not found. Install FFTW both with and without --enable-float.")
+    endif(NOT FFTWF_LIB)
+
     #find includes
     find_path(
         FFTW_INCLUDE_DIR
