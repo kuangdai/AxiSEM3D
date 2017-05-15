@@ -1,6 +1,6 @@
 // OceanLoad3D.cpp
 // created by Kuangdai on 8-Oct-2016 
-// base class of Ocean Load 3D models
+// base class of Ocean Load models
 
 #include "OceanLoad3D.h"
 
@@ -18,21 +18,26 @@
 const double OceanLoad3D::mWaterDensity = 1027.;
 
 void OceanLoad3D::buildInparam(OceanLoad3D *&model,
-    const Parameters &par, int verbose) {
+                               const Parameters &par, int verbose) {
+    // delete    
     if (model) delete model;
     
+    // get keyword
     std::string mstr = par.getValue<std::string>("MODEL_3D_OCEAN_LOAD");
+    boost::trim_if(mstr, boost::is_any_of("\t "));
+    
+    // check ocean type
     if (boost::iequals(mstr, "none")) {
+        // no ocean
         model = 0;
     } else {
         // split model name and parameters
         std::vector<std::string> strs;
-        boost::trim_if(mstr, boost::is_any_of("\t "));
         boost::split(strs, mstr, boost::is_any_of("$"), boost::token_compress_on);
         std::string name = strs[0];
-        std::vector<std::string> params;
-        for (int i = 1; i < strs.size(); i++) params.push_back(strs[i]);
+        std::vector<std::string> params(strs.begin() + 1, strs.end());
         
+        // create model
         if (boost::iequals(name, "constant")) {
             model = new OceanLoad3D_const();
         } else if (boost::iequals(name, "crust1")) {
@@ -44,10 +49,15 @@ void OceanLoad3D::buildInparam(OceanLoad3D *&model,
             
         } else {
             throw std::runtime_error("OceanLoad3D::buildInparam || "
-                "Unknown ocean load model name " + name + ".");
+                "Unknown ocean load model: " + name + ".");
         }
         
+        // initialize model
         model->initialize(params);
-        if (verbose) XMPI::cout << model->verbose();
+        
+        // verbose
+        if (verbose) {
+            XMPI::cout << model->verbose();
+        }
     }
 }

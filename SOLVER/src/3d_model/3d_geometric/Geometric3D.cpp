@@ -26,8 +26,8 @@ void Geometric3D::buildInparam(std::vector<Geometric3D *> &models,
     models.clear();
     
     // check size
-    std::size_t nmodels = par.getValue<std::size_t>("MODEL_3D_GEOMETRIC_NUM");
-    std::size_t nsize = par.getSize("MODEL_3D_GEOMETRIC_LIST");
+    size_t nmodels = par.getValue<size_t>("MODEL_3D_GEOMETRIC_NUM");
+    size_t nsize = par.getSize("MODEL_3D_GEOMETRIC_LIST");
     if (nmodels > nsize) {
         throw std::runtime_error("Geometric3D::buildInparam || "
             "Not enough model names provided in MODEL_3D_GEOMETRIC_LIST, ||"
@@ -35,7 +35,7 @@ void Geometric3D::buildInparam(std::vector<Geometric3D *> &models,
             ", but only " + boost::lexical_cast<std::string>(nsize) + " provided.");
     }
     
-    for (std::size_t imodel = 0; imodel < nmodels; imodel++) {
+    for (size_t imodel = 0; imodel < nmodels; imodel++) {
         
         // split model name and parameters
         std::string mstr = par.getValue<std::string>("MODEL_3D_GEOMETRIC_LIST", imodel);

@@ -31,8 +31,8 @@ public:
     
 private:
     
-    int columnSurf() const {
-        int colSurf = 5; // no ice, no sediment
+    size_t columnSurf() const {
+        size_t colSurf = 5; // no ice, no sediment
         if (mIncludeIce) {
             colSurf = 1; // ice
         } else if (mIncludeSediment) {
@@ -41,15 +41,15 @@ private:
         return colSurf;
     };
     
-    static void interpThetaPhi(double theta, double phi, int np, 
-        std::vector<int> &ilat, std::vector<int> &ilon, 
+    static void interpThetaPhi(double theta, double phi, size_t np, 
+        std::vector<size_t> &ilat, std::vector<size_t> &ilon, 
         std::vector<double> &wlat, std::vector<double> &wlon);
     
 private:
     // model constants
-    static const int sNLayer;
-    static const int sNLat;
-    static const int sNLon;
+    static const size_t sNLayer;
+    static const size_t sNLat;
+    static const size_t sNLon;
     
     // radii of reference sphere
     double mRSurf = 6371000.0;
@@ -61,7 +61,7 @@ private:
     // include sediment or not
     bool mIncludeSediment = true;
     // number of interpolation points 
-    int mNPointInterp = 2;
+    size_t mNPointInterp = 2;
     // use geocentric or geographic
     bool mGeographic = false;
     

@@ -10,21 +10,26 @@
 #include "XMPI.h"
 #include "XMath.h"
 
-const int Geometric3D_crust1::sNLayer = 9;
-const int Geometric3D_crust1::sNLat = 180;
-const int Geometric3D_crust1::sNLon = 360;
+const size_t Geometric3D_crust1::sNLayer = 9;
+const size_t Geometric3D_crust1::sNLat = 180;
+const size_t Geometric3D_crust1::sNLon = 360;
 
 void Geometric3D_crust1::initialize() {
     // read raw data
-    int nrow = sNLat * sNLon;
+    size_t nrow = sNLat * sNLon;
     RDMatXX elevation = RDMatXX::Zero(nrow, sNLayer);
     if (XMPI::root()) {
         std::string fname = projectDirectory + "/src/3d_model/3d_volumetric/crust1/data/crust1.bnds";
         std::fstream fs(fname, std::fstream::in);
-        if (!fs) throw std::runtime_error("Geometric3D_crust1::initialize || "
-            "Error opening crust1.0 data file: ||" + fname);
-        for (int i = 0; i < nrow; i++)
-            for (int j = 0; j < sNLayer; j++) fs >> elevation(i, j);    
+        if (!fs) {
+            throw std::runtime_error("Geometric3D_crust1::initialize || "
+                "Error opening crust1.0 data file: ||" + fname);
+        }
+        for (size_t i = 0; i < nrow; i++) {
+            for (size_t j = 0; j < sNLayer; j++) {
+                fs >> elevation(i, j);  
+            }
+        }
         fs.close();
     }
     // broadcast
@@ -33,21 +38,21 @@ void Geometric3D_crust1::initialize() {
     // surface and moho undulations
     // NOTE: ellipticity should not be considered here because all geometric 
     //       models are defined independently w.r.t. reference sphere 
-    int colSurf = 5; // no ice, no sediment
+    size_t colSurf = 5; // no ice, no sediment
     if (mIncludeIce) {
         colSurf = 1; // ice
         mIncludeSediment = true;
     } else if (mIncludeSediment) {
         colSurf = 2; // sediment
     }
-    int colMoho = 8;
+    size_t colMoho = 8;
     RDColX deltaRSurfVec = elevation.col(colSurf) * 1e3;
     RDColX deltaRMohoVec = elevation.col(colMoho) * 1e3;
     deltaRMohoVec += RDColX::Constant(nrow, mRSurf - mRMoho);
     // cast to matrix
     RDMatXX deltaRSurf(sNLat, sNLon);
     RDMatXX deltaRMoho(sNLat, sNLon);
-    for (int i = 0; i < sNLat; i++) {
+    for (size_t i = 0; i < sNLat; i++) {
         deltaRSurf.row(i) = deltaRSurfVec.block(i * sNLon, 0, sNLon, 1).transpose();
         deltaRMoho.row(i) = deltaRMohoVec.block(i * sNLon, 0, sNLon, 1).transpose();
     }
@@ -65,9 +70,9 @@ void Geometric3D_crust1::initialize() {
     RDColX devRow = RDColX::Constant(sNLat, mGaussianDev);
     RDColX devCol = RDColX::Constant(sNLon, mGaussianDev);
     // smooth poles more
-    // int npolar = mGaussianOrder + 1;
-    // int opolar = sNLon;
-    // for (int i = 0; i < npolar; i++) {
+    // size_t npolar = mGaussianOrder + 1;
+    // size_t opolar = sNLon;
+    // for (size_t i = 0; i < npolar; i++) {
     //     double order = (double)(opolar - mGaussianOrder) / npolar * (npolar - i) + mGaussianOrder;
     //     orderRow(i) = orderRow(sNLat - 1 - i) = round(order);
     // }
@@ -83,7 +88,7 @@ void Geometric3D_crust1::initialize() {
     mDeltaRSurf.row(sNLat).fill(deltaRSurf.row(sNLat - 1).sum() / sNLon);
     mDeltaRMoho.row(sNLat).fill(deltaRMoho.row(sNLat - 1).sum() / sNLon);
     // interp at integer theta
-    for (int i = 1; i < sNLat; i++) {
+    for (size_t i = 1; i < sNLat; i++) {
         mDeltaRSurf.row(i) = (deltaRSurf.row(i - 1) + deltaRSurf.row(i)) * .5;
         mDeltaRMoho.row(i) = (deltaRMoho.row(i - 1) + deltaRMoho.row(i)) * .5; 
     }
@@ -91,9 +96,6 @@ void Geometric3D_crust1::initialize() {
     // apply factor
     mDeltaRSurf *= mSurfFactor;
     mDeltaRMoho *= mMohoFactor;
-    
-    // compute polar values in Cartesian
-    // computePolar();
     
     //////////// plot raw data ////////////  
     // std::fstream fs;
@@ -141,7 +143,7 @@ void Geometric3D_crust1::initialize() {
 
 void Geometric3D_crust1::initialize(const std::vector<std::string> &params) {
     try {
-        int ipar = 0;
+        size_t ipar = 0;
         const std::string source = "Geometric3D_crust1::initialize";
         XMath::castValue(mIncludeSediment, params.at(ipar++), source);
         XMath::castValue(mSurfFactor, params.at(ipar++), source);
@@ -164,15 +166,19 @@ double Geometric3D_crust1::getDeltaR(double r, double theta, double phi, double 
         return 0.;
     }    
     
+    // convert theta to co-latitude 
+    if (mGeographic) {
+        theta = pi / 2. - XMath::theta2Lat(theta, mRSurf - r) * degree;
+    }
+    
     // interpolation on sphere
     double drSurf = 0.;
     double drMoho = 0.;
-    std::vector<int> ilat, ilon;
+    std::vector<size_t> ilat, ilon;
     std::vector<double> wlat, wlon;
-    if (mGeographic) theta = pi / 2. - XMath::theta2Lat(theta, mRSurf - r) * degree;
     Volumetric3D_crust1::interpThetaPhi(theta, phi, mNPointInterp, ilat, ilon, wlat, wlon);
-    for (int i = 0; i < mNPointInterp; i++) {
-        for (int j = 0; j < mNPointInterp; j++) {
+    for (size_t i = 0; i < mNPointInterp; i++) {
+        for (size_t j = 0; j < mNPointInterp; j++) {
             double weight = wlat[i] * wlon[j];
             drSurf += weight * mDeltaRSurf(ilat[i], ilon[j]);
             drMoho += weight * mDeltaRMoho(ilat[i], ilon[j]);
@@ -180,57 +186,12 @@ double Geometric3D_crust1::getDeltaR(double r, double theta, double phi, double 
     }
 
     // interpolation along radius    
-    if (rElemCenter < mRMoho)
+    if (rElemCenter < mRMoho) {
         return drMoho / (mRMoho - mRBase) * (r - mRBase);
-    else 
+    } else {
         return (drSurf - drMoho) / (mRSurf - mRMoho) * (r - mRMoho) + drMoho;
+    } 
 }
-
-// bool Geometric3D_crust1::getNablaDeltaR(double r, double theta, double phi, double rElemCenter,
-//     double &deltaR_r, double &deltaR_theta, double &deltaR_phi) const {
-//     double small = 0.01 * degree;
-//     if (theta >= small && theta <= pi - small) {
-//         return Geometric3D::getNablaDeltaR(r, theta, phi, rElemCenter, 
-//             deltaR_r, deltaR_theta, deltaR_phi);
-//     }
-//     
-//     if (rElemCenter < mRBase) { // no need to check r > mRSurf
-//         deltaR_r = deltaR_theta = deltaR_phi = 0.;
-//         return false;
-//     }
-//        
-//     bool north = theta < small;
-//     double drSurf = 0.;
-//     double drMoho = 0.;
-//     double drdtSurf = 0., drdpSurf = 0.;
-//     double drdtMoho = 0., drdpMoho = 0.;
-//     if (north) {
-//         drSurf = mDeltaRSurf(0, 0);
-//         drMoho = mDeltaRMoho(0, 0);
-//         drdtSurf =  mDrDxNorthSurf(0) * cos(phi) + mDrDxNorthSurf(1) * sin(phi);
-//         drdpSurf = -mDrDxNorthSurf(0) * sin(phi) + mDrDxNorthSurf(1) * cos(phi);
-//         drdtMoho =  mDrDxNorthMoho(0) * cos(phi) + mDrDxNorthMoho(1) * sin(phi);
-//         drdpMoho = -mDrDxNorthMoho(0) * sin(phi) + mDrDxNorthMoho(1) * cos(phi);
-//     } else {
-//         drSurf = mDeltaRSurf(sNLat, 0);
-//         drMoho = mDeltaRMoho(sNLat, 0);
-//         drdtSurf = -mDrDxSouthSurf(0) * cos(phi) - mDrDxSouthSurf(1) * sin(phi);
-//         drdpSurf = -mDrDxSouthSurf(0) * sin(phi) + mDrDxSouthSurf(1) * cos(phi);
-//         drdtMoho = -mDrDxSouthMoho(0) * cos(phi) - mDrDxSouthMoho(1) * sin(phi);
-//         drdpMoho = -mDrDxSouthMoho(0) * sin(phi) + mDrDxSouthMoho(1) * cos(phi);
-//     }
-//     
-//     if (rElemCenter <= mRMoho) {
-//         deltaR_r = drMoho / (mRMoho - mRBase);
-//         deltaR_theta = drdtMoho / (mRMoho - mRBase) * (r - mRBase);
-//         deltaR_phi = drdpMoho / (mRMoho - mRBase) * (r - mRBase);
-//     } else {
-//         deltaR_r = (drSurf - drMoho) / (mRSurf - mRMoho);
-//         deltaR_theta = (drdtSurf - drdtMoho) / (mRSurf - mRMoho) * (r - mRMoho) + drdtMoho;
-//         deltaR_phi = (drdpSurf - drdpMoho) / (mRSurf - mRMoho) * (r - mRMoho) + drdpMoho;    
-//     }
-//     return true;
-// }
 
 std::string Geometric3D_crust1::verbose() const {
     std::stringstream ss;
@@ -250,38 +211,4 @@ std::string Geometric3D_crust1::verbose() const {
     ss << "======================= 3D Geometric =======================\n" << std::endl;
     return ss.str();
 }
-
-// void Geometric3D_crust1::computePolar() {
-//     mDrDxNorthSurf.setZero();
-//     mDrDxSouthSurf.setZero();
-//     mDrDxNorthMoho.setZero();
-//     mDrDxSouthMoho.setZero();
-//     double small = 0.01 * degree;
-//     double theta_north = small;
-//     double theta_south = pi - small;
-//     for (int iphi = 0; iphi < 360; iphi++) {
-//         double phi = iphi * degree;
-//         double dr;
-//         double dt_north_surf, dp_north_surf;
-//         double dt_north_moho, dp_north_moho;
-//         double dt_south_surf, dp_south_surf;
-//         double dt_south_moho, dp_south_moho;
-//         Geometric3D::getNablaDeltaR(mRSurf, theta_north, phi, mRSurf - 1., dr, dt_north_surf, dp_north_surf);
-//         Geometric3D::getNablaDeltaR(mRMoho, theta_north, phi, mRMoho - 1., dr, dt_north_moho, dp_north_moho);
-//         Geometric3D::getNablaDeltaR(mRSurf, theta_south, phi, mRSurf - 1., dr, dt_south_surf, dp_south_surf);
-//         Geometric3D::getNablaDeltaR(mRMoho, theta_south, phi, mRMoho - 1., dr, dt_south_moho, dp_south_moho);
-//         mDrDxNorthSurf(0) +=  dt_north_surf * cos(phi) - dp_north_surf * sin(phi);
-//         mDrDxNorthSurf(1) +=  dt_north_surf * sin(phi) + dp_north_surf * cos(phi);
-//         mDrDxNorthMoho(0) +=  dt_north_moho * cos(phi) - dp_north_moho * sin(phi);
-//         mDrDxNorthMoho(1) +=  dt_north_moho * sin(phi) + dp_north_moho * cos(phi);
-//         mDrDxSouthSurf(0) += -dt_south_surf * cos(phi) - dp_south_surf * sin(phi);
-//         mDrDxSouthSurf(1) += -dt_south_surf * sin(phi) + dp_south_surf * cos(phi);
-//         mDrDxSouthMoho(0) += -dt_south_moho * cos(phi) - dp_south_moho * sin(phi);
-//         mDrDxSouthMoho(1) += -dt_south_moho * sin(phi) + dp_south_moho * cos(phi);
-//     }
-//     mDrDxNorthSurf /= 360.;
-//     mDrDxSouthSurf /= 360.;
-//     mDrDxNorthMoho /= 360.;
-//     mDrDxSouthMoho /= 360.;
-// }
 

@@ -17,9 +17,6 @@ public:
     
     double getDeltaR(double r, double theta, double phi, double rElemCenter) const;
     
-    // bool getNablaDeltaR(double r, double theta, double phi, double rElemCenter,
-    //     double &deltaR_r, double &deltaR_theta, double &deltaR_phi) const;
-    
     std::string verbose() const;
     
     // set outer radius
@@ -28,9 +25,9 @@ public:
 private:
     
     // model constants
-    static const int sNLayer;
-    static const int sNLat;
-    static const int sNLon;
+    static const size_t sNLayer;
+    static const size_t sNLat;
+    static const size_t sNLon;
     
     // radii of reference spheres
     double mRSurf = 6371000.0;
@@ -46,11 +43,11 @@ private:
     double mMohoFactor = 1.;
     
     // smoothening 
-    int mGaussianOrder = 2;
+    size_t mGaussianOrder = 2;
     double mGaussianDev = .5;
     
     // interpolation
-    int mNPointInterp = 2;
+    size_t mNPointInterp = 2;
     // use geocentric or geographic
     bool mGeographic = true;
     
@@ -58,11 +55,5 @@ private:
     RDMatXX mDeltaRSurf;
     RDMatXX mDeltaRMoho;
     
-    // precomputed polar values
-    // void computePolar();
-    // RDCol2 mDrDxNorthSurf;
-    // RDCol2 mDrDxSouthSurf;
-    // RDCol2 mDrDxNorthMoho;
-    // RDCol2 mDrDxSouthMoho;
 };
 

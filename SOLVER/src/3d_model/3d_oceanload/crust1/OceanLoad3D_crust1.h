@@ -21,16 +21,16 @@ public:
 private:
     
     // model constants
-    static const int sNLayer;
-    static const int sNLat;
-    static const int sNLon;
+    static const size_t sNLayer;
+    static const size_t sNLat;
+    static const size_t sNLon;
     
     // smoothening 
-    int mGaussianOrder = 2;
+    size_t mGaussianOrder = 2;
     double mGaussianDev = .5;
     
     // interpolation
-    int mNPointInterp = 2;
+    size_t mNPointInterp = 2;
     // use geocentric or geographic
     bool mGeographic = true;
     

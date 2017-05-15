@@ -1,13 +1,12 @@
 // OceanLoad3D.h
 // created by Kuangdai on 8-Oct-2016 
-// base class of Ocean Load 3D models
+// base class of Ocean Load models
 
 #pragma once
 #include <string>
 #include <vector>
 
 class Parameters;
-class ExodusModel;
 
 class OceanLoad3D {
 public:
