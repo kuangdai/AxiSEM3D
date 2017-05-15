@@ -26,12 +26,12 @@ private:
 
 class XTimer {
 public:
-    static void initialize(const std::string &fileName, size_t nLevels);
+    static void initialize(const std::string &fileName, int nLevels);
     static void finalize();
-    static void begin(const std::string &procName, size_t level, bool barrier = false);
-    static void end(const std::string &procName, size_t level, bool barrier = true);
-    static void pause(size_t level);
-    static void resume(size_t level);
+    static void begin(const std::string &procName, int level, bool barrier = false);
+    static void end(const std::string &procName, int level, bool barrier = true);
+    static void pause(int level);
+    static void resume(int level);
     
     static void enable() {openFile(); mEnabled = true;};
     static void disable() {mEnabled = false;};

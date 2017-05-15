@@ -10,12 +10,12 @@ std::fstream XTimer::mFile;
 std::vector<MyBoostTimer> XTimer::mTimers;
 bool XTimer::mEnabled = false;
 
-void XTimer::initialize(const std::string &fileName, size_t nLevels) {
+void XTimer::initialize(const std::string &fileName, int nLevels) {
     mEnabled = false;
     if (XMPI::root()) {
         mFileName = fileName;
         mTimers.clear();
-        for (size_t i = 0; i < nLevels; i++) {
+        for (int i = 0; i < nLevels; i++) {
             mTimers.push_back(MyBoostTimer());
         }
     }
@@ -37,7 +37,7 @@ void XTimer::finalize() {
     }
 }
 
-void XTimer::begin(const std::string &name, size_t level, bool barrier) {
+void XTimer::begin(const std::string &name, int level, bool barrier) {
     if (!mEnabled) {
         return;
     }
@@ -45,7 +45,7 @@ void XTimer::begin(const std::string &name, size_t level, bool barrier) {
         XMPI::barrier();
     }
     if (XMPI::root()) {
-        for (size_t i = 0; i < level; i++) {
+        for (int i = 0; i < level; i++) {
             mFile << "    ";
         }
         mFile << name << " begins..." << std::endl;
@@ -53,7 +53,7 @@ void XTimer::begin(const std::string &name, size_t level, bool barrier) {
     }
 }
 
-void XTimer::end(const std::string &name, size_t level, bool barrier) {
+void XTimer::end(const std::string &name, int level, bool barrier) {
     if (!mEnabled) {
         return;
     }
@@ -62,7 +62,7 @@ void XTimer::end(const std::string &name, size_t level, bool barrier) {
     }
     if (XMPI::root()) {
         mTimers[level].stop();
-        for (size_t i = 0; i < level; i++) {
+        for (int i = 0; i < level; i++) {
             mFile << "    ";
         }
         mFile << name << " finishes. Elapsed seconds = " 
@@ -70,7 +70,7 @@ void XTimer::end(const std::string &name, size_t level, bool barrier) {
     }
 }
 
-void XTimer::pause(size_t level) {
+void XTimer::pause(int level) {
     if (!mEnabled) {
         return;
     }
@@ -79,7 +79,7 @@ void XTimer::pause(size_t level) {
     }
 }
 
-void XTimer::resume(size_t level) {
+void XTimer::resume(int level) {
     if (!mEnabled) {
         return;
     }
@@ -109,8 +109,8 @@ void MyBoostTimer::clear() {
 
 double MyBoostTimer::elapsed() {
     double elap = 0.;
-    size_t pairs = mTimePoints.size() / 2;
-    for (size_t i = 0; i < pairs; i++) {
+    int pairs = mTimePoints.size() / 2;
+    for (int i = 0; i < pairs; i++) {
         elap += (std::chrono::duration_cast<std::chrono::duration<double>>
             (mTimePoints[2 * i + 1] - mTimePoints[2 * i])).count();
     }
