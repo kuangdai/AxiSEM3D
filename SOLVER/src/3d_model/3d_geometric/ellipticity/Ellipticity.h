@@ -11,9 +11,6 @@ public:
 
     double getDeltaR(double r, double theta, double phi, double rElemCenter) const;
     
-    // bool getNablaDeltaR(double r, double theta, double phi, double rElemCenter,
-    //     double &deltaR_r, double &deltaR_theta, double &deltaR_phi) const;
-    
     std::string verbose() const;
 };
 
