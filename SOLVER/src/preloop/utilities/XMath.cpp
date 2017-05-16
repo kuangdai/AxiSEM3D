@@ -4,6 +4,7 @@
 
 #include "XMath.h"
 #include "PreloopFFTW.h"
+#include <cfloat>
 
 void XMath::makeClose(double &a, double &b) {
     if (a - b > pi) {
@@ -29,7 +30,7 @@ double XMath::findClosestDist(const std::vector<RDCol2> &crds) {
 }
 
 void XMath::interpLagrange(double target, int nbases, 
-    const std::vector<double> &bases, std::vector<double> &results) {
+    const double *bases, double *results) {
     for (int dgr = 0; dgr < nbases; dgr++) {
         double prod1 = 1.;
         double prod2 = 1.;

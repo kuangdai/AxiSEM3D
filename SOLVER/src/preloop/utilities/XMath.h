@@ -17,7 +17,7 @@ public:
     
     // Lagrange interpolation
     static void interpLagrange(double target, int nbases, 
-        const std::vector<double> &bases, std::vector<double> &results);
+        const double *bases, double *results);
     
     // Gaussian smoothing
     static void gaussianSmoothing(RDColX &data, int order, double dev, bool period);

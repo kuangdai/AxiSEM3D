@@ -95,7 +95,7 @@ void Parameters::registerAll() {
 }
 
 void Parameters::parseLine(const std::string &line) {
-    std::vector<std::string> strs = trimSplitString(line, "\t ")
+    std::vector<std::string> strs = splitString(line, "\t ");
     std::string key = strs[0];
     if (key == "#") {
         return;
