@@ -1,16 +1,16 @@
-// XTimer.cpp
+// MultilevelTimer.cpp
 // created by Kuangdai on 5-Nov-2016 
-// Recursive timer
+// multi-level timer
 
-#include "XTimer.h"
+#include "MultilevelTimer.h"
 #include "XMPI.h"
 
-std::string XTimer::mFileName;
-std::fstream XTimer::mFile;
-std::vector<MyBoostTimer> XTimer::mTimers;
-bool XTimer::mEnabled = false;
+std::string MultilevelTimer::mFileName;
+std::fstream MultilevelTimer::mFile;
+std::vector<MyBoostTimer> MultilevelTimer::mTimers;
+bool MultilevelTimer::mEnabled = false;
 
-void XTimer::initialize(const std::string &fileName, int nLevels) {
+void MultilevelTimer::initialize(const std::string &fileName, int nLevels) {
     mEnabled = false;
     if (XMPI::root()) {
         mFileName = fileName;
@@ -21,7 +21,7 @@ void XTimer::initialize(const std::string &fileName, int nLevels) {
     }
 }
 
-void XTimer::openFile() {
+void MultilevelTimer::openFile() {
     if (XMPI::root()) {
         if (!mFile.is_open()) {
             mFile.open(mFileName, std::fstream::out);
@@ -29,7 +29,7 @@ void XTimer::openFile() {
     }
 }
 
-void XTimer::finalize() {
+void MultilevelTimer::finalize() {
     if (XMPI::root()) {
         if (mFile.is_open()) {
             mFile.close();
@@ -37,7 +37,7 @@ void XTimer::finalize() {
     }
 }
 
-void XTimer::begin(const std::string &name, int level, bool barrier) {
+void MultilevelTimer::begin(const std::string &name, int level, bool barrier) {
     if (!mEnabled) {
         return;
     }
@@ -53,7 +53,7 @@ void XTimer::begin(const std::string &name, int level, bool barrier) {
     }
 }
 
-void XTimer::end(const std::string &name, int level, bool barrier) {
+void MultilevelTimer::end(const std::string &name, int level, bool barrier) {
     if (!mEnabled) {
         return;
     }
@@ -70,7 +70,7 @@ void XTimer::end(const std::string &name, int level, bool barrier) {
     }
 }
 
-void XTimer::pause(int level) {
+void MultilevelTimer::pause(int level) {
     if (!mEnabled) {
         return;
     }
@@ -79,7 +79,7 @@ void XTimer::pause(int level) {
     }
 }
 
-void XTimer::resume(int level) {
+void MultilevelTimer::resume(int level) {
     if (!mEnabled) {
         return;
     }

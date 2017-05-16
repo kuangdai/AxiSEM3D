@@ -1,4 +1,4 @@
-// PreloopFFTW_N.h
+// PreloopFFTW.h
 // created by Kuangdai on 21-Sep-2016 
 // perform FFT using fftw
 

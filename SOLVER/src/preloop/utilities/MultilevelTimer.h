@@ -1,6 +1,6 @@
-// XTimer.h
+// MultilevelTimer.h
 // created by Kuangdai on 5-Nov-2016 
-// Recursive timer
+// multi-level timer
 
 #pragma once
 
@@ -24,7 +24,7 @@ private:
 };
 
 
-class XTimer {
+class MultilevelTimer {
 public:
     static void initialize(const std::string &fileName, int nLevels);
     static void finalize();
