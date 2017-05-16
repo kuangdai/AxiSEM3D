@@ -147,7 +147,7 @@ std::string Parameters::verbose() const {
         ss << std::endl;
     }
     // append mpi nproc
-    ss << "  " << std::setw(width) << std::left << "and nproc" << "   =   ";
+    ss << "  " << std::setw(width) << std::left << "mpi nproc" << "   =   ";
     ss << XMPI::nproc() << std::endl;
     ss << "======================== Parameters ========================\n" << std::endl;
     return ss.str();
