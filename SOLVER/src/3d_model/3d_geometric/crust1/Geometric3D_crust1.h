@@ -14,13 +14,8 @@ public:
 
     void initialize();
     void initialize(const std::vector<std::string> &params);
-    
     double getDeltaR(double r, double theta, double phi, double rElemCenter) const;
-    
     std::string verbose() const;
-    
-    // set outer radius
-    void setROuter(double router) {mRSurf = router;};
     
 private:
     
