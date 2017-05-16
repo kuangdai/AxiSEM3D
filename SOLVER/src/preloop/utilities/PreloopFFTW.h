@@ -26,6 +26,14 @@ public:
     // backward, complex => real
     static void computeC2R(int nr);
     
+    ////////////////// lucky number //////////////////
+    // http://www.fftw.org/fftw2_doc/fftw_3.html
+    // FFTW is best at handling sizes of the form 2^a 3^b 5^c 7^d 11^e 13^f, 
+    // where e+f is either 0 or 1, and the other exponents are arbitrary.
+    // We call numbers of the form lucky numbers.
+    static bool isLuckyNumber(int n, bool forceOdd = false);
+    static int nextLuckyNumber(int n, bool forceOdd = false);
+    
 private:
     static int sNmax;
     static std::vector<fftw_plan> sR2CPlans;

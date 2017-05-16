@@ -53,6 +53,26 @@ public:
     
     // build from input parameters
     static void buildInparam(Parameters *&par, int &verbose);
+        
+    // string cast tools 
+    template<typename parType>
+    static void castValue(parType &result, const std::string &val_in, const std::string &source) {
+        try {
+            // special care of bool
+            std::string val = val_in;
+            if (typeid(parType) == typeid(bool)) {
+                boost::to_upper<std::string>(val);
+                if (val == "TRUE" || val == "YES" || val == "ON") val = "1";
+                if (val == "FALSE" || val == "NO" || val == "OFF") val = "0";
+            }
+            result = boost::lexical_cast<parType>(val);
+        } catch(std::exception) {
+            throw std::runtime_error("Parameters::castValue || "
+                "Invalid argument encountered in " + source + ", arg = " + val_in + ".");
+        }
+    };
+    
+    static std::vector<std::string> splitString(const std::string &in, const std::string &sep);
     
     // input and output dir 
     static std::string sInputDirectory;

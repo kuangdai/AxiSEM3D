@@ -4,49 +4,34 @@
 
 #include "XMPI.h"
 #include <iomanip>
-#include <boost/algorithm/string.hpp>
 #include "Parameters.h"
 
 XMPI::root_cout XMPI::cout;
 std::string XMPI::endl = "\n";
 
-extern "C" {
-    #include <sys/types.h>
-    #include <sys/stat.h>
-};
-
-bool XMPI::dirExists(const std::string &path) {
-    struct stat info;
-    if (stat(path.c_str(), &info) != 0)
-        return false;
-    else if (info.st_mode & S_IFDIR)
-        return true;
-    else
-        return false;
-}
-
-void XMPI::mkdir(const std::string &path) {
-    if (!dirExists(path)) ::mkdir(path.c_str(), ACCESSPERMS);
-}
-
 void XMPI::initialize(int argc, char *argv[]) {
     #ifndef _SERIAL_BUILD
-        MPI_Init(NULL, NULL);
+        MPI_Init(&argc, &argv);
     #endif
+    
+    // find path of executable
+    // 9 characters: /axisem3d
     std::string argv0(argv[0]);
-    std::string execDirectory = argv0.substr(0, argv0.length() - 9);
-    if (boost::algorithm::ends_with(execDirectory, "/.")) 
-        execDirectory = execDirectory.substr(0, execDirectory.length() - 2);
-    // when launched by some debuggers such as valgrind, boost cannot find exe directory
-    if (execDirectory.length() == 0) execDirectory = ".";
+    std::string execDirectory = argv0.substr(0, argv0.length() - 9); 
+    
+    // input and output
     Parameters::sInputDirectory = execDirectory + "/input";
     Parameters::sOutputDirectory = execDirectory + "/output";
-    if (!dirExists(Parameters::sInputDirectory)) 
-        throw std::runtime_error("XMPI::initialize || Missing input directory: ||" + Parameters::sInputDirectory);
-    mkdir(Parameters::sOutputDirectory);
-    mkdir(Parameters::sOutputDirectory + "/stations");    
-    mkdir(Parameters::sOutputDirectory + "/plots");
-    mkdir(Parameters::sOutputDirectory + "/develop");            
+    if (XMPI::root()) {
+        if (!dirExists(Parameters::sInputDirectory)) {
+            throw std::runtime_error("XMPI::initialize || Missing input directory: ||" 
+                + Parameters::sInputDirectory);
+        }
+        mkdir(Parameters::sOutputDirectory);
+        mkdir(Parameters::sOutputDirectory + "/stations");    
+        mkdir(Parameters::sOutputDirectory + "/plots");
+        mkdir(Parameters::sOutputDirectory + "/develop");
+    }
 }
 
 void XMPI::finalize() {
@@ -58,9 +43,7 @@ void XMPI::finalize() {
 void XMPI::printException(const std::exception &e) {
     std::string head = " AXISEM3D ABORTED UPON RUNTIME EXCEPTION ";
     std::string what = e.what();
-    std::vector<std::string> strs;
-    boost::trim_if(what, boost::is_any_of("\t "));
-    boost::split(strs, what, boost::is_any_of("|"), boost::token_compress_on);
+    std::vector<std::string> strs = Parameters::splitString(what, "|");
     std::string src, msg;
     int nmsg = 0;
     if (strs.size() >= 2) {
@@ -69,7 +52,9 @@ void XMPI::printException(const std::exception &e) {
         msg = "WHAT: ";
         for (int i = 1; i < strs.size(); i++) {
             msg += boost::trim_copy(strs[i]);
-            if (i != strs.size() - 1) msg += "\n      ";
+            if (i != strs.size() - 1) {
+                msg += "\n      ";
+            }
             nmsg = std::max(nmsg, (int)(boost::trim_copy(strs[i]).length() + 6));
         }
     } else {
@@ -82,7 +67,9 @@ void XMPI::printException(const std::exception &e) {
     XMPI::cout << XMPI::endl << std::setfill('*') << std::setw(nstar) << "";
     XMPI::cout << head << std::setfill('*') << std::setw(nstar) << "" << XMPI::endl;
     XMPI::cout << src << XMPI::endl;
-    if (msg.length() > 0) XMPI::cout << msg << XMPI::endl;
+    if (msg.length() > 0) {
+        XMPI::cout << msg << XMPI::endl;
+    }
     XMPI::cout << std::setfill('*') << std::setw(nstar * 2 + head.length()) << "";
     XMPI::cout << XMPI::endl << XMPI::endl;
 }
@@ -144,12 +131,16 @@ void XMPI::bcast(float &buffer) {
 void XMPI::bcast(std::string &str) {
     #ifndef _SERIAL_BUILD
         int size = 0;
-        if (root()) size = str.size();
+        if (root()) {
+            size = str.size();
+        }
         bcast(size);
         char *cstr = new char[size + 1];
         if (root()) {
             const char *ostr = str.c_str();
-            for (int i = 0; i < size; i++) cstr[i] = ostr[i];
+            for (int i = 0; i < size; i++) {
+                cstr[i] = ostr[i];
+            }
         } 
         bcast(cstr, size);
         if (!root()) {
@@ -177,7 +168,9 @@ void XMPI::bcast(std::vector<std::string> &buffer) {
         
         // bcast data
         char *all_str = new char[num * maxLen];
-        for (int i = 0; i < num * maxLen; i++) all_str[i] = 0;
+        for (int i = 0; i < num * maxLen; i++) {
+            all_str[i] = 0;
+        }
         if (root()) {
             for (int i = 0; i < num; i++) {
                 for (int j = 0; j < buffer[i].size(); j++) {
@@ -274,7 +267,9 @@ void XMPI::gather(int buf, std::vector<int> &all_buf, bool all) {
             all_buf.resize(XMPI::nproc());
             MPI_Allgather(&buf, 1, MPI_INT, all_buf.data(), 1, MPI_INT, MPI_COMM_WORLD);
         } else {
-            if (root()) all_buf.resize(XMPI::nproc());
+            if (root()) {
+                all_buf.resize(XMPI::nproc());
+            }
             MPI_Gather(&buf, 1, MPI_INT, all_buf.data(), 1, MPI_INT, 0, MPI_COMM_WORLD);
         }
     #else
@@ -290,25 +285,29 @@ void XMPI::gather(const std::string &buf, std::vector<std::string> &all_buf, boo
         std::vector<int> all_size;
         gather(size, all_size, all);
         int total_size = 0;
-        for (auto &n : all_size) total_size += n;
+        for (auto &n : all_size) {
+            total_size += n;
+        }
+        
+        // displacement: where to insert to the global array
         int nproc = XMPI::nproc();
         std::vector<int> disp(nproc, 0);
         if (all || root()) {
-            for (int i = 1; i < nproc; i++) 
-                for (int j = 0; j < i; j++) 
+            for (int i = 1; i < nproc; i++) {
+                for (int j = 0; j < i; j++) {
                     disp[i] += all_size[j];
+                }
+            }
         }
 
-        char *cstr = new char[size];
-        for (int i = 0; i < size - 1; i++) cstr[i] = buf.c_str()[i];
-        cstr[size - 1] = 0;
-        
         char *all_cstr;
-        if (all || root()) all_cstr = new char[total_size];
+        if (all || root()) {
+            all_cstr = new char[total_size];
+        }
         if (all) {
-            MPI_Allgatherv(cstr, size, MPI_CHAR, all_cstr, all_size.data(), disp.data(), MPI_CHAR, MPI_COMM_WORLD);
+            MPI_Allgatherv(buf.c_str(), size, MPI_CHAR, all_cstr, all_size.data(), disp.data(), MPI_CHAR, MPI_COMM_WORLD);
         } else {
-            MPI_Gatherv(cstr, size, MPI_CHAR, all_cstr, all_size.data(), disp.data(), MPI_CHAR, 0, MPI_COMM_WORLD);
+            MPI_Gatherv(buf.c_str(), size, MPI_CHAR, all_cstr, all_size.data(), disp.data(), MPI_CHAR, 0, MPI_COMM_WORLD);
         }
         if (all || root()) {
             all_buf.clear();
@@ -320,7 +319,6 @@ void XMPI::gather(const std::string &buf, std::vector<std::string> &all_buf, boo
             delete [] all_cstr;
         }
         
-        delete [] cstr;
     #else
         all_buf.clear();
         all_buf.push_back(buf);
@@ -358,3 +356,29 @@ void XMPI::gather(const std::vector<std::string> &buf,
     }
 }
 
+
+/////////////////
+// file system 
+/////////////////
+
+extern "C" {
+    #include <sys/types.h>
+    #include <sys/stat.h>
+};
+
+bool XMPI::dirExists(const std::string &path) {
+    struct stat info;
+    if (stat(path.c_str(), &info) != 0) {
+        return false;
+    } else if (info.st_mode & S_IFDIR) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void XMPI::mkdir(const std::string &path) {
+    if (!dirExists(path)) {
+        ::mkdir(path.c_str(), ACCESSPERMS);
+    }
+}

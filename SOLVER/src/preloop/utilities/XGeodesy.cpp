@@ -178,9 +178,9 @@ void XGeodesy::setup(double router, double flattening,
                      const std::vector<double> &ellip_coeffs) {
     sROuter = router;
     sFlattening = flattening;
-    size_t nknots = ellip_knots.size();
+    int nknots = ellip_knots.size();
     sEllipKnots = sEllipCoeffs = RDColX(nknots);
-    for (size_t i = 0; i < nknots; i++) {
+    for (int i = 0; i < nknots; i++) {
         sEllipKnots(i) = ellip_knots[i];
         sEllipCoeffs(i) = ellip_coeffs[i];
     }
@@ -189,8 +189,8 @@ void XGeodesy::setup(double router, double flattening,
 double XGeodesy::getFlattening(double r) {
     double f = 1.;
     double r_ref = r / sROuter;
-    size_t nknots = sEllipKnots.size();
-    for (size_t i = 1; i < nknots; i++) {
+    int nknots = sEllipKnots.size();
+    for (int i = 1; i < nknots; i++) {
         if (r_ref <= sEllipKnots(i)) {
             f = (sEllipCoeffs(i) - sEllipCoeffs(i - 1)) 
                 / (sEllipKnots(i) - sEllipKnots(i - 1))

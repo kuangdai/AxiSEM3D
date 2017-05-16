@@ -67,19 +67,23 @@ public:
     };
     
     ////////////////////////////// broadcast //////////////////////////////
-    // array
+    // raw array
     static void bcast(int *buffer, int size);
     static void bcast(double *buffer, int size);
     static void bcast(float *buffer, int size);
     static void bcast(std::complex<float> *buffer, int size);
     static void bcast(std::complex<double> *buffer, int size);
     static void bcast(char *buffer, int size);
+    
+    // broadcast with allocation
     template<typename Type>
     static void bcast_alloc(Type *&buffer, int size) {
         #ifndef _SERIAL_BUILD
             bcast(size);
             if (!root()) {
-                if (buffer != 0) delete [] buffer;
+                if (buffer != 0) {
+                    delete [] buffer;
+                }
                 buffer = new Type[size];
             }
             bcast(buffer, size);
@@ -97,9 +101,14 @@ public:
     static void bcastEigen(Type &buffer) {
         #ifndef _SERIAL_BUILD
             int dim[2];
-            if (root()) {dim[0] = buffer.rows(); dim[1] = buffer.cols();}
+            if (root()) {
+                dim[0] = buffer.rows(); 
+                dim[1] = buffer.cols();
+            }
             bcast(dim, 2);
-            if (!root()) buffer = Type::Zero(dim[0], dim[1]);
+            if (!root()) {
+                buffer = Type::Zero(dim[0], dim[1]);
+            }
             bcast(buffer.data(), buffer.size());
         #endif
     };
@@ -109,9 +118,13 @@ public:
     static void bcast(std::vector<Type> &buffer) {
         #ifndef _SERIAL_BUILD
             int size = 0;
-            if (root()) size = buffer.size();
+            if (root()) {
+                size = buffer.size();
+            }
             bcast(size);
-            if (!root()) buffer.resize(size);
+            if (!root()) {
+                buffer.resize(size);
+            }
             bcast(buffer.data(), size);
         #endif
     }
@@ -173,6 +186,37 @@ public:
         #endif
     };
     
+    ////////////////////////////// reduce //////////////////////////////
+    // simple
+    static int min(const int &value);
+    static double min(const double &value);
+    static int max(const int &value);
+    static double max(const double &value);
+    static int sum(const int &value);
+    static double sum(const double &value);
+    
+    // sum std::vector
+    static void sumVector(std::vector<double> &value);
+    
+    // sum Eigen::Matrix
+    template<typename Type>
+    static void sumEigenDouble(Type &value) {
+        #ifndef _SERIAL_BUILD
+            Type total(value);
+            MPI_Allreduce(value.data(), total.data(), value.size(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            value = total;
+        #endif
+    };
+    
+    template<typename Type>
+    static void sumEigenInt(Type &value) {
+        #ifndef _SERIAL_BUILD
+            Type total(value);
+            MPI_Allreduce(value.data(), total.data(), value.size(), MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+            value = total;
+        #endif
+    };
+    
     ////////////////////////////// gather ////////////////////////////// 
     // string
     static void gather(int buf, std::vector<int> &all_buf, bool all);
@@ -191,7 +235,11 @@ public:
             std::vector<int> all_size;
             gather(size, all_size, all);
             int total_size = 0;
-            for (auto &n : all_size) total_size += n;
+            for (auto &n : all_size) {
+                total_size += n;
+            }
+            
+            // displacement
             int nproc = XMPI::nproc();
             std::vector<int> disp(nproc, 0);
             if (all || root()) {
@@ -201,7 +249,9 @@ public:
             }
 
             std::vector<Type> allBuf_flat;
-            if (all || root()) allBuf_flat.resize(total_size);
+            if (all || root()) {
+                allBuf_flat.resize(total_size);
+            }
             if (all) {
                 MPI_Allgatherv(buf.data(), size, mpitype, allBuf_flat.data(), all_size.data(), disp.data(), mpitype, MPI_COMM_WORLD);
             } else {
@@ -212,7 +262,9 @@ public:
                 int pos = 0;
                 for (int i = 0; i < nproc; i++) {
                     std::vector<Type> sub;
-                    for (int j = 0; j < all_size[i]; j++) sub.push_back(allBuf_flat[pos++]);
+                    for (int j = 0; j < all_size[i]; j++) {
+                        sub.push_back(allBuf_flat[pos++]);
+                    }
                     all_buf.push_back(sub);
                 }
             }
@@ -244,56 +296,36 @@ public:
             all_buf.clear();
             for (int i = 0; i < all_keys.size(); i++) {
                 std::map<std::string, Type> sub;
-                for (int j = 0; j < all_keys[i].size(); j++)
+                for (int j = 0; j < all_keys[i].size(); j++) {
                     sub.insert(std::pair<std::string, Type>(all_keys[i][j], all_vals[i][j]));
+                }
                 all_buf.push_back(sub);
             }
         }
     }
     
-    ////////////////////////////// reduce //////////////////////////////
-    // simple
-    static int min(const int &value);
-    static double min(const double &value);
-    static int max(const int &value);
-    static double max(const double &value);
-    static int sum(const int &value);
-    static double sum(const double &value);
-    
-    // sum std::vector
-    static void sumVector(std::vector<double> &value);
-    
-    // sum Eigen::Matrix
-    template<typename Type>
-    static void sumEigenDouble(Type &value) {
-        #ifndef _SERIAL_BUILD
-            Type total(value);
-            MPI_Allreduce(value.data(), total.data(), value.size(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            value = total;
-        #endif
-    };
-    
-    template<typename Type>
-    static void sumEigenInt(Type &value) {
-        #ifndef _SERIAL_BUILD
-            Type total(value);
-            MPI_Allreduce(value.data(), total.data(), value.size(), MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-            value = total;
-        #endif
-    };
-        
     ////////////////////////////// stream on root //////////////////////////////
     struct root_cout {
         template<typename Type>
         root_cout &operator<<(const Type &val) {
-            if (rank() == mProc) std::cout << val;
+            if (rank() == mProc) {
+                std::cout << val;
+            }
             return *this;
         };
-        void resetp() {mProc = 0;};
-        void setp(int proc) {
-            if (proc < nproc()) mProc = proc;
-            else resetp();
+        
+        void resetp() {
+            mProc = 0;
         };
+        
+        void setp(int proc) {
+            if (proc < nproc()) {
+                mProc = proc;
+            } else {
+                resetp();
+            }
+        };
+        
         int mProc = 0;
     };
     static root_cout cout;

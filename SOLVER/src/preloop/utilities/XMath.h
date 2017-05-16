@@ -16,11 +16,11 @@ public:
     static double findClosestDist(const std::vector<RDCol2> &crds);         
     
     // Lagrange interpolation
-    static void interpLagrange(double target, size_t nbases, 
+    static void interpLagrange(double target, int nbases, 
         const std::vector<double> &bases, std::vector<double> &results);
     
     // Gaussian smoothing
-    static void gaussianSmoothing(RDColX &data, size_t order, double dev, bool period);
+    static void gaussianSmoothing(RDColX &data, int order, double dev, bool period);
     static void gaussianSmoothing(RDMatXX &data, 
         IColX orderRow, RDColX devRow, bool periodRow, 
         IColX orderCol, RDColX devCol, bool periodCol);
@@ -39,7 +39,7 @@ public:
     // check if a matrix has identical rows
     template<class TMat>
     static bool equalRows(const TMat &mat, double tol = tinyDouble) {
-        for (size_t i = 1; i < mat.rows(); i++) {
+        for (int i = 1; i < mat.rows(); i++) {
             bool equal = (mat.row(i) - mat.row(0)).norm() <= tol * mat.row(0).norm();
             if (!equal) return false;
         }
@@ -47,8 +47,8 @@ public:
     };
     
     // resampling
-    static RDColX trigonResampling(size_t newSize, const RDColX &original);
-    static RDColX linearResampling(size_t newSize, const RDColX &original);
+    static RDColX trigonResampling(int newSize, const RDColX &original);
+    static RDColX linearResampling(int newSize, const RDColX &original);
     
     // compute value at phi 
     static RDRowN computeFourierAtPhi(const RDMatXN &data, double phi);

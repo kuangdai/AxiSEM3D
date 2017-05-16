@@ -15,10 +15,10 @@ void XMath::makeClose(double &a, double &b) {
 }
 
 double XMath::findClosestDist(const std::vector<RDCol2> &crds) {
-    size_t npoint = crds.size();
+    int npoint = crds.size();
     double distMin = DBL_MAX;
-    for (size_t i = 0; i < npoint; i++) {
-        for (size_t j = i + 1; j < npoint; j++) {
+    for (int i = 0; i < npoint; i++) {
+        for (int j = i + 1; j < npoint; j++) {
             double dist = (crds[i] - crds[j]).norm();
             if (dist < distMin) {
                 distMin = dist;
@@ -28,13 +28,13 @@ double XMath::findClosestDist(const std::vector<RDCol2> &crds) {
     return distMin;
 }
 
-void XMath::interpLagrange(double target, size_t nbases, 
+void XMath::interpLagrange(double target, int nbases, 
     const std::vector<double> &bases, std::vector<double> &results) {
-    for (size_t dgr = 0; dgr < nbases; dgr++) {
+    for (int dgr = 0; dgr < nbases; dgr++) {
         double prod1 = 1.;
         double prod2 = 1.;
         double x0 = bases[dgr];
-        for (size_t i = 0; i < nbases; i++) {
+        for (int i = 0; i < nbases; i++) {
             if (i != dgr) {
                 double x = bases[i];
                 prod1 *= target - x;
@@ -45,15 +45,15 @@ void XMath::interpLagrange(double target, size_t nbases,
     }
 }
 
-void XMath::gaussianSmoothing(RDColX &data, size_t order, double dev, bool period) {
+void XMath::gaussianSmoothing(RDColX &data, int order, double dev, bool period) {
     if (data.size() == 0) return;
-    order = std::min(order, (data.size() + 1) / 2 - 1);
+    order = std::min(order, ((int)data.size() + 1) / 2 - 1);
     if (order == 0) return;
     dev *= order;
     
     // gaussian kernel
     RDColX gaussian(order * 2 + 1);
-    for (size_t i = 0; i <= order; i++) {
+    for (int i = 0; i <= order; i++) {
         gaussian(order + i) = exp(- .5 * i * i / (dev * dev));
         gaussian(order - i) = gaussian(order + i);
     }
@@ -61,7 +61,7 @@ void XMath::gaussianSmoothing(RDColX &data, size_t order, double dev, bool perio
     
     // convolve
     RDColX result = RDColX::Zero(data.size());
-    for (size_t i = 0; i < data.size(); i++) {
+    for (int i = 0; i < data.size(); i++) {
         for (int j = -order; j <= order; j++) {
             int k = i + j;
             if (period) {
@@ -91,12 +91,12 @@ void XMath::gaussianSmoothing(RDColX &data, size_t order, double dev, bool perio
 void XMath::gaussianSmoothing(RDMatXX &data, 
     IColX orderRow, RDColX devRow, bool periodRow, 
     IColX orderCol, RDColX devCol, bool periodCol) {
-    for (size_t i = 0; i < data.rows(); i++) {
+    for (int i = 0; i < data.rows(); i++) {
         RDColX temp = data.row(i).transpose();
         gaussianSmoothing(temp, orderRow(i), devRow(i), periodRow);
         data.row(i) = temp.transpose();
     }
-    for (size_t i = 0; i < data.cols(); i++) {
+    for (int i = 0; i < data.cols(); i++) {
         RDColX temp = data.col(i);
         gaussianSmoothing(temp, orderCol(i), devCol(i), periodCol);
         data.col(i) = temp;
@@ -109,8 +109,8 @@ RMatPP XMath::castToSolver(const RDMatPP &mp) {
     return ms;
 }
 
-RDColX XMath::trigonResampling(size_t newSize, const RDColX &original) {
-    size_t nslices = original.rows();
+RDColX XMath::trigonResampling(int newSize, const RDColX &original) {
+    int nslices = original.rows();
     if (newSize == nslices) {
         return original;
     }
@@ -126,10 +126,10 @@ RDColX XMath::trigonResampling(size_t newSize, const RDColX &original) {
     // densed sampling
     double dphi = 2. * pi / newSize;
     RDColX densed(newSize);
-    for (size_t islice = 0; islice < newSize; islice++) {
+    for (int islice = 0; islice < newSize; islice++) {
         double phi = islice * dphi;
         double value_phi = fourier(0).real();
-        for (size_t alpha = 1; alpha < fourier.size(); alpha++) {
+        for (int alpha = 1; alpha < fourier.size(); alpha++) {
             double factor = (nslices % 2 == 0 && alpha == fourier.size() - 1) ? 1. : 2.;
             value_phi += factor * (fourier(alpha) * exp(alpha * phi * iid)).real();
         }
@@ -138,8 +138,8 @@ RDColX XMath::trigonResampling(size_t newSize, const RDColX &original) {
     return densed; 
 }
 
-RDColX XMath::linearResampling(size_t newSize, const RDColX &original) {
-    size_t nslices = original.rows();
+RDColX XMath::linearResampling(int newSize, const RDColX &original) {
+    int nslices = original.rows();
     if (newSize == nslices) {
         return original;
     }
@@ -151,11 +151,11 @@ RDColX XMath::linearResampling(size_t newSize, const RDColX &original) {
     double dphi = 2. * pi / newSize;
     double dphi_orig = 2. * pi / nslices;
     RDColX densed(newSize);
-    for (size_t islice = 0; islice < newSize; islice++) {
+    for (int islice = 0; islice < newSize; islice++) {
         double phi = islice * dphi;
-        size_t loc0 = (size_t)(phi / dphi_orig);
+        int loc0 = (int)(phi / dphi_orig);
         double phi0 = loc0 * dphi_orig;
-        size_t loc1 = loc0 + 1;
+        int loc1 = loc0 + 1;
         if (loc1 == nslices) {
             loc1 = 0;
         }
@@ -166,14 +166,14 @@ RDColX XMath::linearResampling(size_t newSize, const RDColX &original) {
 }
 
 RDRowN XMath::computeFourierAtPhi(const RDMatXN &data, double phi) {
-    size_t nslices = data.rows();
+    int nslices = data.rows();
     RDRowN result;
-    for (size_t col = 0; col < nPntElem; col++) {
+    for (int col = 0; col < nPntElem; col++) {
         PreloopFFTW::getR2C_RMat(nslices) = data.col(col);
         PreloopFFTW::computeR2C(nslices);
         CDColX &fourier = PreloopFFTW::getR2C_CMat(nslices);
         double value_phi = fourier(0).real();
-        for (size_t alpha = 1; alpha < fourier.size(); alpha++) {
+        for (int alpha = 1; alpha < fourier.size(); alpha++) {
             double factor = (nslices % 2 == 0 && alpha == fourier.size() - 1) ? 1. : 2.;
             value_phi += factor * (fourier(alpha) * exp(alpha * phi * iid)).real();
         }

@@ -13,7 +13,9 @@ std::vector<RDColX> PreloopFFTW::sC2R_RMats;
 std::vector<CDColX> PreloopFFTW::sC2R_CMats;
 
 void PreloopFFTW::checkAndInit(int nr) {
-    if (nr <= sNmax) return;
+    if (nr <= sNmax) {
+        return;
+    }
     int xx = 1;
     for (int NR = sNmax + 1; NR <= nr; NR++) {
         int NC = NR / 2 + 1;
@@ -52,4 +54,56 @@ void PreloopFFTW::computeR2C(int nr) {
 void PreloopFFTW::computeC2R(int nr) {
     checkAndInit(nr); 
     fftw_execute(sC2RPlans[nr - 1]);
+}
+
+bool PreloopFFTW::isLuckyNumber(int n, bool forceOdd)
+{
+    int num = n;
+    
+    // We always hope to use even numbers that are generally faster,
+    // but the Nyquist frequency sometimes causes trouble.
+    // force odd
+    if (forceOdd && num % 2 == 0) {
+        return false;
+    }
+    
+    // use even when n > 10
+    if (!forceOdd && num % 2 != 0 && num > 10) {
+        return false;
+    }
+    
+    for (int i = 2; i <= num; i++) {  
+        while(num % i == 0) {
+            num /= i;
+            if (i > 13) {
+                return false;
+            }
+        }
+    }
+    num = n;
+    int e = 0;
+    while(num % 11 == 0) {
+        num /= 11;
+        e++;
+    }
+    num = n;
+    int f = 0;
+    while(num % 13 == 0) {
+        num /= 13;
+        f++;
+    }
+    if (e + f > 1) {
+        return false;
+    }
+    return true;
+}
+
+int PreloopFFTW::nextLuckyNumber(int n, bool forceOdd)
+{
+    while(true) {
+        if (isLuckyNumber(n, forceOdd)) {
+            return n;
+        }
+        n++;
+    }
 }
