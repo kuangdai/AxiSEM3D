@@ -14,7 +14,9 @@ RDCol2 SphericalMapping::mapping(const RDMat24 &nodes, const RDCol2 &xieta, int 
     // get r and theta
     RDMat24 rtheta2;
     rtheta2.row(0).array() = (nodes2.row(0).array().square() + nodes2.row(1).array().square()).sqrt();
-    for (int i = 0; i < 4; i++) rtheta2(1, i) = atan2(nodes2(0, i), nodes2(1, i));
+    for (int i = 0; i < 4; i++) {
+        rtheta2(1, i) = atan2(nodes2(0, i), nodes2(1, i));
+    }
     // copy local variables
     double r0 = rtheta2(0, Mapping::period0123(curvedOuter - 2));
     double r3 = rtheta2(0, Mapping::period0123(curvedOuter + 1));
@@ -44,7 +46,9 @@ RDMat22 SphericalMapping::jacobian(const RDMat24 &nodes, const RDCol2 &xieta, in
     // get r and theta
     RDMat24 rtheta2;
     rtheta2.row(0).array() = (nodes2.row(0).array().square() + nodes2.row(1).array().square()).sqrt();
-    for (int i = 0; i < 4; i++) rtheta2(1, i) = atan2(nodes2(0, i), nodes2(1, i));
+    for (int i = 0; i < 4; i++) {
+        rtheta2(1, i) = atan2(nodes2(0, i), nodes2(1, i));
+    }
     // copy local variables
     double r0 = rtheta2(0, Mapping::period0123(curvedOuter - 2));
     double r3 = rtheta2(0, Mapping::period0123(curvedOuter + 1));

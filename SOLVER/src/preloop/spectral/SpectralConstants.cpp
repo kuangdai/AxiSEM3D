@@ -13,8 +13,6 @@ RDColP SpectralConstants::sW_GLL;
 RDColP SpectralConstants::sW_GLJ;
 RDMatPP SpectralConstants::sG_GLL;
 RDMatPP SpectralConstants::sG_GLJ;
-double SpectralConstants::sDistMin_GLL = 0.;
-double SpectralConstants::sDistMin_GLJ = 0.;
 
 void SpectralConstants::initialize(int nPol) {
 
@@ -140,14 +138,6 @@ void SpectralConstants::initialize(int nPol) {
         sG_GLJ = Eigen::Map<RDMatPP>(Gglj_8, 9, 9);
     } else throw std::runtime_error("SpectralConstants::initialize || Method not implemented for nPol > 8.");
     
-    // minimum distance between points in reference square
-    sDistMin_GLL = 10.;
-    sDistMin_GLJ = 10.;
-    for (int i = 0; i < nPol; i++) {
-        sDistMin_GLL = std::min(sDistMin_GLL, std::abs(sP_GLL(i) - sP_GLL(i + 1)) / 2.);
-        sDistMin_GLJ = std::min(sDistMin_GLJ, std::abs(sP_GLJ(i) - sP_GLJ(i + 1)) / 2.);
-    }
-    
     // initialize Gradient operator
     Gradient::setGMat(XMath::castToSolver(sG_GLL), XMath::castToSolver(sG_GLJ));
     PreloopGradient::setGMat(sG_GLL, sG_GLJ);
@@ -158,8 +148,7 @@ RDCol2 SpectralConstants::getXiEta(int xiPol, int etaPol, bool axial) {
     if (axial) {
         xieta(0) = sP_GLJ(xiPol);
         xieta(1) = sP_GLL(etaPol);
-    } else 
-    {
+    } else {
         xieta(0) = sP_GLL(xiPol);
         xieta(1) = sP_GLL(etaPol);
     }
@@ -171,17 +160,13 @@ RDCol2 SpectralConstants::getWeights(int xiPol, int etaPol, bool axial) {
     if (axial) {
         weights(0) = sW_GLJ(xiPol);
         weights(1) = sW_GLL(etaPol);
-    } else 
-    {
+    } else {
         weights(0) = sW_GLL(xiPol);
         weights(1) = sW_GLL(etaPol);
     }
     return weights;
 }
 
-double SpectralConstants::getDistMin(bool axial) {
-    return axial ? sDistMin_GLJ : sDistMin_GLL;
-}
 
 
 

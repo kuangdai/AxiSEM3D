@@ -17,7 +17,9 @@ bool Mapping::invMapping(const RDMat24 &nodes, const RDCol2 &sz, int curvedOuter
     int numiter = 10;
     for (int i = 1; i <= numiter; i++) {
         const RDCol2 &dsz = sz - mapping(nodes, xieta, curvedOuter);
-        if (dsz.norm() < 1e-7) return true;
+        if (dsz.norm() < 1e-7) {
+            return true;
+        }
         xieta += invJacobian(nodes, xieta, curvedOuter) * dsz;
     }
     return false;
@@ -41,8 +43,12 @@ RDColX Mapping::interpolateCol(const RDMatX4 &nodalValues, const RDCol2 &xieta) 
 }
 
 int Mapping::period0123(int p) {
-    if (p > 3) return period0123(p - 4);
-    if (p < 0) return period0123(p + 4);
+    if (p > 3) {
+        return period0123(p - 4);
+    }
+    if (p < 0) {
+        return period0123(p + 4);
+    }
     return p;
 }
 

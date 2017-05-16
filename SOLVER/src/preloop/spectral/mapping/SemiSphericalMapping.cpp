@@ -14,7 +14,9 @@ RDCol2 SemiSphericalMapping::mapping(const RDMat24 &nodes, const RDCol2 &xieta, 
     // get r and theta
     RDMat24 rtheta2;
     rtheta2.row(0).array() = (nodes2.row(0).array().square() + nodes2.row(1).array().square()).sqrt();
-    for (int i = 0; i < 4; i++) rtheta2(1, i) = atan2(nodes2(0, i), nodes2(1, i));
+    for (int i = 0; i < 4; i++) {
+        rtheta2(1, i) = atan2(nodes2(0, i), nodes2(1, i));
+    }
     // copy local variables
     double s0 = nodes2(0, Mapping::period0123(curvedOuter - 2));
     double z0 = nodes2(1, Mapping::period0123(curvedOuter - 2));
@@ -44,7 +46,9 @@ RDMat22 SemiSphericalMapping::jacobian(const RDMat24 &nodes, const RDCol2 &xieta
     // get r and theta
     RDMat24 rtheta2;
     rtheta2.row(0).array() = (nodes2.row(0).array().square() + nodes2.row(1).array().square()).sqrt();
-    for (int i = 0; i < 4; i++) rtheta2(1, i) = atan2(nodes2(0, i), nodes2(1, i));
+    for (int i = 0; i < 4; i++) {
+        rtheta2(1, i) = atan2(nodes2(0, i), nodes2(1, i));
+    }
     // copy local variables
     double s0 = nodes2(0, Mapping::period0123(curvedOuter - 2));
     double z0 = nodes2(1, Mapping::period0123(curvedOuter - 2));
