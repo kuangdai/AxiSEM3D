@@ -6,7 +6,7 @@
 #include "Volumetric3D.h"
 
 #include "XMPI.h"
-#include "XGeodesy.h"
+#include "Geodesy.h"
 #include "Parameters.h"
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
@@ -64,7 +64,7 @@ void Volumetric3D::buildInparam(std::vector<Volumetric3D *> &models,
         }
         
         // initialize
-        m->setROuter(XGeodesy::getROuter());
+        m->setROuter(Geodesy::getROuter());
         m->setSource(srcLat, srcLon, srcDep);
         m->setupExodusModel(exModel);
         m->initialize(params);

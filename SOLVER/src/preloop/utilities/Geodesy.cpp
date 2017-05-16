@@ -1,27 +1,27 @@
-// XGeodesy.cpp
+// Geodesy.cpp
 // created by Kuangdai on 15-May-2017 
 // geodetic tools
 
-#include "XGeodesy.h"
+#include "Geodesy.h"
 
-double XGeodesy::sFlattening = 0.;
-double XGeodesy::sROuter = 6371e3;
-RDColX XGeodesy::sEllipKnots = RDColX::Zero(0);
-RDColX XGeodesy::sEllipCoeffs = RDColX::Zero(0);
+double Geodesy::sFlattening = 0.;
+double Geodesy::sROuter = 6371e3;
+RDColX Geodesy::sEllipKnots = RDColX::Zero(0);
+RDColX Geodesy::sEllipCoeffs = RDColX::Zero(0);
 
 
-void XGeodesy::rtheta(const RDCol2 &sz, double &r, double &theta) {
+void Geodesy::rtheta(const RDCol2 &sz, double &r, double &theta) {
     r = sz.norm();
     theta = (r < tinyDouble) ? 0. : acos(sz(1) / r);
 }
 
-RDCol2 XGeodesy::rtheta(const RDCol2 &sz) {
+RDCol2 Geodesy::rtheta(const RDCol2 &sz) {
     RDCol2 rt;
     rtheta(sz, rt(0), rt(1));
     return rt;
 }
 
-double XGeodesy::atan4(double y, double x, bool &defined) {
+double Geodesy::atan4(double y, double x, bool &defined) {
     if (sqrt(x * x + y * y) < tinyDouble) {
         defined = false;
         return 0.;
@@ -37,7 +37,7 @@ double XGeodesy::atan4(double y, double x, bool &defined) {
     return t;
 }
 
-RDCol3 XGeodesy::toCartesian(const RDCol3 &rtp) {
+RDCol3 Geodesy::toCartesian(const RDCol3 &rtp) {
     RDCol3 xyz;
     xyz(0) = rtp(0) * sin(rtp(1)) * cos(rtp(2));
     xyz(1) = rtp(0) * sin(rtp(1)) * sin(rtp(2));
@@ -45,7 +45,7 @@ RDCol3 XGeodesy::toCartesian(const RDCol3 &rtp) {
     return xyz;
 }
 
-RDCol3 XGeodesy::toSpherical(const RDCol3 &xyz, bool &defined) {
+RDCol3 Geodesy::toSpherical(const RDCol3 &xyz, bool &defined) {
     RDCol3 rtp;
     rtp(0) = xyz.norm();
     rtp(1) = rtp(0) < tinyDouble ? 0. : acos(xyz(2) / rtp(0));
@@ -53,7 +53,7 @@ RDCol3 XGeodesy::toSpherical(const RDCol3 &xyz, bool &defined) {
     return rtp;
 }
 
-RDMat33 XGeodesy::rotationMatrix(double theta, double phi) {
+RDMat33 Geodesy::rotationMatrix(double theta, double phi) {
     RDMat33 Q;
     Q(0, 0) = cos(theta) * cos(phi);
     Q(0, 1) = -sin(phi);
@@ -67,7 +67,7 @@ RDMat33 XGeodesy::rotationMatrix(double theta, double phi) {
     return Q;
 }
 
-double XGeodesy::lat2Theta_r(double lat, double radius) {
+double Geodesy::lat2Theta_r(double lat, double radius) {
     double flattening = getFlattening(radius);
     double one_minus_f_squared = (1. - flattening) * (1. - flattening);
     // take care of poles
@@ -75,27 +75,27 @@ double XGeodesy::lat2Theta_r(double lat, double radius) {
     double limit_bound = 90.1;
     if (lat > limit_round) {
         if (lat > limit_bound) {
-            throw std::runtime_error("XGeodesy::lat2Theta || Latitude out of range [-90, 90]");
+            throw std::runtime_error("Geodesy::lat2Theta || Latitude out of range [-90, 90]");
         }
         lat = limit_round;
     }
     if (lat < -limit_round) {
         if (lat < -limit_bound) {
-            throw std::runtime_error("XGeodesy::lat2Theta || Latitude out of range [-90, 90]");
+            throw std::runtime_error("Geodesy::lat2Theta || Latitude out of range [-90, 90]");
         }
         lat = -limit_round;
     }
     return pi / 2. - atan(one_minus_f_squared * tan(lat * degree));
 }
 
-double XGeodesy::lon2Phi(double lon) {
+double Geodesy::lon2Phi(double lon) {
     if (lon < 0.) {
         lon += 360.;
     }
     return lon * degree;
 }
 
-double XGeodesy::theta2Lat_r(double theta, double radius) {
+double Geodesy::theta2Lat_r(double theta, double radius) {
     double flattening = getFlattening(radius);
     double inv_one_minus_f_squared = 1. / (1. - flattening) / (1. - flattening);
     // take care of poles
@@ -104,27 +104,27 @@ double XGeodesy::theta2Lat_r(double theta, double radius) {
     double limit_bound = 90.1 * degree;
     if (lat > limit_round) {
         if (lat > limit_bound) {
-            throw std::runtime_error("XGeodesy::theta2Lat || Theta out of range [0, pi]");
+            throw std::runtime_error("Geodesy::theta2Lat || Theta out of range [0, pi]");
         }
         lat = limit_round;
     }
     if (lat < -limit_round) {
         if (lat < -limit_bound) {
-            throw std::runtime_error("XGeodesy::theta2Lat || Theta out of range [0, pi]");
+            throw std::runtime_error("Geodesy::theta2Lat || Theta out of range [0, pi]");
         }
         lat = -limit_round;
     }
     return atan(inv_one_minus_f_squared * tan(lat)) / degree;
 }
 
-double XGeodesy::phi2Lon(double phi) {
+double Geodesy::phi2Lon(double phi) {
     if (phi > pi) {
         phi -= 2. * pi;
     }
     return phi / degree;
 }
 
-RDCol3 XGeodesy::rotateSrc2Glob(const RDCol3 &rtpS, double srclat, double srclon, double srcdep) {
+RDCol3 Geodesy::rotateSrc2Glob(const RDCol3 &rtpS, double srclat, double srclon, double srcdep) {
     const RDCol3 &xyzS = toCartesian(rtpS);
     const RDCol3 &xyzG = rotationMatrix(lat2Theta_d(srclat, srcdep), lon2Phi(srclon)) * xyzS;
     bool defined = true;
@@ -135,7 +135,7 @@ RDCol3 XGeodesy::rotateSrc2Glob(const RDCol3 &rtpS, double srclat, double srclon
     return rtpG;
 }
 
-RDCol3 XGeodesy::rotateGlob2Src(const RDCol3 &rtpG, double srclat, double srclon, double srcdep) {
+RDCol3 Geodesy::rotateGlob2Src(const RDCol3 &rtpG, double srclat, double srclon, double srcdep) {
     const RDCol3 &xyzG = toCartesian(rtpG);
     const RDCol3 &xyzS = rotationMatrix(lat2Theta_d(srclat, srcdep), lon2Phi(srclon)).transpose() * xyzG;
     bool defined = true;
@@ -146,7 +146,7 @@ RDCol3 XGeodesy::rotateGlob2Src(const RDCol3 &rtpG, double srclat, double srclon
     return rtpS;
 }
 
-double XGeodesy::backAzimuth(double srclat, double srclon, double srcdep,
+double Geodesy::backAzimuth(double srclat, double srclon, double srcdep,
     double reclat, double reclon, double recdep) {    
     // event
     double srcTheta = lat2Theta_d(srclat, srcdep);
@@ -173,7 +173,7 @@ double XGeodesy::backAzimuth(double srclat, double srclon, double srcdep,
     return atan4(ss, sc, defined);
 }
 
-void XGeodesy::setup(double router, double flattening, 
+void Geodesy::setup(double router, double flattening, 
                      const std::vector<double> &ellip_knots, 
                      const std::vector<double> &ellip_coeffs) {
     sROuter = router;
@@ -186,7 +186,7 @@ void XGeodesy::setup(double router, double flattening,
     }
 }
 
-double XGeodesy::getFlattening(double r) {
+double Geodesy::getFlattening(double r) {
     double f = 1.;
     double r_ref = r / sROuter;
     int nknots = sEllipKnots.size();

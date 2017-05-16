@@ -1,10 +1,10 @@
-// XGeodesy.h
+// Geodesy.h
 // created by Kuangdai on 15-May-2017 
 // geodetic tools
 
 #include "eigenp.h"
 
-class XGeodesy {
+class Geodesy {
 public:
     
     // 2D, (s, z) -> (r, theta)
