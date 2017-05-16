@@ -25,9 +25,9 @@ public:
 private:
     
     // model constants
-    static const size_t sNLayer;
-    static const size_t sNLat;
-    static const size_t sNLon;
+    static const int sNLayer;
+    static const int sNLat;
+    static const int sNLon;
     
     // radii of reference spheres
     double mRSurf = 6371000.0;
@@ -43,11 +43,9 @@ private:
     double mMohoFactor = 1.;
     
     // smoothening 
-    size_t mGaussianOrder = 2;
+    int mGaussianOrder = 2;
     double mGaussianDev = .5;
     
-    // interpolation
-    size_t mNPointInterp = 2;
     // use geocentric or geographic
     bool mGeographic = true;
     

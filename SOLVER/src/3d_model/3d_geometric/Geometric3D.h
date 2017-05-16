@@ -33,9 +33,6 @@ public:
     // verbose 
     virtual std::string verbose() const = 0;
     
-    // set outer radius
-    virtual void setROuter(double router) {};
-    
     // build from input parameters
     static void buildInparam(std::vector<Geometric3D *> &models, 
         const Parameters &par, int verbose);
