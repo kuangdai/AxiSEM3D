@@ -6,7 +6,6 @@
 #include "Geometric3D.h"
 
 #include "XMPI.h"
-#include "XMath.h"
 #include "Parameters.h"
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>

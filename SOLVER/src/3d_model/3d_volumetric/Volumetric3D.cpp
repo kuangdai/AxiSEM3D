@@ -1,12 +1,11 @@
 // Volumetric3D.cpp
 // created by Kuangdai on 16-May-2016 
-// base class of Volumetric 3D models, including both mantle and crust
-// currently we assume 1D Q-factors (Q_mu and Q_kappa)
+// base class of volumetric 3D models, including 
+// velocity, density, elasticity, attenuation
 
 #include "Volumetric3D.h"
 
 #include "XMPI.h"
-#include "Geodesy.h"
 #include "Parameters.h"
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
@@ -22,24 +21,30 @@
 void Volumetric3D::buildInparam(std::vector<Volumetric3D *> &models, 
     const Parameters &par, const ExodusModel *exModel, 
     double srcLat, double srcLon, double srcDep, int verbose) {
-    for (const auto &m: models) delete m;     
+    
+    // clear the container
+    for (const auto &m: models) {
+        delete m;    
+    }    
     models.clear();
-    // first check size
+    
+    // check size
     int nmodels = par.getValue<int>("MODEL_3D_VOLUMETRIC_NUM");
     int nsize = par.getSize("MODEL_3D_VOLUMETRIC_LIST");
-    if (nmodels > nsize) throw std::runtime_error("Volumetric3D::buildInparam || "
-        "Not enough model names provided in MODEL_3D_VOLUMETRIC_LIST ||"
-        "MODEL_3D_VOLUMETRIC_NUM = " + par.getValue<std::string>("MODEL_3D_VOLUMETRIC_NUM") + ".");
+    if (nmodels > nsize) {
+        throw std::runtime_error("Volumetric3D::buildInparam || "
+            "Not enough model names provided in MODEL_3D_VOLUMETRIC_LIST, ||"
+            "MODEL_3D_VOLUMETRIC_NUM = " + boost::lexical_cast<std::string>(nmodels) + 
+            ", but only " + boost::lexical_cast<std::string>(nsize) + " provided.");
+    }
     
-    for (int i = 0; i < nmodels; i++) {
+    for (int imodel = 0; imodel < nmodels; imodel++) {
+        
         // split model name and parameters
-        std::string mstr = par.getValue<std::string>("MODEL_3D_VOLUMETRIC_LIST", i);
-        std::vector<std::string> strs;
-        boost::trim_if(mstr, boost::is_any_of("\t "));
-        boost::split(strs, mstr, boost::is_any_of("$"), boost::token_compress_on);
-        std::string name = strs[0];
-        std::vector<std::string> params;
-        for (int i = 1; i < strs.size(); i++) params.push_back(strs[i]);
+        std::string mstr = par.getValue<std::string>("MODEL_3D_VOLUMETRIC_LIST", imodel);
+        std::vector<std::string> strs = Parameters::splitString(mstr, "$");
+        std::string name(strs[0]);
+        std::vector<std::string> params(strs.begin() + 1, strs.end());
         
         // create model
         Volumetric3D *m;
@@ -64,11 +69,14 @@ void Volumetric3D::buildInparam(std::vector<Volumetric3D *> &models,
         }
         
         // initialize
-        m->setROuter(Geodesy::getROuter());
-        m->setSource(srcLat, srcLon, srcDep);
+        m->setSourceLocation(srcLat, srcLon, srcDep);
         m->setupExodusModel(exModel);
         m->initialize(params);
-        if (verbose) XMPI::cout << m->verbose();
         models.push_back(m);
+        
+        // verbose
+        if (verbose) {
+            XMPI::cout << m->verbose();
+        }
     }
 }
