@@ -8,11 +8,11 @@
 
 #include "OceanLoad3D_const.h"
 #include <sstream>
-#include "XMath.h"
+#include "Parameters.h"
 
 void OceanLoad3D_const::initialize(const std::vector<std::string> &params) {
     if (params.size() >= 1) {
-        XMath::castValue(mDepth, params[0], "OceanLoad3D_const::initialize");
+        Parameters::castValue(mDepth, params[0], "OceanLoad3D_const::initialize");
         mDepth *= 1e3;
     }
 }
