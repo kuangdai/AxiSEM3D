@@ -24,9 +24,9 @@ public:
     // get undulation (deltaR)
     // IMPORTANT NOTES: 
     // a) This function should be realized such that r/theta/phi are the geocentric 
-    //    coordinates, without rotating the source to the north pole. For models 
-    //    given in geographic coordinates, such as topographical models, one has
-    //    to perform the geographic-to-geocentric conversion internally.
+    //    coordinates, without rotating the source to the north pole.  
+    //    For models given in geographic coordinates, geocentric-to-geographic  
+    //    conversion of theta and phi has to be performed internally.
     // b) All models should be defined independently with respect to the perfect sphere.
     virtual double getDeltaR(double r, double theta, double phi, double rElemCenter) const = 0;
     
