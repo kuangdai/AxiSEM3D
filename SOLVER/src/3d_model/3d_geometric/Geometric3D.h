@@ -26,7 +26,7 @@ public:
     // a) This function should be realized such that r/theta/phi are the geocentric 
     //    coordinates, without rotating the source to the north pole.  
     //    For models given in geographic coordinates, geocentric-to-geographic  
-    //    conversion of theta and phi has to be performed internally.
+    //    conversions from (theta, phi) to (lat, lon) has to be performed internally.
     // b) All models should be defined independently with respect to the perfect sphere.
     virtual double getDeltaR(double r, double theta, double phi, double rElemCenter) const = 0;
     
