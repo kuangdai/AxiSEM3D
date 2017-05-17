@@ -46,6 +46,40 @@ void XMath::interpLagrange(double target, int nbases,
     }
 }
 
+void XMath::interpLinear(double target, const RDColX &bases, int &loc, double &weight) {
+    if (target < bases(0) || target > bases(bases.size() - 1)) {
+        loc = -1;
+        weight = 0.;
+        return;
+    }
+    
+    for (int i = 1; i < bases.size(); i++) {
+        if (target <= bases(i)) {
+            loc = i - 1;
+            weight = 1. - 1. / (bases(loc + 1) - bases(loc)) * (target - bases(loc));
+            return;
+        }
+    }
+}
+
+bool XMath::sortedAscending(const RDColX &bases) {
+    for (int i = 0; i < bases.size() - 1; i++) {
+        if (bases(i) > bases(i + 1)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void XMath::checkLimits(double &value, double low, double up, double tol) {
+    if (value < low + tol) {
+        value = low + tol;
+    }
+    if (value > up - tol) {
+        value = up - tol;
+    }
+}
+
 void XMath::gaussianSmoothing(RDColX &data, int order, double dev, bool period) {
     if (data.size() == 0) return;
     order = std::min(order, ((int)data.size() + 1) / 2 - 1);

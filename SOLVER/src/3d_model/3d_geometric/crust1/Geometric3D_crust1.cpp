@@ -4,7 +4,6 @@
 // http://igppweb.ucsd.edu/~gabi/crust1.html
 
 #include "Geometric3D_crust1.h"
-#include "Volumetric3D_crust1.h"
 #include <sstream>
 #include <fstream>
 #include "XMPI.h"
@@ -99,6 +98,16 @@ void Geometric3D_crust1::initialize() {
     mDeltaRSurf *= mSurfFactor;
     mDeltaRMoho *= mMohoFactor;
     
+    // grid lat and lon
+    mGridLat = RDColX(sNLat + 1);
+    mGridLon = RDColX(sNLon + 1); // one bigger than data
+    for (int i = 0; i < sNLat + 1; i++) {
+        mGridLat[i] = i * 1. - 90.;
+    }
+    for (int i = 0; i < sNLon + 1; i++) {
+        mGridLon[i] = i * 1. - 180.;
+    }
+    
     //////////// plot raw data ////////////  
     // std::fstream fs;
     // fs.open("/Users/kuangdai/Desktop/crust1/smt.txt", std::fstream::out);
@@ -159,6 +168,7 @@ void Geometric3D_crust1::initialize(const std::vector<std::string> &params) {
     } catch (std::out_of_range) {
         // nothing
     }
+    mRSurf = Geodesy::getROuter();
     initialize();
 }
 
@@ -169,24 +179,42 @@ double Geometric3D_crust1::getDeltaR(double r, double theta, double phi, double 
     
     // convert theta to co-latitude 
     if (mGeographic) {
-        theta = pi / 2. - Geodesy::theta2Lat_r(theta, r) * degree;
+        theta = pi / 2. - Geodesy::theta2Lat_d(theta, 0.) * degree;
     }
     
+    // regularise
+    double lat = 90. - theta / degree;
+    double lon = phi / degree;
+    if (lon > 180.) {
+        lon -= 360.;
+    }
+    XMath::checkLimits(lat, -90., 90.);
+    XMath::checkLimits(lon, -180., 180.);
+    
     // interpolation on sphere
-    int    it0, it1, ip0, ip1;
-    double wt0, wt1, wp0, wp1;
-    Volumetric3D_crust1::interpTheta(theta, it0, it1, wt0, wt1);
-    Volumetric3D_crust1::interpPhi(phi, ip0, ip1, wp0, wp1);
+    int llat0, llon0, llat1, llon1;
+    double wlat0, wlon0, wlat1, wlon1;
+    XMath::interpLinear(lat, mGridLat, llat0, wlat0);
+    XMath::interpLinear(lon, mGridLon, llon0, wlon0);    
+    llat1 = llat0 + 1;
+    llon1 = llon0 + 1;
+    wlat1 = 1. - wlat0;
+    wlon1 = 1. - wlon1;
+    if (llon1 == sNLon) {
+        llon1 = 0;
+    }
+    
     double drSurf = 0.;
+    drSurf += mDeltaRSurf(llat0, llon0) * wlat0 * wlon0;
+    drSurf += mDeltaRSurf(llat1, llon0) * wlat1 * wlon0;
+    drSurf += mDeltaRSurf(llat0, llon1) * wlat0 * wlon1;
+    drSurf += mDeltaRSurf(llat1, llon1) * wlat1 * wlon1;
+    
     double drMoho = 0.;
-    drSurf += wt0 * wp0 * mDeltaRSurf(it0, ip0);
-    drSurf += wt0 * wp1 * mDeltaRSurf(it0, ip1);
-    drSurf += wt1 * wp0 * mDeltaRSurf(it1, ip0);
-    drSurf += wt1 * wp1 * mDeltaRSurf(it1, ip1);
-    drMoho += wt0 * wp0 * mDeltaRMoho(it0, ip0);
-    drMoho += wt0 * wp1 * mDeltaRMoho(it0, ip1);
-    drMoho += wt1 * wp0 * mDeltaRMoho(it1, ip0);
-    drMoho += wt1 * wp1 * mDeltaRMoho(it1, ip1);
+    drMoho += mDeltaRMoho(llat0, llon0) * wlat0 * wlon0;
+    drMoho += mDeltaRMoho(llat1, llon0) * wlat1 * wlon0;
+    drMoho += mDeltaRMoho(llat0, llon1) * wlat0 * wlon1;
+    drMoho += mDeltaRMoho(llat1, llon1) * wlat1 * wlon1;
 
     // interpolation along radius    
     if (rElemCenter < mRMoho) {

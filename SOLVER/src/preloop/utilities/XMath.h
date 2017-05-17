@@ -18,6 +18,15 @@ public:
     // Lagrange interpolation
     static void interpLagrange(double target, int nbases, 
         const double *bases, double *results);
+        
+    // linear interpolation
+    static void interpLinear(double target, const RDColX &bases, int &loc, double &weight); 
+    
+    // check sorted
+    static bool sortedAscending(const RDColX &bases); 
+    
+    // check limits
+    static void checkLimits(double &value, double low, double up, double tol = tinyDouble);
     
     // Gaussian smoothing
     static void gaussianSmoothing(RDColX &data, int order, double dev, bool period);

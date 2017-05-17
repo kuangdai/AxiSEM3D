@@ -47,6 +47,7 @@ private:
     // deltaR at surface and moho 
     RDMatXX mDeltaRSurf;
     RDMatXX mDeltaRMoho;
+    RDColX mGridLat, mGridLon;
     
 };
 

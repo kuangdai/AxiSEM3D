@@ -1,20 +1,18 @@
-// Geometric3D_Internal.h
-// created by Kuangdai on 19-Jan-2017 
-// topography on a general internal boundary
+// Geometric3D_EMC.h
+// created by Kuangdai on 16-May-2017 
+// topography on a boundary at any depth, with IRIS-EMC format
 
 #pragma once
 
 #include "Geometric3D.h"
 #include "eigenp.h"
 
-class Geometric3D_Internal: public Geometric3D {
+class Geometric3D_EMC: public Geometric3D {
 public:
 
     void initialize();
     void initialize(const std::vector<std::string> &params);
-    
     double getDeltaR(double r, double theta, double phi, double rElemCenter) const;
-    
     std::string verbose() const;
     
 private:
@@ -24,23 +22,19 @@ private:
     double mRLower;
     double mRUpper;
     
-    // resolution
-    int mN360;
-    
     // file
     std::string mFileName;
-    
-    // use geocentric or geographic
-    bool mGeographic = false;
+    std::string mVarName;
     
     // factor
     double mFactor = 1.0;
     
-    // smoothening 
-    int mGaussianOrder = 0;
-    double mGaussianDev = .5;
-
+    // use geocentric or geographic
+    bool mGeographic = false;
+    
     // data
-    RDMatXX mData;    
+    RDMatXX mGridData;
+    RDColX mGridLat;
+    RDColX mGridLon;
 };
 
