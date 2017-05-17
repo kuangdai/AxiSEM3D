@@ -14,7 +14,7 @@ class Volumetric3D {
 public:
     // reference type of material properties
     enum MaterialRefType {Absolute, Reference1D, Reference3D, ReferencePerturb};
-    const std::vector<std::string> MaterialRefTypeStringFull = {"Absolute", 
+    const std::vector<std::string> MaterialRefTypeString = {"Absolute", 
         "Reference1D", "Reference3D", "ReferencePerturb"};
     const std::vector<std::string> MaterialRefTypeStringShort = {"Abs", 
         "Ref1D", "Ref3D", "RefPtb"};
