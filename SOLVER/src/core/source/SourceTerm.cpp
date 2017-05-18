@@ -17,16 +17,19 @@ mElement(element) {
     // make the order consistent
     for (int i = 0; i < nPntElem; i++) {
         int length = mElement->getPoint(i)->getNu() + 1;
-        if (length < force[i].rows())
+        if (length < force[i].rows()) {
             mForce[i] = force[i].topRows(length);
-        else 
+        } else {
             mForce[i] = force[i];
+        }
     }
     mForceXSTF = mForce;
 }
 
 void SourceTerm::apply(Real stf) {
     // using mForceXSTF avoids dynamic allocation
-    for (int i = 0; i < nPntElem; i++) mForceXSTF[i] = mForce[i] * stf;
+    for (int i = 0; i < nPntElem; i++) {
+        mForceXSTF[i] = mForce[i] * stf;
+    }
     mElement->addSourceTerm(mForceXSTF);
 }
