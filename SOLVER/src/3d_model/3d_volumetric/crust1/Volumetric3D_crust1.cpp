@@ -21,54 +21,54 @@ const int Volumetric3D_crust1::sNLon = 360;
 void Volumetric3D_crust1::initialize() {
     // read raw data
     int nrow = sNLat * sNLon;
-    RDMatXX bnd, vp_, vs_, rho;
-    bnd = vp_ = vs_ = rho = RDMatXX::Zero(nrow, sNLayer);
+    RDMatXX bnd, v_p, v_s, rho;
+    bnd = v_p = v_s = rho = RDMatXX::Zero(nrow, sNLayer);
     if (XMPI::root()) {
         std::string path = projectDirectory + "/src/3d_model/3d_volumetric/crust1/data";
-        std::fstream fsbnd, fsvp_, fsvs_, fsrho;
+        std::fstream fsbnd, fsv_p, fsv_s, fsrho;
         fsbnd.open(path + "/crust1.bnds", std::fstream::in);
-        fsvp_.open(path + "/crust1.vp", std::fstream::in);
-        fsvs_.open(path + "/crust1.vs", std::fstream::in);
+        fsv_p.open(path + "/crust1.vp", std::fstream::in);
+        fsv_s.open(path + "/crust1.vs", std::fstream::in);
         fsrho.open(path + "/crust1.rho", std::fstream::in);
-        if (!fsbnd || !fsvp_ || !fsvs_ || !fsrho) {
+        if (!fsbnd || !fsv_p || !fsv_s || !fsrho) {
             throw std::runtime_error("Volumetric3D_crust1::initialize || "
                 "Error opening crust1.0 data files at directory: ||" + path);
         }
         for (int i = 0; i < nrow; i++) {
             for (int j = 0; j < sNLayer; j++) {
                 fsbnd >> bnd(i, j);
-                fsvp_ >> vp_(i, j);
-                fsvs_ >> vs_(i, j);
+                fsv_p >> v_p(i, j);
+                fsv_s >> v_s(i, j);
                 fsrho >> rho(i, j);
             }
         }
         fsbnd.close();
-        fsvp_.close();
-        fsvs_.close();
+        fsv_p.close();
+        fsv_s.close();
         fsrho.close();    
     }
     // broadcast
     XMPI::bcastEigen(bnd);
-    XMPI::bcastEigen(vp_);
-    XMPI::bcastEigen(vs_);
+    XMPI::bcastEigen(v_p);
+    XMPI::bcastEigen(v_s);
     XMPI::bcastEigen(rho);
     
     // cast to integer theta
     mRl = mVp = mVs = mRh = RDMatXX::Zero(nrow + sNLon, sNLayer);
     for (int col = 0; col < sNLayer; col++) {
         mRl.block(0, col, sNLon, 1).fill(bnd.block(0, col, sNLon, 1).sum() / sNLon);
-        mVp.block(0, col, sNLon, 1).fill(vp_.block(0, col, sNLon, 1).sum() / sNLon);
-        mVs.block(0, col, sNLon, 1).fill(vs_.block(0, col, sNLon, 1).sum() / sNLon);
+        mVp.block(0, col, sNLon, 1).fill(v_p.block(0, col, sNLon, 1).sum() / sNLon);
+        mVs.block(0, col, sNLon, 1).fill(v_s.block(0, col, sNLon, 1).sum() / sNLon);
         mRh.block(0, col, sNLon, 1).fill(rho.block(0, col, sNLon, 1).sum() / sNLon);
         mRl.block(nrow, col, sNLon, 1).fill(bnd.block(nrow - sNLon, col, sNLon, 1).sum() / sNLon);
-        mVp.block(nrow, col, sNLon, 1).fill(vp_.block(nrow - sNLon, col, sNLon, 1).sum() / sNLon);
-        mVs.block(nrow, col, sNLon, 1).fill(vs_.block(nrow - sNLon, col, sNLon, 1).sum() / sNLon);
+        mVp.block(nrow, col, sNLon, 1).fill(v_p.block(nrow - sNLon, col, sNLon, 1).sum() / sNLon);
+        mVs.block(nrow, col, sNLon, 1).fill(v_s.block(nrow - sNLon, col, sNLon, 1).sum() / sNLon);
         mRh.block(nrow, col, sNLon, 1).fill(rho.block(nrow - sNLon, col, sNLon, 1).sum() / sNLon);
     }
     for (int i = 1; i < sNLat; i++) {
         mRl.block(i * sNLon, 0, sNLon, sNLayer) = (bnd.block(i * sNLon, 0, sNLon, sNLayer) + bnd.block((i - 1) * sNLon, 0, sNLon, sNLayer)) * .5;
-        mVp.block(i * sNLon, 0, sNLon, sNLayer) = (vp_.block(i * sNLon, 0, sNLon, sNLayer) + vp_.block((i - 1) * sNLon, 0, sNLon, sNLayer)) * .5;
-        mVs.block(i * sNLon, 0, sNLon, sNLayer) = (vs_.block(i * sNLon, 0, sNLon, sNLayer) + vs_.block((i - 1) * sNLon, 0, sNLon, sNLayer)) * .5;
+        mVp.block(i * sNLon, 0, sNLon, sNLayer) = (v_p.block(i * sNLon, 0, sNLon, sNLayer) + v_p.block((i - 1) * sNLon, 0, sNLon, sNLayer)) * .5;
+        mVs.block(i * sNLon, 0, sNLon, sNLayer) = (v_s.block(i * sNLon, 0, sNLon, sNLayer) + v_s.block((i - 1) * sNLon, 0, sNLon, sNLayer)) * .5;
         mRh.block(i * sNLon, 0, sNLon, sNLayer) = (rho.block(i * sNLon, 0, sNLon, sNLayer) + rho.block((i - 1) * sNLon, 0, sNLon, sNLayer)) * .5;
     } 
     
@@ -256,17 +256,17 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
             bool found = false;
             for (int iLayer = 1; iLayer < mRlGLL.rows(); iLayer++) {
                 if (r > mRlGLL(iLayer)) {
-                    double vp_top = mVpGLL(rowdata, iLayer - 1);
-                    double vs_top = mVsGLL(rowdata, iLayer - 1);
-                    double rh_top = mRhGLL(rowdata, iLayer - 1);
-                    double vp_bot = mVpGLL(rowdata, iLayer);
-                    double vs_bot = mVsGLL(rowdata, iLayer);
-                    double rh_bot = mRhGLL(rowdata, iLayer);
+                    double v_ptop = mVpGLL(rowdata, iLayer - 1);
+                    double v_stop = mVsGLL(rowdata, iLayer - 1);
+                    double rhotop = mRhGLL(rowdata, iLayer - 1);
+                    double v_pbot = mVpGLL(rowdata, iLayer);
+                    double v_sbot = mVsGLL(rowdata, iLayer);
+                    double rhobot = mRhGLL(rowdata, iLayer);
                     double top = mRlGLL(iLayer - 1);
                     double bot = mRlGLL(iLayer);
-                    double vp = (vp_top - vp_bot) / (top - bot) * (r - bot) + vp_bot;
-                    double vs = (vs_top - vs_bot) / (top - bot) * (r - bot) + vs_bot;
-                    double rh = (rh_top - rh_bot) / (top - bot) * (r - bot) + rh_bot;
+                    double vp = (v_ptop - v_pbot) / (top - bot) * (r - bot) + v_pbot;
+                    double vs = (v_stop - v_sbot) / (top - bot) * (r - bot) + v_sbot;
+                    double rh = (rhotop - rhobot) / (top - bot) * (r - bot) + rhobot;
                     v_p += vp * weight;
                     v_s += vs * weight;
                     rho += rh * weight;
@@ -281,8 +281,8 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
     }
     
     // when sediment is considered, Vs at some locations may be too small
-    v_s = std::max(vsv, 500.);
-    v_p = std::max(vpv, sqrt(2) * vsv);
+    v_s = std::max(v_s, 500.);
+    v_p = std::max(v_p, sqrt(2) * v_s);
     
     values[0] = v_p;
     values[1] = v_s;
