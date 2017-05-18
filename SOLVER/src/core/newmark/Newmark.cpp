@@ -7,7 +7,7 @@
 #include "SourceTimeFunction.h"
 #include <sstream>
 #include "XMPI.h"
-#include "XTimer.h"
+#include "MultilevelTimer.h"
 
 Newmark::Newmark(Domain *&domain, int reportInterval, int checkStabInterval):
 mDomain(domain), mReportInterval(reportInterval), 
@@ -53,8 +53,10 @@ void Newmark::solve() const {
         t += dt;
         
         // check stability
-        if (tstep % mCheckStabInterval == 0)
+        if (tstep % mCheckStabInterval == 0) {
             mDomain->checkStability(dt, tstep, t);
+        }
+        
         // screen info    
         if (tstep % mReportInterval == 0) {
             double elapsed = timer.elapsed() * sec2h;
