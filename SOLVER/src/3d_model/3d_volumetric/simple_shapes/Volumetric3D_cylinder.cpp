@@ -71,37 +71,8 @@ void Volumetric3D_cylinder::initialize(const std::vector<std::string> &params) {
         // nothing
     }    
     
-    // use one-fifth of radius for HWHM if not specified
-    if (mHWHM_lateral < 0.) {
-        mHWHM_lateral = mRadius * .2;
-    }
-    
-    if (mHWHM_top_bot < 0.) {
-        mHWHM_top_bot = mRadius * .2;
-    }
-    
-    // for Absolute models, decay is not allowed
-    if (mReferenceType == Volumetric3D::MaterialRefType::Absolute) {
-        mHWHM_lateral = mHWHM_top_bot = 0.;
-        mValueInside *= MaterialPropertyAbsSI[mMaterialProp];
-    }
-}
-
-bool Volumetric3D_cylinder::get3dProperties(double r, double theta, double phi, double rElemCenter,
-    std::vector<MaterialProperty> &propNames, 
-    std::vector<double> &propValues, 
-    std::vector<MaterialRefType> &propRefTypes) const {
-    
-    // clear
-    propNames.clear();
-    propValues.clear();
-    propRefTypes.clear();
-    propNames.push_back(mMaterialProp);
-    propValues.push_back(0.);
-    propRefTypes.push_back(mReferenceType);
-    
-    // distance from point to axis
-    RDCol3 rtpPoint1, rtpPoint2, rtpTarget;
+    // compute xyz of endpoints and length
+    RDCol3 rtpPoint1, rtpPoint2;
     if (mSourceCentered) {
         RDCol3 rtpPoint1Src, rtpPoint2Src;
         rtpPoint1Src(0) = Geodesy::getROuter() - mD1;
@@ -120,17 +91,51 @@ bool Volumetric3D_cylinder::get3dProperties(double r, double theta, double phi, 
         rtpPoint2(1) = Geodesy::lat2Theta_d(mLat2, mD2);
         rtpPoint2(2) = Geodesy::lon2Phi(mLon2);
     }
+    mXyzPoint1 = Geodesy::toCartesian(rtpPoint1);
+    mXyzPoint2 = Geodesy::toCartesian(rtpPoint2);
+    mLength = (mXyzPoint1 - mXyzPoint2).norm();
     
+    // use 20% of radius for lateral HWHM if not specified
+    if (mHWHM_lateral < 0.) {
+        mHWHM_lateral = mRadius * .2;
+    }
+    
+    // use 10% of cylinder length for top-bot HWHM if not specified
+    if (mHWHM_top_bot < 0.) {
+        mHWHM_top_bot = mLength * .1;
+    }
+    
+    // for Absolute models
+    if (mReferenceType == Volumetric3D::MaterialRefType::Absolute) {
+        // decay is not allowed
+        mHWHM_lateral = mHWHM_top_bot = 0.;
+        // convert to SI
+        mValueInside *= MaterialPropertyAbsSI[mMaterialProp];
+    }
+}
+
+bool Volumetric3D_cylinder::get3dProperties(double r, double theta, double phi, double rElemCenter,
+    std::vector<MaterialProperty> &propNames, 
+    std::vector<double> &propValues, 
+    std::vector<MaterialRefType> &propRefTypes) const {
+    
+    // clear
+    propNames.clear();
+    propValues.clear();
+    propRefTypes.clear();
+    propNames.push_back(mMaterialProp);
+    propValues.push_back(0.);
+    propRefTypes.push_back(mReferenceType);
+    
+    // distance from point to axis
+    RDCol3 rtpTarget;
     rtpTarget(0) = r;
     rtpTarget(1) = theta;
     rtpTarget(2) = phi;
-    const RDCol3 &xyzPoint1 = Geodesy::toCartesian(rtpPoint1);
-    const RDCol3 &xyzPoint2 = Geodesy::toCartesian(rtpPoint2);
     const RDCol3 &xyzTarget = Geodesy::toCartesian(rtpTarget);
-    const RDCol3 &xyzDiff1 = xyzTarget - xyzPoint1;
-    const RDCol3 &xyzDiff2 = xyzTarget - xyzPoint2; 
-    double length = (xyzPoint1 - xyzPoint2).norm();
-    double distToLine = xyzDiff1.cross(xyzDiff2).norm() / length;
+    const RDCol3 &xyzDiff1 = xyzTarget - mXyzPoint1;
+    const RDCol3 &xyzDiff2 = xyzTarget - mXyzPoint2; 
+    double distToLine = xyzDiff1.cross(xyzDiff2).norm() / mLength;
     
     // outside range
     if (distToLine > mRadius + 4. * mHWHM_lateral) {
@@ -149,7 +154,7 @@ bool Volumetric3D_cylinder::get3dProperties(double r, double theta, double phi, 
     double d1 = xyzDiff1.norm();
     double d2 = xyzDiff2.norm();
     double dmax = std::max(d1, d2);
-    double distToTopBot = sqrt(dmax * dmax - distToLine * distToLine) - length;
+    double distToTopBot = sqrt(dmax * dmax - distToLine * distToLine) - mLength;
     
     // outside range
     if (distToTopBot > 4. * mHWHM_top_bot) {

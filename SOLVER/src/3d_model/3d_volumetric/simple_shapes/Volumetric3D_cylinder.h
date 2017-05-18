@@ -4,6 +4,7 @@
 
 #pragma once
 #include "Volumetric3D.h"
+#include "eigenp.h"
 
 class Volumetric3D_cylinder: public Volumetric3D {
 public:
@@ -51,4 +52,8 @@ private:
     // how the perturbation fades laterally and longitudinally outside the cylinder
     double mHWHM_lateral = -1.;
     double mHWHM_top_bot = -1.; 
+    
+    // temp variables for performance
+    RDCol3 mXyzPoint1, mXyzPoint2;
+    double mLength;
 };
