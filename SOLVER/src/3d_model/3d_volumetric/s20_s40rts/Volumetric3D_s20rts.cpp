@@ -97,7 +97,6 @@ std::string Volumetric3D_s20rts::verbose() const {
     ss << "  Radii (km)           =   [" << mRCMB / 1e3 << ", " << mRMoho / 1e3 << "]" << std::endl;
     ss << "  Reference Type       =   Reference1D" << std::endl;
     ss << "  Affected Propertis   =   VS VP RHO" << std::endl;
-    ss << "  Max. Fourier Order   =   20" << std::endl;
     ss << "  3D Density Factor    =   " << mScaleRho << std::endl;
     ss << "======================= 3D Volumetric ======================\n" << std::endl;
     return ss.str();
