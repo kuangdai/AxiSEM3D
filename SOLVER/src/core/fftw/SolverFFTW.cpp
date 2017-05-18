@@ -16,9 +16,12 @@ void SolverFFTW::importWisdom() {
         #else
             std::string fname = fftwWisdomDirectory + "/fftw_wisdom.float";
         #endif
-        std::ifstream t(fname);
+        std::ifstream fs(fname);
         std::stringstream buffer;
-        if (t) buffer << t.rdbuf();
+        if (fs) {
+            buffer << t.rdbuf();
+            fs.close();
+        }
         wisdomstr = buffer.str();
     }
     XMPI::bcast(wisdomstr);
@@ -34,8 +37,10 @@ void SolverFFTW::importWisdom() {
 void SolverFFTW::exportWisdom() {
     if (XMPI::root()) {
         XMPI::mkdir(fftwWisdomDirectory);
-        if (!XMPI::dirExists(fftwWisdomDirectory)) 
-            throw std::runtime_error("SolverFFTW::exportWisdom || Error creating FFTW wisdom directory: ||" + fftwWisdomDirectory);    
+        if (!XMPI::dirExists(fftwWisdomDirectory)) {
+            throw std::runtime_error("SolverFFTW::exportWisdom || "
+                "Error creating FFTW wisdom directory: ||" + fftwWisdomDirectory);    
+        }
         #ifdef _USE_DOUBLE
             fftw_export_wisdom_to_filename((fftwWisdomDirectory + "/fftw_wisdom.double").c_str());
         #else
@@ -43,3 +48,4 @@ void SolverFFTW::exportWisdom() {
         #endif
     }
 }
+
