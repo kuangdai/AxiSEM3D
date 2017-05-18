@@ -7,7 +7,8 @@
 #include <sstream>
 #include <fstream>
 #include "XMPI.h"
-#include "XMath.h"
+#include "Parameters.h"
+#include "Geodesy.h"
 
 extern "C" {
     void __s20rts_MOD_initialize_s20rts(double *rcmb, double *rmoho, double *rearth, 
@@ -45,12 +46,13 @@ void Volumetric3D_s20rts::initialize(const std::vector<std::string> &params) {
     try {
         int ipar = 0;
         const std::string source = "Volumetric3D_s20rts::initialize";
-        XMath::castValue(mScaleRho, params.at(ipar++), source);
-        XMath::castValue(mRCMB, params.at(ipar++), source); mRCMB *= 1e3;
-        XMath::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
+        Parameters::castValue(mScaleRho, params.at(ipar++), source);
+        Parameters::castValue(mRCMB, params.at(ipar++), source); mRCMB *= 1e3;
+        Parameters::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
     } catch (std::out_of_range) {
         // nothing
     }
+    mRSurf = Geodesy::getROuter();
     initialize();
 }
 
@@ -59,12 +61,23 @@ void Volumetric3D_s20rts::finalize() {
 }
 
 bool Volumetric3D_s20rts::get3dProperties(double r, double theta, double phi, double rElemCenter,
-    double &dvpv, double &dvph, double &dvsv, double &dvsh, double &drho) const {
+    std::vector<MaterialProperty> &properties, 
+    std::vector<MaterialRefType> &refTypes,
+    std::vector<double> &values) const {
+    
+    // header
+    properties.clear();
+    properties.push_back(Volumetric3D::MaterialProperty::VP);
+    properties.push_back(Volumetric3D::MaterialProperty::VS);
+    properties.push_back(Volumetric3D::MaterialProperty::RHO);
+    refTypes = std::vector<MaterialRefType>(3, Volumetric3D::MaterialRefType::Reference1D);
+    values = std::vector<double>(3, 0.);
+    
     double dvp, dvs;
     bool result = __s20rts_MOD_perturb_s20rts(&r, &theta, &phi, &rElemCenter, &dvp, &dvs);
-    dvpv = dvph = dvp;
-    dvsv = dvsh = dvs;
-    drho = mScaleRho * dvs;
+    values[0] = dvp;
+    values[1] = dvs;
+    values[2] = mScaleRho * dvs;
     return result;
 }
 
@@ -75,9 +88,9 @@ std::string Volumetric3D_s20rts::verbose() const {
     ss << "  Scope                =   Mantle" << std::endl;
     ss << "  Radii (km)           =   [" << mRCMB / 1e3 << ", " << mRMoho / 1e3 << "]" << std::endl;
     ss << "  Reference Type       =   Reference1D" << std::endl;
+    ss << "  Affected Propertis   =   VS VP RHO" << std::endl;
     ss << "  Max. Fourier Order   =   20" << std::endl;
-    ss << "  Anisotropic          =   NO" << std::endl;
-    ss << "  3D Density           =   " << (mScaleRho != 0. ? "YES" : "NO") << std::endl;
+    ss << "  3D Density Factor    =   " << mScaleRho << std::endl;
     ss << "======================= 3D Volumetric ======================\n" << std::endl;
     return ss.str();
 }

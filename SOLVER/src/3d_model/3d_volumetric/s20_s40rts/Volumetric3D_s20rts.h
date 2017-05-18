@@ -15,14 +15,11 @@ public:
     void finalize();
     
     bool get3dProperties(double r, double theta, double phi, double rElemCenter,
-        double &dvpv, double &dvph, double &dvsv, double &dvsh, double &drho) const;
-    
-    ReferenceTypes getReferenceType() const {return ReferenceTypes::Reference1D;};
+        std::vector<MaterialProperty> &properties, 
+        std::vector<MaterialRefType> &refTypes,
+        std::vector<double> &values) const;
     
     std::string verbose() const;
-    
-    // set outer radius
-    void setROuter(double router) {mRSurf = router;};
     
 private:
     double mRCMB = 3480000.0;
