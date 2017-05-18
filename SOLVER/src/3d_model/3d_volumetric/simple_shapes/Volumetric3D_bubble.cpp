@@ -118,10 +118,14 @@ bool Volumetric3D_bubble::get3dProperties(double r, double theta, double phi, do
     
     // treat as center if inside bubble
     distance -= mRadius; 
-    if (distance < 0.) distance = 0.;
+    if (distance < 0.) {
+        distance = 0.;
+    }
     
     // outside range
-    if (distance > 4. * mHWHM) return false;
+    if (distance > 4. * mHWHM) {
+        return false;
+    }
     
     // compute Gaussian
     double stddev = mHWHM / sqrt(2. * log(2.));
