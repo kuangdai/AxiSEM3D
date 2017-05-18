@@ -11,32 +11,35 @@ public:
     void initialize(const std::vector<std::string> &params);
     
     bool get3dProperties(double r, double theta, double phi, double rElemCenter,
-        double &dvpv, double &dvph, double &dvsv, double &dvsh, double &drho) const;
-    
-    ReferenceTypes getReferenceType() const {return mReferenceType;};
+        std::vector<MaterialProperty> &propNames, 
+        std::vector<double> &propValues, 
+        std::vector<MaterialRefType> &propRefTypes) const;
     
     std::string verbose() const;
     
-    void setSource(double srcLat, double srcLon, double srcDep) {
+    void setSourceLocation(double srcLat, double srcLon, double srcDep) {
         mSrcLat = srcLat;
         mSrcLon = srcLon;
         mSrcDep = srcDep;
     }
     
 private:
+    // property name
+    MaterialProperty mMaterialProp;
+    
+    // value inside the cylinder
+    double mValueInside; 
+
+    // reference type
+    MaterialRefType mReferenceType;
+    
+    // radius of the cylinder
+    double mRadius;
+
     // anchor points of the cylinder
     double mD1, mD2;
     double mLat1, mLat2;
     double mLon1, mLon2;
-    
-    // Gaussian parameters
-    double mRadius;         // radius of the cylinder
-    double mHWHM_lateral;   // halfwidth at half maximum; how the perturbation fades laterally outside the cylinder
-    double mHWHM_top_bot;   // halfwidth at half maximum; how the perturbation fades longitudinally outside the cylinder
-    double mMaxAxis;        // value inside the cylinder
-    
-    // reference type
-    ReferenceTypes mReferenceType;
     
     // source-centered
     bool mSourceCentered = false;
@@ -44,8 +47,8 @@ private:
     double mSrcLon = 0.;
     double mSrcDep = 0.;
     
-    // optional 
-    bool mChangeVp = true;
-    bool mChangeVs = true;
-    bool mChangeRho = true;
+    // halfwidth at half maximum of Gaussian 
+    // how the perturbation fades laterally and longitudinally outside the cylinder
+    double mHWHM_lateral = -1.;
+    double mHWHM_top_bot = -1.; 
 };

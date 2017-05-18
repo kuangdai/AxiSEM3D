@@ -23,6 +23,8 @@ public:
     enum MaterialProperty {VP, VPV, VPH, VS, VSV, VSH, RHO, ANIS_ETA, QMU, QKAPPA};
     const std::vector<std::string> MaterialPropertyString = {"VP", "VPV", "VPH", 
         "VS", "VSV", "VSH", "RHO", "ANIS_ETA", "QMU", "QKAPPA"};
+    const std::vector<double> MaterialPropertyAbsSI = {1e3, 1e3, 1e3, 
+        1e3, 1e3, 1e3, 1e3, 1., 1., 1.};    
     
     virtual ~Volumetric3D() {finalize();};
     
