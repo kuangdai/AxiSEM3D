@@ -56,7 +56,8 @@ void SFCoupling3D::coupleSolidToFluid(const CMatX3 &solidDispl, CColX &fluidStif
 void SFCoupling3D::checkCompatibility(int nr) const {
     int myNr0 = mNormal_unassembled.rows();
     int myNr1 = mNormal_assembled_invMassFluid.rows();
-    if (myNr0 != nr || myNr1 != nr) 
+    if (myNr0 != nr || myNr1 != nr) {
         throw std::runtime_error("SFCoupling3D::checkCompatibility || Incompatible size.");
+    }
 }
 
