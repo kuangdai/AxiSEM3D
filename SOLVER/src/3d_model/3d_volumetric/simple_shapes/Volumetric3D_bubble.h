@@ -4,6 +4,7 @@
 
 #pragma once
 #include "Volumetric3D.h"
+#include "eigenp.h"
 
 class Volumetric3D_bubble: public Volumetric3D {
 public:
@@ -11,31 +12,34 @@ public:
     void initialize(const std::vector<std::string> &params);
     
     bool get3dProperties(double r, double theta, double phi, double rElemCenter,
-        double &dvpv, double &dvph, double &dvsv, double &dvsh, double &drho) const;
-    
-    ReferenceTypes getReferenceType() const {return mReferenceType;};
+        std::vector<MaterialProperty> &propNames, 
+        std::vector<double> &propValues, 
+        std::vector<MaterialRefType> &propRefTypes) const;
     
     std::string verbose() const;
     
-    void setSource(double srcLat, double srcLon, double srcDep) {
+    void setSourceLocation(double srcLat, double srcLon, double srcDep) {
         mSrcLat = srcLat;
         mSrcLon = srcLon;
         mSrcDep = srcDep;
     }
     
 private:
+    // property name
+    MaterialProperty mMaterialProp;
+    
+    // value inside the bubble
+    double mValueInside; 
+
+    // reference type
+    MaterialRefType mReferenceType;
+    
+    // radius of the bubble
+    double mRadius;
+
     // center of the bubble
     double mDepth;
-    double mLat;
-    double mLon;
-    
-    // Gaussian parameters
-    double mRadius; // radius of the bubble 
-    double mHWHM;   // halfwidth at half maximum; how the perturbation fades outside the bubble 
-    double mMax;    // value inside the bubble
-    
-    // reference type
-    ReferenceTypes mReferenceType;
+    double mLat, mLon;
     
     // source-centered
     bool mSourceCentered = false;
@@ -43,8 +47,10 @@ private:
     double mSrcLon = 0.;
     double mSrcDep = 0.;
     
-    // optional 
-    bool mChangeVp = true;
-    bool mChangeVs = true;
-    bool mChangeRho = true;
+    // halfwidth at half maximum of Gaussian 
+    // how the perturbation fades outside the bubble
+    double mHWHM = -1.;
+    
+    // temp variables for performance
+    RDCol3 mXyzBubble;
 };
