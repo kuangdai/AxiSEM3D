@@ -11,7 +11,7 @@
 #include "Station.h"
 #include "XMPI.h"
 #include "NuWisdom.h"
-#include "XTimer.h"
+#include "MultilevelTimer.h"
 
 Domain::Domain() {
     #ifdef _MEASURE_TIMELOOP
@@ -24,14 +24,14 @@ Domain::Domain() {
 }
 
 Domain::~Domain() {
-    for (const auto &e: mPoints) delete e;
-    for (const auto &e: mElements) delete e;
-    for (const auto &e: mSourceTerms) delete e;
-    for (const auto &e: mStations) delete e;
-    if (mSTF) delete mSTF;
-    if (mMsgInfo) delete mMsgInfo;
-    if (mMsgBuffer) delete mMsgBuffer;
-    if (mLearnPar) delete mLearnPar;
+    for (const auto &e: mPoints) {delete e;}
+    for (const auto &e: mElements) {delete e;}
+    for (const auto &e: mSourceTerms) {delete e;}
+    for (const auto &e: mStations) {delete e;}
+    if (mSTF) {delete mSTF;}
+    if (mMsgInfo) {delete mMsgInfo;}
+    if (mMsgBuffer) {delete mMsgBuffer;}
+    if (mLearnPar) {delete mLearnPar;}
     #ifdef _MEASURE_TIMELOOP
         delete mTimerElemts;
         delete mTimerPoints;
@@ -54,13 +54,18 @@ int Domain::addElement(Element *elem) {
 }
 
 void Domain::test() const {
-    for (const auto &point: mPoints) point->test();
-    for (const auto &elem: mElements) elem->test();
+    for (const auto &point: mPoints) {
+        point->test();
+    }
+    for (const auto &elem: mElements) {
+        elem->test();
+    }
 }
 
 void Domain::initDisplTinyRandom() const {
-    for (const auto &point: mPoints) 
+    for (const auto &point: mPoints) {
         point->randomDispl((Real)1e-30, point->getDomainTag());
+    }
 }
 
 void Domain::computeStiff() const {
@@ -68,7 +73,9 @@ void Domain::computeStiff() const {
         mTimerElemts->resume();
     #endif
     
-    for (const auto &elem: mElements) elem->computeStiff();
+    for (const auto &elem: mElements) {
+        elem->computeStiff();
+    }
     
     #ifdef _MEASURE_TIMELOOP
         mTimerElemts->stop();
@@ -81,7 +88,9 @@ void Domain::applySource(int tstep) const {
     #endif
     
     Real stf = mSTF->getFactor(tstep);
-    for (const auto &source: mSourceTerms) source->apply(stf);
+    for (const auto &source: mSourceTerms) {
+        source->apply(stf);
+    }
     
     #ifdef _MEASURE_TIMELOOP
         mTimerElemts->stop();
@@ -147,7 +156,9 @@ void Domain::updateNewmark(Real dt) const {
         mTimerPoints->resume();
     #endif
     
-    for (const auto &point: mPoints) point->updateNewmark(dt);
+    for (const auto &point: mPoints) {
+        point->updateNewmark(dt);
+    }
     
     #ifdef _MEASURE_TIMELOOP
         mTimerPoints->stop();
@@ -159,7 +170,9 @@ void Domain::coupleSolidFluid() const {
         mTimerPoints->resume();
     #endif
     
-    for (const auto &point: mSFPoints) point->coupleSolidFluid();
+    for (const auto &point: mSFPoints) {
+        point->coupleSolidFluid();
+    }
     
     #ifdef _MEASURE_TIMELOOP
         mTimerPoints->stop();
@@ -171,7 +184,9 @@ void Domain::record(int tstep, Real t) const {
         mTimerOthers->resume();
     #endif
     
-    for (const auto &station: mStations) station->record(tstep, t);
+    for (const auto &station: mStations) {
+        station->record(tstep, t);
+    }
     
     #ifdef _MEASURE_TIMELOOP
         mTimerOthers->stop();
@@ -183,7 +198,9 @@ void Domain::dumpLeft() const {
         mTimerOthers->resume();
     #endif
     
-    for (const auto &station: mStations) station->dumpLeft();
+    for (const auto &station: mStations) {
+        station->dumpLeft();
+    }
     
     #ifdef _MEASURE_TIMELOOP
         mTimerOthers->stop();
@@ -280,19 +297,23 @@ std::string Domain::verbose() const {
     ss << "\n=================== Computational Domain ===================" << std::endl;
     ss << "  Elements__________________________________________________" << std::endl;
     int width = 12;
-    for (auto it = eles.begin(); it != eles.end(); it++) 
+    for (auto it = eles.begin(); it != eles.end(); it++) {
         width = std::max(width, (int)(it->first.length()));
+    }
     ss << "    " << std::setw(width) << std::left << "TOTAL NUMBER" << "   =   " << nele << std::endl;
-    for (auto it = eles.begin(); it != eles.end(); it++) 
+    for (auto it = eles.begin(); it != eles.end(); it++) {
         ss << "    " << std::setw(width) << std::left << it->first << "   =   " << it->second << std::endl;
-        
+    }
+
     ss << "  GLL Points________________________________________________" << std::endl;
     width = 12;
-    for (auto it = points.begin(); it != points.end(); it++) 
+    for (auto it = points.begin(); it != points.end(); it++) {
         width = std::max(width, (int)(it->first.length()));
+    }
     ss << "    " << std::setw(width) << std::left << "TOTAL NUMBER" << "   =   " << npoint << std::endl;
-    for (auto it = points.begin(); it != points.end(); it++) 
+    for (auto it = points.begin(); it != points.end(); it++) {
         ss << "    " << std::setw(width) << std::left << it->first << "   =   " << it->second << std::endl;
+    }
     
     ss << "=================== Computational Domain ===================\n" << std::endl;
     return ss.str();
@@ -323,7 +344,9 @@ std::string Domain::reportCost() const {
         if (XMPI::root()) {
             s += "\n-------------------------------------- MPI COST MEASUREMENTS --------------------------------------\n";
             s += "PROCESSOR    WALLTIME    ELEMENT-WISE    POINT_WISE    MPI_ASSEMBLE    MPI_WAIT    MISCELLANEOUS\n";
-            for (int iproc = 0; iproc < XMPI::nproc(); iproc++) s += all_s[iproc]; 
+            for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
+                s += all_s[iproc]; 
+            }
             s += "---------------------------------------------------------------------------------------------------\n\n\n";
         }
         return s;
@@ -333,15 +356,18 @@ std::string Domain::reportCost() const {
 }
 
 void Domain::learnWisdom(int tstep) const {
-    if (!mLearnPar->mInvoked) return;
+    if (!mLearnPar->mInvoked) {
+        return;
+    }
     
     #ifdef _MEASURE_TIMELOOP
         mTimerOthers->resume();
     #endif
     
     if (tstep % mLearnPar->mInterval == 0) {
-        for (const auto &point: mPoints) 
+        for (const auto &point: mPoints) {
             point->learnWisdom(mLearnPar->mCutoff);
+        }
     }
     
     #ifdef _MEASURE_TIMELOOP
@@ -350,7 +376,9 @@ void Domain::learnWisdom(int tstep) const {
 }
 
 void Domain::dumpWisdom() const {
-    if (!mLearnPar->mInvoked) return;
+    if (!mLearnPar->mInvoked) {
+        return;
+    }
     
     #ifdef _MEASURE_TIMELOOP
         mTimerOthers->resume();
@@ -373,9 +401,10 @@ void Domain::dumpWisdom() const {
             buffer.insert(buffer.end(), all_buffer[iproc].begin(), all_buffer[iproc].end());
         }
         NuWisdom wis;
-        for (int i = 0; i < buffer.size() / 4; i++) 
+        for (int i = 0; i < buffer.size() / 4; i++) {
             wis.insert(buffer[i * 4], buffer[i * 4 + 1], 
                 round(buffer[i * 4 + 2]), round(buffer[i * 4 + 3]));
+        }
         wis.writeToFile(mLearnPar->mFileName, false);
     }
     
@@ -390,10 +419,11 @@ bool Domain::pointInPreviousRank(int myPointTag) const {
             int pTag = mMsgInfo->mILocalPoints[i][j];
             if (pTag == myPointTag) {
                 int otherRank = mMsgInfo->mIProcComm[i];
-                if (otherRank < XMPI::rank())
+                if (otherRank < XMPI::rank()) {
                     return true;
-                else 
+                } else {
                     break;
+                }
             }
         }
     }

@@ -7,7 +7,7 @@
 #include "global.h"
 
 #ifdef _MEASURE_TIMELOOP
-    #include "XTimer.h"
+    #include "MultilevelTimer.h"
 #endif
 
 class Point;
