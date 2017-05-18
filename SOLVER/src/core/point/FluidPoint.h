@@ -51,7 +51,7 @@ public:
     void gatherStiffFromElement(const vec_CMatPP &stiff, int ipol, int jpol);
     
     // wisdom
-    void learnWisdom(double cutoff);
+    void learnWisdom(Real cutoff);
     int getNuWisdom() const {return mNuWisdom;};
     
 private:

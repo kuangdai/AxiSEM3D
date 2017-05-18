@@ -4,7 +4,7 @@
 
 #include "FluidPoint.h"
 #include "Mass.h"
-#include "XTimer.h"
+#include "MultilevelTimer.h"
 
 FluidPoint::FluidPoint(int nr, bool axial, const RDCol2 &crds, Mass *mass):
 Point(nr, axial, crds), mMass(mass) {
@@ -13,6 +13,7 @@ Point(nr, axial, crds), mMass(mass) {
     mAccel = CColX::Zero(mNu + 1, 1);
     mStiff = CColX::Zero(mNu + 1, 1);
     mMass->checkCompatibility(nr);
+    mNuWisdom = mNu;
 }
 
 FluidPoint::~FluidPoint() {
@@ -89,11 +90,11 @@ void FluidPoint::test() {
     
     resetZero();
     for (int alpha = 0; alpha <= mNu; alpha++) {
-        if (mNr % 2 == 0 && alpha == mNu) continue;
+        if (mNr % 2 == 0 && alpha == mNu) {continue;}
         // delta function
-        if (axial() && alpha > 0) continue;
+        if (axial() && alpha > 0) {continue;}
         mStiff(alpha) = one;
-        if (alpha == 0) mStiff(alpha) = two;
+        if (alpha == 0) {mStiff(alpha) = two;}
                 
         // compute stiff 
         updateNewmark(1.);
@@ -109,8 +110,8 @@ void FluidPoint::test() {
         // store mass
         int row = alpha;
         for (int alpha1 = 0; alpha1 <= mNu; alpha1++) {
-            if (mNr % 2 == 0 && alpha1 == mNu) continue;
-            if (axial() && alpha > 0) continue;
+            if (mNr % 2 == 0 && alpha1 == mNu) {continue;}
+            if (axial() && alpha > 0) {continue;}
             int col = alpha1;
             M(row, col) = mAccel(alpha1).real();
         }
@@ -150,56 +151,61 @@ void FluidPoint::extractBuffer(CColX &buffer, int &row) {
 void FluidPoint::scatterDisplToElement(vec_CMatPP &displ, int ipol, int jpol, int maxNu) const {
     // lower orders
     int nyquist = (int)(mNr % 2 == 0);
-    for (int alpha = 0; alpha <= mNu - nyquist; alpha++)
+    for (int alpha = 0; alpha <= mNu - nyquist; alpha++) {
         displ[alpha](ipol, jpol) = mDispl(alpha);
+    }
     // mask Nyquist
-    if (nyquist) displ[mNu](ipol, jpol) = czero;
+    if (nyquist) {
+        displ[mNu](ipol, jpol) = czero;
+    }
     // mask higher orders
-    for (int alpha = mNu + 1; alpha <= maxNu; alpha++)
+    for (int alpha = mNu + 1; alpha <= maxNu; alpha++) {
         displ[alpha](ipol, jpol) = czero;
+    }
 }
 
 void FluidPoint::gatherStiffFromElement(const vec_CMatPP &stiff, int ipol, int jpol) {
     // lower orders
     int nyquist = (int)(mNr % 2 == 0);
-    for (int alpha = 0; alpha <= mNu - nyquist; alpha++)
+    for (int alpha = 0; alpha <= mNu - nyquist; alpha++) {
         mStiff(alpha) -= stiff[alpha](ipol, jpol);
+    }
     // mask Nyquist
-    if (nyquist) mStiff(mNu) = czero;
+    if (nyquist) {
+        mStiff(mNu) = czero;
+    }
 }
 
 void FluidPoint::maskField(CColX &field) {
     field.row(0).imag().setZero();
     // axial boundary condition
-    if (mAxial) field.bottomRows(mNu).setZero();
+    if (mAxial) {
+        field.bottomRows(mNu).setZero();
+    }
     // mask Nyquist
-    if (mNr % 2 == 0) field(mNu) = czero;
+    if (mNr % 2 == 0) {
+        field(mNu) = czero;
+    }
 }
 
-#include "SolverFFTW_1.h"
-void FluidPoint::learnWisdom(double cutoff) {
-    // compute real displ
-    SolverFFTW_1::getC2R_CMat(mNr) = mDispl;
-    SolverFFTW_1::computeC2R(mNr);
-    RColX &displ = SolverFFTW_1::getC2R_RMat(mNr);
-    
-    // check max displ
-    Real maxDispl = displ.array().abs().maxCoeff();
-    if (maxDispl <= mMaxDisplWisdom) return;
-    mMaxDisplWisdom = maxDispl;
-    
-    // keep original
-    RColX &displOrig = SolverFFTW_1::getR2C_RMat(mNr);
-    displOrig = displ;
-    Real normTol = cutoff * displOrig.norm();
+void FluidPoint::learnWisdom(Real cutoff) {
+    // L2 norm
+    Real L2norm = mDispl.norm();
+    Real L2norm_sq = L2norm * L2norm;
+    // Hilbert norm
+    Real hnorm_sq = L2norm - .5 * mDispl(0).real() * mDispl(0).real();
+    if (hnorm_sq <= mMaxDisplWisdom) {
+        return;
+    }
+    mMaxDisplWisdom = hnorm_sq;
     
     // try smaller orders
+    Real tol = hnorm_sq * cutoff * cutoff;
+    Real diff = L2norm;
     for (int newNu = 0; newNu < mNu; newNu++) {
-        SolverFFTW_1::getC2R_CMat(mNr) = mDispl; // C2R destroys input
-        SolverFFTW_1::getC2R_CMat(mNr).bottomRows(mNu - newNu).setZero();
-        SolverFFTW_1::computeC2R(mNr);
-        RColX &dispNew = SolverFFTW_1::getC2R_RMat(mNr);
-        if ((dispNew - displOrig).norm() <= normTol) {
+        Real norm = std::norm(mDispl(newNu));
+        diff -= norm * norm;
+        if (diff <= tol) {
             mNuWisdom = newNu;
             return;
         }

@@ -7,14 +7,15 @@
 #include "FluidPoint.h"
 #include "SFCoupling.h"
 #include "Mass.h"
-#include "XTimer.h"
+#include "MultilevelTimer.h"
 
 SolidFluidPoint::SolidFluidPoint(SolidPoint *sp, FluidPoint *fp, SFCoupling *couple): 
 mSolidPoint(sp), mFluidPoint(fp), mSFCoupling(couple),
 Point(sp->getNr(), sp->axial(), sp->getCoords()) {
     mSFCoupling->checkCompatibility(mNr);
-    if (sp->getNr() != fp->getNr())
+    if (sp->getNr() != fp->getNr()) {
         throw std::runtime_error("SolidFluidPoint::SolidFluidPoint || Incompatible size.");
+    }
 }
 
 SolidFluidPoint::~SolidFluidPoint() {
@@ -112,13 +113,15 @@ double SolidFluidPoint::measureCoupling(int count) {
     mSolidPoint->randomDispl((Real)1e-6);
     MyBoostTimer timer;
     timer.start();
-    for (int i = 0; i < count; i++) coupleSolidFluid();
+    for (int i = 0; i < count; i++) {
+        coupleSolidFluid();
+    }
     double elapsed_time = timer.elapsed();
     resetZero();
     return elapsed_time / count;
 }
 
-void SolidFluidPoint::learnWisdom(double cutoff) {
+void SolidFluidPoint::learnWisdom(Real cutoff) {
     mSolidPoint->learnWisdom(cutoff);
     mFluidPoint->learnWisdom(cutoff);
 }

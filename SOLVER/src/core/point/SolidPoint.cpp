@@ -4,7 +4,7 @@
 
 #include "SolidPoint.h"
 #include "Mass.h"
-#include "XTimer.h"
+#include "MultilevelTimer.h"
 
 SolidPoint::SolidPoint(int nr, bool axial, const RDCol2 &crds, Mass *mass):
 Point(nr, axial, crds), mMass(mass) {
@@ -13,6 +13,7 @@ Point(nr, axial, crds), mMass(mass) {
     mAccel = CMatX3::Zero(mNu + 1, 3);
     mStiff = CMatX3::Zero(mNu + 1, 3);
     mMass->checkCompatibility(nr);
+    mMaxDisplWisdom.fill(mNu);
 }
 
 SolidPoint::~SolidPoint() {
@@ -89,16 +90,16 @@ void SolidPoint::test() {
     
     resetZero();
     for (int alpha = 0; alpha <= mNu; alpha++) {
-        if (mNr % 2 == 0 && alpha == mNu) continue;
+        if (mNr % 2 == 0 && alpha == mNu) {continue;}
         for (int idim = 0; idim <= 2; idim++) {
             // delta function
             if (axial()) {
-                if (alpha == 0 && idim != 2) continue;
-                if (alpha == 1 && idim == 2) continue;
-                if (alpha >= 2) continue;
+                if (alpha == 0 && idim != 2) {continue;}
+                if (alpha == 1 && idim == 2) {continue;}
+                if (alpha >= 2) {continue;}
             }
             mStiff(alpha, idim) = one;
-            if (alpha == 0) mStiff(alpha, idim) = two;
+            if (alpha == 0) {mStiff(alpha, idim) = two;}
                     
             // compute stiff 
             updateNewmark(1.);
@@ -114,12 +115,12 @@ void SolidPoint::test() {
             // store mass
             int row = alpha * 3 + idim;
             for (int alpha1 = 0; alpha1 <= mNu; alpha1++) {
-                if (mNr % 2 == 0 && alpha1 == mNu) continue;
+                if (mNr % 2 == 0 && alpha1 == mNu) {continue;}
                 for (int idim1 = 0; idim1 <= 2; idim1++) {
                     if (axial()) {
-                        if (alpha1 == 0 && idim1 != 2) continue;
-                        if (alpha1 == 1 && idim1 == 2) continue;
-                        if (alpha1 >= 2) continue;
+                        if (alpha1 == 0 && idim1 != 2) {continue;}
+                        if (alpha1 == 1 && idim1 == 2) {continue;}
+                        if (alpha1 >= 2) {continue;}
                     }
                     int col = alpha1 * 3 + idim1;
                     M(row, col) = mAccel(alpha1, idim1).real();
@@ -190,7 +191,9 @@ void SolidPoint::gatherStiffFromElement(const vec_ar3_CMatPP &stiff, int ipol, i
         mStiff(alpha, 2) -= stiff[alpha][2](ipol, jpol);
     }
     // mask Nyquist 
-    if (nyquist) mStiff.row(mNu).setZero();
+    if (nyquist) {
+        mStiff.row(mNu).setZero();
+    }
 }
 
 void SolidPoint::addToStiff(const CMatX3 &source) {
@@ -217,34 +220,30 @@ void SolidPoint::maskField(CMatX3 &field) {
         field.bottomRows(mNu - 1).setZero();
     }
     // mask Nyquist 
-    if (mNr % 2 == 0) field.row(mNu).setZero();
+    if (mNr % 2 == 0) {
+        field.row(mNu).setZero();
+    }
 }
 
-#include "SolverFFTW_1.h"
-void SolidPoint::learnWisdom(double cutoff) {
+void SolidPoint::learnWisdom(Real cutoff) {
     for (int idim = 0; idim < 3; idim++) {
-        // compute real displ
-        SolverFFTW_1::getC2R_CMat(mNr) = mDispl.col(idim);
-        SolverFFTW_1::computeC2R(mNr);
-        RColX &displ = SolverFFTW_1::getC2R_RMat(mNr);
-        
-        // check max displ
-        Real maxDispl = displ.array().abs().maxCoeff();
-        if (maxDispl <= mMaxDisplWisdom(idim)) continue;
-        mMaxDisplWisdom(idim) = maxDispl;
-        
-        // keep original
-        RColX &displOrig = SolverFFTW_1::getR2C_RMat(mNr);
-        displOrig = displ;
-        Real normTol = cutoff * displOrig.norm();
+        // L2 norm
+        Real L2norm = mDispl.col(idim).norm();
+        Real L2norm_sq = L2norm * L2norm;
+        // Hilbert norm
+        Real hnorm_sq = L2norm - .5 * mDispl(0, idim).real() * mDispl(0, idim).real();
+        if (hnorm_sq <= mMaxDisplWisdom(idim)) {
+            continue;
+        }
+        mMaxDisplWisdom(idim) = hnorm_sq;
         
         // try smaller orders
+        Real tol = hnorm_sq * cutoff * cutoff;
+        Real diff = L2norm;
         for (int newNu = 0; newNu < mNu; newNu++) {
-            SolverFFTW_1::getC2R_CMat(mNr) = mDispl.col(idim); // C2R destroys input
-            SolverFFTW_1::getC2R_CMat(mNr).bottomRows(mNu - newNu).setZero();
-            SolverFFTW_1::computeC2R(mNr);
-            RColX &dispNew = SolverFFTW_1::getC2R_RMat(mNr);
-            if ((dispNew - displOrig).norm() <= normTol) {
+            Real norm = std::norm(mDispl(newNu, idim));
+            diff -= norm * norm;
+            if (diff <= tol) {
                 mNuWisdom(idim) = newNu;
                 return;
             }

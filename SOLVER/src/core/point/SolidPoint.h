@@ -54,7 +54,7 @@ public:
     void addToStiff(const CMatX3 &source);
     
     // wisdom
-    void learnWisdom(double cutoff);
+    void learnWisdom(Real cutoff);
     int getNuWisdom() const;
     
 private:
