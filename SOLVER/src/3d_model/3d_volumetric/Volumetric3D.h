@@ -50,7 +50,7 @@ public:
     virtual bool get3dProperties(double r, double theta, double phi, double rElemCenter,
         std::vector<MaterialProperty> &properties, 
         std::vector<MaterialRefType> &refTypes,
-        std::vector<double> &values) const {return false;};
+        std::vector<double> &values) const = 0;
         
     // get perturbations or absolute values at location r/theta/phi 
     // IMPORTANT: this function should be realized such that r/theta/phi are 
