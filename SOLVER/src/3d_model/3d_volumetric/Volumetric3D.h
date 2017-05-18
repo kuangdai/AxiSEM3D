@@ -44,13 +44,13 @@ public:
     // b) rElemCenter: radius of the element center, used to decide whether the given 
     //    location is within the model range. We use rElemCenter instead of r itself 
     //    to honour vertical discontinuities.
-    // c) output: propNames, propValues, propRefTypes
+    // c) output: properties, refTypes, values
     // d) return: a "false" return means the outputs are all ignored, 
     //    e.g., the input location is out of the model range
     virtual bool get3dProperties(double r, double theta, double phi, double rElemCenter,
-        std::vector<MaterialProperty> &propNames, 
-        std::vector<double> &propValues, 
-        std::vector<MaterialRefType> &propRefTypes) const {return false;};
+        std::vector<MaterialProperty> &properties, 
+        std::vector<MaterialRefType> &refTypes,
+        std::vector<double> &values) const {return false;};
         
     // get perturbations or absolute values at location r/theta/phi 
     // IMPORTANT: this function should be realized such that r/theta/phi are 

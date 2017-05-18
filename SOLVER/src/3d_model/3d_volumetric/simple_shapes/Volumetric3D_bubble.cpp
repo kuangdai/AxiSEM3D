@@ -31,14 +31,11 @@ void Volumetric3D_bubble::initialize(const std::vector<std::string> &params) {
             "Unknown material property, name = " + params[0]);
     }
     
-    // value inside
-    Parameters::castValue(mValueInside, params[1], source);
-    
     // reference type
     found = false;
     for (int i = 0; i < Volumetric3D::MaterialRefTypeString.size(); i++) {
-        if (boost::iequals(params[2], Volumetric3D::MaterialRefTypeString[i]) ||
-            boost::iequals(params[2], Volumetric3D::MaterialRefTypeStringShort[i])) {
+        if (boost::iequals(params[1], Volumetric3D::MaterialRefTypeString[i]) ||
+            boost::iequals(params[1], Volumetric3D::MaterialRefTypeStringShort[i])) {
             mReferenceType = Volumetric3D::MaterialRefType(i);
             found = true;
             break;
@@ -46,8 +43,11 @@ void Volumetric3D_bubble::initialize(const std::vector<std::string> &params) {
     }
     if (!found) {
         throw std::runtime_error("Volumetric3D_bubble::initialize || "
-            "Unknown material reference type, type = " + params[2]);
+            "Unknown material reference type, type = " + params[1]);
     }
+    
+    // value inside
+    Parameters::castValue(mValueInside, params[2], source);
     
     // radius
     Parameters::castValue(mRadius, params[3], source); mRadius *= 1e3;
@@ -96,17 +96,14 @@ void Volumetric3D_bubble::initialize(const std::vector<std::string> &params) {
 }
 
 bool Volumetric3D_bubble::get3dProperties(double r, double theta, double phi, double rElemCenter,
-    std::vector<MaterialProperty> &propNames, 
-    std::vector<double> &propValues, 
-    std::vector<MaterialRefType> &propRefTypes) const {
+    std::vector<MaterialProperty> &properties, 
+    std::vector<MaterialRefType> &refTypes,
+    std::vector<double> &values) const {
     
-    // clear
-    propNames.clear();
-    propValues.clear();
-    propRefTypes.clear();
-    propNames.push_back(mMaterialProp);
-    propValues.push_back(0.);
-    propRefTypes.push_back(mReferenceType);
+    // header
+    properties = std::vector<MaterialProperty>(1, mMaterialProp);
+    refTypes = std::vector<MaterialRefType>(1, mReferenceType);
+    values = std::vector<double>(1, 0.);
     
     // distance from point to axis
     RDCol3 rtpTarget;
@@ -132,7 +129,7 @@ bool Volumetric3D_bubble::get3dProperties(double r, double theta, double phi, do
     double gaussian = mValueInside * exp(-distance * distance / (stddev * stddev * 2.));
     
     // set perturbations    
-    propValues[0] = gaussian;
+    values[0] = gaussian;
     return true;    
 }
 
@@ -141,8 +138,8 @@ std::string Volumetric3D_bubble::verbose() const {
     ss << "\n======================= 3D Volumetric ======================" << std::endl;
     ss << "  Model Name           =   bubble" << std::endl;
     ss << "  Material Property    =   " << MaterialPropertyString[mMaterialProp] << std::endl;
-    ss << "  Value Inside         =   " << mValueInside / MaterialPropertyAbsSI[mMaterialProp] << std::endl;
     ss << "  Reference Type       =   " << MaterialRefTypeString[mReferenceType] << std::endl;
+    ss << "  Value Inside         =   " << mValueInside / MaterialPropertyAbsSI[mMaterialProp] << std::endl;
     ss << "  Bubble Radius / km   =   " << mRadius / 1e3 << std::endl;
     ss << "  Depth / km           =   " << mDepth / 1e3 << std::endl;
     ss << "  Lat or Theta / deg   =   " << mLat << std::endl;

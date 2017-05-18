@@ -12,9 +12,9 @@ public:
     void initialize(const std::vector<std::string> &params);
     
     bool get3dProperties(double r, double theta, double phi, double rElemCenter,
-        std::vector<MaterialProperty> &propNames, 
-        std::vector<double> &propValues, 
-        std::vector<MaterialRefType> &propRefTypes) const;
+        std::vector<MaterialProperty> &properties, 
+        std::vector<MaterialRefType> &refTypes,
+        std::vector<double> &values) const;
     
     std::string verbose() const;
     
