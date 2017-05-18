@@ -56,7 +56,9 @@ void Mass3D::computeAccel(CColX &stiff) const {
 
 void Mass3D::checkCompatibility(int nr) const {
     int myNr = mInvMass.rows();
-    if (myNr != nr) throw std::runtime_error("Mass3D::checkCompatibility || Incompatible size.");
+    if (myNr != nr) {
+        throw std::runtime_error("Mass3D::checkCompatibility || Incompatible size.");
+    }
 }
 
 

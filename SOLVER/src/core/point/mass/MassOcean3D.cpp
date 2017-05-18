@@ -69,8 +69,9 @@ void MassOcean3D::computeAccel(CColX &stiff) const {
 }
 
 void MassOcean3D::checkCompatibility(int nr) const {
-    if (mInvMass.rows() != nr) 
+    if (mInvMass.rows() != nr) {
         throw std::runtime_error("MassOcean3D::checkCompatibility || Incompatible size.");
+    }
 }
 
 
