@@ -19,7 +19,7 @@ void SolverFFTW::importWisdom() {
         std::ifstream fs(fname);
         std::stringstream buffer;
         if (fs) {
-            buffer << t.rdbuf();
+            buffer << fs.rdbuf();
             fs.close();
         }
         wisdomstr = buffer.str();
