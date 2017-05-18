@@ -27,14 +27,22 @@ void Volumetric3D_s40rts::initialize() {
         std::string path = projectDirectory + "/src/3d_model/3d_volumetric/s20_s40rts/data";
         std::fstream fs;
         fs.open(path + "/P12.dat", std::fstream::in);
-        if (!fs) throw std::runtime_error("Volumetric3D_s40rts::initialize || "
-            "Error opening P12.dat at directory: ||" + path + "/P12.dat");
-        for (int i = 0; i < np12; i++) fs >> meta_data_p12[i];
+        if (!fs) {
+            throw std::runtime_error("Volumetric3D_s40rts::initialize || "
+                "Error opening P12.dat at directory: ||" + path + "/P12.dat");
+        }
+        for (int i = 0; i < np12; i++) {
+            fs >> meta_data_p12[i];
+        }
         fs.close();
         fs.open(path + "/S40RTS.dat", std::fstream::in);
-        if (!fs) throw std::runtime_error("Volumetric3D_s40rts::initialize || "
-            "Error opening S40RTS.dat at directory: ||" + path + "/S40RTS.dat");
-        for (int i = 0; i < ns40; i++) fs >> meta_data_s40[i];
+        if (!fs) {
+            throw std::runtime_error("Volumetric3D_s40rts::initialize || "
+                "Error opening S40RTS.dat at directory: ||" + path + "/S40RTS.dat");
+        }
+        for (int i = 0; i < ns40; i++) {
+            fs >> meta_data_s40[i];
+        }
         fs.close();
     }
     XMPI::bcast(meta_data_p12, np12);
