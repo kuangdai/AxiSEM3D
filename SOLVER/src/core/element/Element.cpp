@@ -1,13 +1,16 @@
 // Element.cpp
 // created by Kuangdai on 27-Mar-2016 
-// base class of axisymmetric spectral elements
+// base class of AxiSEM3D spectral elements
 
 #include "Element.h"
-#include "Gradient.h"
 #include "Point.h"
 
-Element::Element(Gradient *grad, const std::array<Point *, nPntElem> &points):
-mGradient(grad) {
+#include "Gradient.h"
+#include "PRT.h"
+
+Element::Element(Gradient *grad, PRT *prt, 
+    const std::array<Point *, nPntElem> &points):
+mGradient(grad), mPRT(prt) {
     mMaxNr = mMaxNu = -1;
     for (int i = 0; i < nPntElem; i++) {
         mPoints[i] = points[i];
@@ -18,33 +21,15 @@ mGradient(grad) {
 
 Element::~Element() {
     delete mGradient;
+    if (hasPRT()) {
+        delete mPRT;
+    }
 }
 
 void Element::addSourceTerm(const arPP_CMatX3 &source) const {
-    for (int i = 0; i < nPntElem; i++) 
+    for (int i = 0; i < nPntElem; i++) {
         mPoints[i]->addToStiff(source[i]);
-}
-
-int Element::sizeComm() const {
-    int ipol, jpol;
-    
-    int size0 = 0;
-    ipol = 0;
-    for (jpol = 0; jpol <= nPol; jpol++) size0 += mPoints[ipol * nPntEdge + jpol]->sizeComm();
-    
-    int size1 = 0;
-    ipol = nPol;
-    for (jpol = 0; jpol <= nPol; jpol++) size1 += mPoints[ipol * nPntEdge + jpol]->sizeComm();
-        
-    int size2 = 0;
-    jpol = 0;
-    for (ipol = 0; ipol <= nPol; ipol++) size2 += mPoints[ipol * nPntEdge + jpol]->sizeComm();
-    
-    int size3 = 0;
-    jpol = nPol;
-    for (ipol = 0; ipol <= nPol; ipol++) size3 += mPoints[ipol * nPntEdge + jpol]->sizeComm();
-    
-    return std::max(size0, std::max(size1, std::max(size2, size3)));
+    }
 }
 
 bool Element::axial() const {

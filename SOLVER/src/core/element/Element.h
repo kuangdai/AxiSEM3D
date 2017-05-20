@@ -1,17 +1,18 @@
 // Element.h
 // created by Kuangdai on 27-Mar-2016 
-// base class of axisymmetric spectral elements
+// base class of AxiSEM3D spectral elements
 
 #pragma once
 
 class Point;
 class Gradient;
+class PRT;
 
 #include "eigenc.h"
 
 class Element {
 public:    
-    Element(Gradient *grad, const std::array<Point *, nPntElem> &points);
+    Element(Gradient *grad, PRT *prt, const std::array<Point *, nPntElem> &points);
     virtual ~Element();
     
     // compute stiffness term
@@ -35,9 +36,6 @@ public:
     // source 
     void addSourceTerm(const arPP_CMatX3 &source) const;
     
-    // communication size
-    int sizeComm() const;
-    
     // get nr 
     int getMaxNr() const {return mMaxNr;};
     
@@ -47,11 +45,15 @@ public:
     // axial
     bool axial() const;
     
+    // do PRT
+    bool hasPRT() const {mPRT != 0;};
+    
 protected:
     int mMaxNu;
     int mMaxNr;
     std::array<Point *, nPntElem> mPoints;
     Gradient *mGradient;
+    PRT *mPRT;
     
 public:
     // domain tag, mainly for debug
@@ -60,5 +62,5 @@ public:
     
 private:
     int mDomainTag;
-    
 };
+
