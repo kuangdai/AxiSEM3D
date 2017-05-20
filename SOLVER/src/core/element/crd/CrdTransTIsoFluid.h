@@ -13,8 +13,8 @@ public:
     CrdTransTIsoFluid(const RDMatPP &theta);
     ~CrdTransTIsoFluid() {};
     
-    void transformSPZ_RTZ_3(vec_ar3_CMatPP &u, int Nu) const;
-    void transformRTZ_SPZ_3(vec_ar3_CMatPP &u, int Nu) const;
+    void transformSPZ_RTZ(vec_ar3_CMatPP &u, int Nu) const;
+    void transformRTZ_SPZ(vec_ar3_CMatPP &u, int Nu) const;
     
 private:
     

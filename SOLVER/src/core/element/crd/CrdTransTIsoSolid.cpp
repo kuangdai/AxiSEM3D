@@ -11,7 +11,7 @@ CrdTransTIsoSolid::CrdTransTIsoSolid(const RDMatPP &theta) {
     mCos2t = ((2. * theta).array().cos().matrix()).cast<Real>();
 }
 
-void CrdTransTIsoSolid::transformSPZ_RTZ_6(vec_ar6_CMatPP &u, int Nu) const {
+void CrdTransTIsoSolid::transformSPZ_RTZ(vec_ar6_CMatPP &u, int Nu) const {
     static CMatPP sum02, dif02, ua_3_;
     for (int alpha = 0; alpha <= Nu; alpha++) {
         ar6_CMatPP &ua = u[alpha];
@@ -26,7 +26,7 @@ void CrdTransTIsoSolid::transformSPZ_RTZ_6(vec_ar6_CMatPP &u, int Nu) const {
     }
 }
 
-void CrdTransTIsoSolid::transformRTZ_SPZ_6(vec_ar6_CMatPP &u, int Nu) const {
+void CrdTransTIsoSolid::transformRTZ_SPZ(vec_ar6_CMatPP &u, int Nu) const {
     static CMatPP sum02, dif02, ua_3_;
     for (int alpha = 0; alpha <= Nu; alpha++) {
         ar6_CMatPP &ua = u[alpha];
@@ -41,7 +41,7 @@ void CrdTransTIsoSolid::transformRTZ_SPZ_6(vec_ar6_CMatPP &u, int Nu) const {
     }
 }
 
-void CrdTransTIsoSolid::transformSPZ_RTZ_9(vec_ar9_CMatPP &u, int Nu) const {
+void CrdTransTIsoSolid::transformSPZ_RTZ(vec_ar9_CMatPP &u, int Nu) const {
     static CMatPP sum08, dif08, sum26, dif26, ua_1_, ua_3_;
     for (int alpha = 0; alpha <= Nu; alpha++) {
         ar9_CMatPP &ua = u[alpha];
@@ -62,7 +62,7 @@ void CrdTransTIsoSolid::transformSPZ_RTZ_9(vec_ar9_CMatPP &u, int Nu) const {
     }
 }
 
-void CrdTransTIsoSolid::transformRTZ_SPZ_9(vec_ar9_CMatPP &u, int Nu) const {
+void CrdTransTIsoSolid::transformRTZ_SPZ(vec_ar9_CMatPP &u, int Nu) const {
     static CMatPP sum08, dif08, sum26, dif26, ua_1_, ua_3_;
     for (int alpha = 0; alpha <= Nu; alpha++) {
         ar9_CMatPP &ua = u[alpha];

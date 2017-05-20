@@ -9,7 +9,7 @@ CrdTransTIsoFluid::CrdTransTIsoFluid(const RDMatPP &theta) {
     mCos1t = (theta.array().cos().matrix()).cast<Real>();
 }
 
-void CrdTransTIsoFluid::transformSPZ_RTZ_3(vec_ar3_CMatPP &u, int Nu) const {
+void CrdTransTIsoFluid::transformSPZ_RTZ(vec_ar3_CMatPP &u, int Nu) const {
     static CMatPP ua_0_;
     for (int alpha = 0; alpha <= Nu; alpha++) {
         ar3_CMatPP &ua = u[alpha];
@@ -19,7 +19,7 @@ void CrdTransTIsoFluid::transformSPZ_RTZ_3(vec_ar3_CMatPP &u, int Nu) const {
     }
 }
 
-void CrdTransTIsoFluid::transformRTZ_SPZ_3(vec_ar3_CMatPP &u, int Nu) const {
+void CrdTransTIsoFluid::transformRTZ_SPZ(vec_ar3_CMatPP &u, int Nu) const {
     static CMatPP ua_0_;
     for (int alpha = 0; alpha <= Nu; alpha++) {
         ar3_CMatPP &ua = u[alpha];

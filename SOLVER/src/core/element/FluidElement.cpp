@@ -12,9 +12,6 @@
 
 #include "MultilevelTimer.h"
 
-#include "eigenp.h"
-#include "XMath.h"
-
 FluidElement::FluidElement(Gradient *grad, PRT *prt,
     const std::array<Point *, nPntElem> &points, 
     Acoustic *acous): 
@@ -69,7 +66,6 @@ void FluidElement::computeStiff() const {
 
 double FluidElement::measure(int count) const {
     // random disp
-    int ipnt = 0;
     int ipnt = 0;
     for (int ipol = 0; ipol <= nPol; ipol++) {
         for (int jpol = 0; jpol <= nPol; jpol++) {
@@ -178,10 +174,10 @@ std::string FluidElement::verbose() const {
 void FluidElement::displToStiff() const {
     mGradient->computeGrad(sResponse.mDispl, sResponse.mStrain, sResponse.mNu);
     if (mInTIso) {
-        mCrdTransTIso->transformSPZ_RTZ_3(sResponse.mStrain, sResponse.mNu);
+        mCrdTransTIso->transformSPZ_RTZ(sResponse.mStrain, sResponse.mNu);
     }
     if (mElem3D) {
-        FieldFFT::transformF2P_3(sResponse.mStrain, sResponse.mNr);
+        FieldFFT::transformF2P(sResponse.mStrain, sResponse.mNr);
     }
     if (mHasPRT) {
         mPRT->sphericalToUndulated(sResponse);
@@ -191,10 +187,10 @@ void FluidElement::displToStiff() const {
         mPRT->undulatedToSpherical(sResponse);
     }
     if (mElem3D) {
-        FieldFFT::transformP2F_3(sResponse.mStress, sResponse.mNr);
+        FieldFFT::transformP2F(sResponse.mStress, sResponse.mNr);
     }
     if (mInTIso) {
-        mCrdTransTIso->transformRTZ_SPZ_3(sResponse.mStress, sResponse.mNu);
+        mCrdTransTIso->transformRTZ_SPZ(sResponse.mStress, sResponse.mNu);
     }
     mGradient->computeQuad(sResponse.mStiff, sResponse.mStress, sResponse.mNu);
 }

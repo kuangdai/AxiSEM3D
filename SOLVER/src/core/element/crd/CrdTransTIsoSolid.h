@@ -13,11 +13,11 @@ public:
     CrdTransTIsoSolid(const RDMatPP &theta);
     ~CrdTransTIsoSolid() {};
     
-    void transformSPZ_RTZ_6(vec_ar6_CMatPP &u, int Nu) const;
-    void transformRTZ_SPZ_6(vec_ar6_CMatPP &u, int Nu) const;
+    void transformSPZ_RTZ(vec_ar6_CMatPP &u, int Nu) const;
+    void transformRTZ_SPZ(vec_ar6_CMatPP &u, int Nu) const;
     
-    void transformSPZ_RTZ_9(vec_ar9_CMatPP &u, int Nu) const;
-    void transformRTZ_SPZ_9(vec_ar9_CMatPP &u, int Nu) const;
+    void transformSPZ_RTZ(vec_ar9_CMatPP &u, int Nu) const;
+    void transformRTZ_SPZ(vec_ar9_CMatPP &u, int Nu) const;
     
 private:
     

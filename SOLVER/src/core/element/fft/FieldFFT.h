@@ -9,13 +9,13 @@
 class FieldFFT {
 public:
     
-    static void transformF2P_3(const vec_ar3_CMatPP &uc, int Nr);
-    static void transformF2P_6(const vec_ar6_CMatPP &uc, int Nr);
-    static void transformF2P_9(const vec_ar9_CMatPP &uc, int Nr);
+    static void transformF2P(const vec_ar3_CMatPP &uc, int Nr);
+    static void transformF2P(const vec_ar6_CMatPP &uc, int Nr);
+    static void transformF2P(const vec_ar9_CMatPP &uc, int Nr);
     
-    static void transformP2F_3(vec_ar3_CMatPP &uc, int Nr);
-    static void transformP2F_6(vec_ar6_CMatPP &uc, int Nr);
-    static void transformP2F_9(vec_ar9_CMatPP &uc, int Nr);
+    static void transformP2F(vec_ar3_CMatPP &uc, int Nr);
+    static void transformP2F(vec_ar6_CMatPP &uc, int Nr);
+    static void transformP2F(vec_ar9_CMatPP &uc, int Nr);
     
     template<class vec_arY_CMatPP, class CMatXNY>
     static void makeFlat(const vec_arY_CMatPP &ucStruct, CMatXNY &ucFlat, int Nu) {
