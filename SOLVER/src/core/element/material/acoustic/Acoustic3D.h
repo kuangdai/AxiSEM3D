@@ -13,7 +13,7 @@ public:
     Acoustic3D(const RDMatXN &KFluid);
     
     // STEP 2: strain ==> stress
-    void strainToStress(FluidElementResponse &response) const;
+    void strainToStress(FluidResponse &response) const;
     
     // verbose
     std::string verbose() const {return "Acoustic3D";};

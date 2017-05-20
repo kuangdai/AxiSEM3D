@@ -4,7 +4,7 @@
 
 #pragma once
 
-class FluidElementResponse;
+class FluidResponse;
 #include <string>
 #include "eigenp.h"
 
@@ -13,7 +13,7 @@ public:
     virtual ~Acoustic() {};
     
     // STEP 2: strain ==> stress
-    virtual void strainToStress(FluidElementResponse &response) const = 0;
+    virtual void strainToStress(FluidResponse &response) const = 0;
     
     // verbose
     virtual std::string verbose() const = 0;

@@ -13,7 +13,7 @@ Acoustic1D::Acoustic1D(const RDMatXN &KFluid) {
     }
 }
 
-void Acoustic1D::strainToStress(FluidElementResponse &response) const {
+void Acoustic1D::strainToStress(FluidResponse &response) const {
     for (int alpha = 0; alpha <= response.mNu; alpha++) {
         const ar3_CMatPP &strain_alpha = response.mStrain[alpha];
         ar3_CMatPP &stress_alpha = response.mStress[alpha];
