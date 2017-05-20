@@ -7,9 +7,6 @@
 #include "eigenc.h"
 #include "eigenp.h"
 
-class FluidElementResponse;
-class SolidElementResponse;
-
 class Gradient {
 public:
     Gradient(const RDMatPP &dsdxii, const RDMatPP &dsdeta,  
@@ -19,14 +16,14 @@ public:
     
 private:
     
-    void computeGrad(FluidElementResponse &response) const;
-    void computeQuad(FluidElementResponse &response) const;
+    void computeGrad(const vec_CMatPP &u, vec_ar3_CMatPP &u_i, int Nu, int nyquist) const;
+    void computeQuad(vec_CMatPP &f, const vec_ar3_CMatPP &f_i, int Nu, int nyquist) const;
     
-    void computeGrad9(SolidElementResponse &response) const;
-    void computeQuad9(SolidElementResponse &response) const;
+    void computeGrad9(const vec_ar3_CMatPP &ui, vec_ar9_CMatPP &ui_j, int Nu, int nyquist) const;
+    void computeQuad9(vec_ar3_CMatPP &fi, const vec_ar9_CMatPP &fi_j, int Nu, int nyquist) const;
     
-    void computeGrad6(SolidElementResponse &response) const;
-    void computeQuad6(SolidElementResponse &response) const;
+    void computeGrad6(const vec_ar3_CMatPP &ui, vec_ar6_CMatPP &eij, int Nu, int nyquist) const;
+    void computeQuad6(vec_ar3_CMatPP &fi, const vec_ar6_CMatPP &sij, int Nu, int nyquist) const;
     
     // operators
     RMatPP mDsDxii;

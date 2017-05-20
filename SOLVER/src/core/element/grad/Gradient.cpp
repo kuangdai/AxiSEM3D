@@ -3,6 +3,8 @@
 // elemental gradient
 
 #include "Gradient.h"
+#include "FluidElement.h"
+#include "SolidElement.h"
 
 Gradient::Gradient(const RDMatPP &dsdxii, const RDMatPP &dsdeta, 
                    const RDMatPP &dzdxii, const RDMatPP &dzdeta, 
@@ -21,11 +23,7 @@ mInv_s(inv_s.cast<Real>()), mAxial(axial) {
     sGT_eta = &sGT_GLL;
 }
 
-void Gradient::computeGrad(FluidElementResponse &response) const {
-    // get response
-    const vec_CMatPP &u = response.mDispl;
-    vec_ar3_CMatPP &u_i = response.mStrain;
-    
+void Gradient::computeGrad(const vec_CMatPP &u, vec_ar3_CMatPP &u_i, int Nu, int nyquist) const {
     // hardcode for alpha = 0
     static RMatPP GUR, UGR;
     GUR = (*sGT_xii) * u[0].real();  
@@ -35,7 +33,7 @@ void Gradient::computeGrad(FluidElementResponse &response) const {
     
     // alpha > 0
     static CMatPP v, GU, UG;
-    for (int alpha = 1; alpha <= response.mNu - response.mNyquist; alpha++) {        
+    for (int alpha = 1; alpha <= Nu - nyquist; alpha++) {        
         Complex iialpha = (Real)alpha * ii;
         v = iialpha * u[alpha];
         GU = (*sGT_xii) * u[alpha];  
@@ -49,18 +47,14 @@ void Gradient::computeGrad(FluidElementResponse &response) const {
     }    
     
     // mask Nyquist
-    if (response.mNyquist) {
-        u_i[response.mNu][0].setZero();
-        u_i[response.mNu][1].setZero();
-        u_i[response.mNu][2].setZero();
+    if (nyquist) {
+        u_i[Nu][0].setZero();
+        u_i[Nu][1].setZero();
+        u_i[Nu][2].setZero();
     }
 }
 
-void Gradient::computeQuad(FluidElementResponse &response) const {
-    // get response
-    const vec_ar3_CMatPP &f_i = response.mStress;
-    vec_CMatPP &f = response.mStiff;
-    
+void Gradient::computeQuad(vec_CMatPP &f, const vec_ar3_CMatPP &f_i, int Nu, int nyquist) const {
     // hardcode for mbeta = 0
     static RMatPP XR, YR;
     XR = mDzDeta.schur(f_i[0][0].real()) + mDsDeta.schur(f_i[0][2].real());
@@ -69,7 +63,7 @@ void Gradient::computeQuad(FluidElementResponse &response) const {
     
     // mbeta > 0
     static CMatPP g, X, Y;
-    for (int mbeta = 1; mbeta <= response.mNu - response.mNyquist; mbeta++) {
+    for (int mbeta = 1; mbeta <= Nu - nyquist; mbeta++) {
         Complex iibeta = - (Real)mbeta * ii; 
         g = iibeta * f_i[mbeta][1];
         X = mDzDeta.schur(f_i[mbeta][0]) + mDsDeta.schur(f_i[mbeta][2]);
@@ -81,16 +75,12 @@ void Gradient::computeQuad(FluidElementResponse &response) const {
     }
     
     // mask Nyquist
-    if (response.mNyquist) {
-        f[response.mNu].setZero();
+    if (nyquist) {
+        f[Nu].setZero();
     }
 }    
 
-void Gradient::computeGrad9(SolidElementResponse &response) const {
-    // get response
-    const vec_ar3_CMatPP &ui = response.mDispl;
-    vec_ar9_CMatPP &ui_j = response.mStrainC9;
-    
+void Gradient::computeGrad9(const vec_ar3_CMatPP &ui, vec_ar9_CMatPP &ui_j, int Nu, int nyquist) const {
     // hardcode for alpha = 0
     static RMatPP GU0R, GU1R, GU2R, UG0R, UG1R, UG2R;
     GU0R = (*sGT_xii) * ui[0][0].real();  
@@ -114,7 +104,7 @@ void Gradient::computeGrad9(SolidElementResponse &response) const {
     
     // alpha > 0
     static CMatPP v0, v1, v2, GU0, GU1, GU2, UG0, UG1, UG2;
-    for (int alpha = 1; alpha <= response.mNu - response.mNyquist; alpha++) {        
+    for (int alpha = 1; alpha <= Nu - nyquist; alpha++) {        
         Complex iialpha = (Real)alpha * ii;
         v0 = ui[alpha][0] + iialpha * ui[alpha][1];
         v1 = iialpha * ui[alpha][0] - ui[alpha][1];
@@ -146,24 +136,20 @@ void Gradient::computeGrad9(SolidElementResponse &response) const {
     } 
     
     // mask Nyquist
-    if (response.mNyquist) {
-        ui_j[response.mNu][0].setZero();
-        ui_j[response.mNu][1].setZero();
-        ui_j[response.mNu][2].setZero();
-        ui_j[response.mNu][3].setZero();
-        ui_j[response.mNu][4].setZero();
-        ui_j[response.mNu][5].setZero();
-        ui_j[response.mNu][6].setZero();
-        ui_j[response.mNu][7].setZero();
-        ui_j[response.mNu][8].setZero();
+    if (nyquist) {
+        ui_j[Nu][0].setZero();
+        ui_j[Nu][1].setZero();
+        ui_j[Nu][2].setZero();
+        ui_j[Nu][3].setZero();
+        ui_j[Nu][4].setZero();
+        ui_j[Nu][5].setZero();
+        ui_j[Nu][6].setZero();
+        ui_j[Nu][7].setZero();
+        ui_j[Nu][8].setZero();
     }
 }
 
-void Gradient::computeQuad9(SolidElementResponse &response) const {
-    // get response
-    const vec_ar9_CMatPP &fi_j = response.mStressC9;
-    vec_ar3_CMatPP &fi = response.mStiff;
-    
+void Gradient::computeQuad9(vec_ar3_CMatPP &fi, const vec_ar9_CMatPP &fi_j, int Nu, int nyquist) const {
     // hardcode for mbeta = 0
     static RMatPP X0R, X1R, X2R, Y0R, Y1R, Y2R; 
     X0R = mDzDeta.schur(fi_j[0][0].real()) + mDsDeta.schur(fi_j[0][2].real());
@@ -182,7 +168,7 @@ void Gradient::computeQuad9(SolidElementResponse &response) const {
     
     // mbeta > 0
     static CMatPP g0, g1, g2, X0, X1, X2, Y0, Y1, Y2;
-    for (int mbeta = 1; mbeta <= response.mNu - response.mNyquist; mbeta++) {
+    for (int mbeta = 1; mbeta <= Nu - nyquist; mbeta++) {
         Complex iibeta = - (Real)mbeta * ii; 
         g0 = fi_j[mbeta][4] + iibeta * fi_j[mbeta][1];
         g1 = iibeta * fi_j[mbeta][4] - fi_j[mbeta][1];
@@ -208,18 +194,14 @@ void Gradient::computeQuad9(SolidElementResponse &response) const {
     }
     
     // mask Nyquist
-    if (response.mNyquist) {
-        fi[response.mNu][0].setZero();
-        fi[response.mNu][1].setZero();
-        fi[response.mNu][2].setZero();
+    if (nyquist) {
+        fi[Nu][0].setZero();
+        fi[Nu][1].setZero();
+        fi[Nu][2].setZero();
     }
 }
 
-void Gradient::computeGrad6(SolidElementResponse &response) const {
-    // get response
-    const vec_ar3_CMatPP &ui = response.mDispl;
-    vec_ar6_CMatPP &eij = response.mStrainC6;
-    
+void Gradient::computeGrad6(const vec_ar3_CMatPP &ui, vec_ar6_CMatPP &eij, int Nu, int nyquist) const {
     // hardcode for alpha = 0
     static RMatPP GU0R, GU1R, GU2R, UG0R, UG1R, UG2R;
     GU0R = (*sGT_xii) * ui[0][0].real();  
@@ -241,7 +223,7 @@ void Gradient::computeGrad6(SolidElementResponse &response) const {
     
     // alpha > 0
     static CMatPP v0, v1, v2, GU0, GU1, GU2, UG0, UG1, UG2;
-    for (int alpha = 1; alpha <= response.mNu - response.mNyquist; alpha++) {        
+    for (int alpha = 1; alpha <= Nu - nyquist; alpha++) {        
         Complex iialpha = (Real)alpha * ii;
         v0 = ui[alpha][0] + iialpha * ui[alpha][1];
         v1 = iialpha * ui[alpha][0] - ui[alpha][1];
@@ -270,21 +252,17 @@ void Gradient::computeGrad6(SolidElementResponse &response) const {
     }    
     
     // mask Nyquist
-    if (response.mNyquist) {
-        eij[response.mNu][0].setZero();
-        eij[response.mNu][1].setZero();
-        eij[response.mNu][2].setZero();
-        eij[response.mNu][3].setZero();
-        eij[response.mNu][4].setZero();
-        eij[response.mNu][5].setZero();
+    if (nyquist) {
+        eij[Nu][0].setZero();
+        eij[Nu][1].setZero();
+        eij[Nu][2].setZero();
+        eij[Nu][3].setZero();
+        eij[Nu][4].setZero();
+        eij[Nu][5].setZero();
     }   
 }
 
-void Gradient::computeQuad6(SolidElementResponse &response) const {
-    // get response
-    const vec_ar6_CMatPP &sij = response.mStressC6;
-    vec_ar3_CMatPP &fi = response.mStiff;
-    
+void Gradient::computeQuad6(vec_ar3_CMatPP &fi, const vec_ar6_CMatPP &sij, int Nu, int nyquist) const {
     // hardcode for mbeta = 0
     static RMatPP X0R, X1R, X2R, Y0R, Y1R, Y2R; 
     X0R = mDzDeta.schur(sij[0][0].real()) + mDsDeta.schur(sij[0][4].real());
@@ -303,7 +281,7 @@ void Gradient::computeQuad6(SolidElementResponse &response) const {
     
     // mbeta > 0
     static CMatPP g0, g1, g2, X0, X1, X2, Y0, Y1, Y2;
-    for (int mbeta = 1; mbeta <= response.mNu - response.mNyquist; mbeta++) {
+    for (int mbeta = 1; mbeta <= Nu - nyquist; mbeta++) {
         Complex iibeta = - (Real)mbeta * ii; 
         g0 = sij[mbeta][1] + iibeta * sij[mbeta][5];
         g1 = iibeta * sij[mbeta][1] - sij[mbeta][5];
@@ -329,10 +307,10 @@ void Gradient::computeQuad6(SolidElementResponse &response) const {
     }
     
     // mask Nyquist
-    if (response.mNyquist) {
-        fi[response.mNu][0].setZero();
-        fi[response.mNu][1].setZero();
-        fi[response.mNu][2].setZero();
+    if (nyquist) {
+        fi[Nu][0].setZero();
+        fi[Nu][1].setZero();
+        fi[Nu][2].setZero();
     }
 }
 
