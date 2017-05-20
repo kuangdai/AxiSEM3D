@@ -4,8 +4,8 @@
 
 #pragma once
 
-class SolidElementResponse;
-class FluidElementResponse;
+class SolidResponse;
+class FluidResponse;
 #include <string>
 #include "eigenp.h"
 
@@ -14,11 +14,11 @@ public:
     
     virtual ~PRT() {};
     
-    virtual void sphericalToUndulated(FluidElementResponse &response) const = 0;
-    virtual void undulatedToSpherical(FluidElementResponse &response) const = 0;
+    virtual void sphericalToUndulated(FluidResponse &response) const = 0;
+    virtual void undulatedToSpherical(FluidResponse &response) const = 0;
     
-    virtual void sphericalToUndulated(SolidElementResponse &response) const = 0;
-    virtual void undulatedToSpherical(SolidElementResponse &response) const = 0;
+    virtual void sphericalToUndulated(SolidResponse &response) const = 0;
+    virtual void undulatedToSpherical(SolidResponse &response) const = 0;
     
     virtual std::string verbose() const = 0;
     virtual bool is1D() const = 0;

@@ -12,11 +12,11 @@ public:
     PRT_3D(const RDMatXN4 &X);
     ~PRT_3D() {};
     
-    void sphericalToUndulated(FluidElementResponse &response) const;
-    void undulatedToSpherical(FluidElementResponse &response) const;
+    void sphericalToUndulated(FluidResponse &response) const;
+    void undulatedToSpherical(FluidResponse &response) const;
     
-    void sphericalToUndulated(SolidElementResponse &response) const;
-    void undulatedToSpherical(SolidElementResponse &response) const;
+    void sphericalToUndulated(SolidResponse &response) const;
+    void undulatedToSpherical(SolidResponse &response) const;
     
     std::string verbose() const {return "PRT_3D";};
     bool is1D() const {return false;};
