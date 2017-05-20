@@ -139,7 +139,7 @@ void SpectralConstants::initialize(int nPol) {
     } else throw std::runtime_error("SpectralConstants::initialize || Method not implemented for nPol > 8.");
     
     // initialize Gradient operator
-    Gradient::setGMat(XMath::castToSolver(sG_GLL), XMath::castToSolver(sG_GLJ));
+    Gradient::setGMat(sG_GLL, sG_GLJ);
     PreloopGradient::setGMat(sG_GLL, sG_GLJ);
 }
 

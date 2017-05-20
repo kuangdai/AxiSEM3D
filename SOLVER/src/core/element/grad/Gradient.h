@@ -14,8 +14,6 @@ public:
              const RDMatPP &inv_s, bool axial);
     ~Gradient() {};
     
-private:
-    
     void computeGrad(const vec_CMatPP &u, vec_ar3_CMatPP &u_i, int Nu, int nyquist) const;
     void computeQuad(vec_CMatPP &f, const vec_ar3_CMatPP &f_i, int Nu, int nyquist) const;
     
@@ -24,7 +22,8 @@ private:
     
     void computeGrad6(const vec_ar3_CMatPP &ui, vec_ar6_CMatPP &eij, int Nu, int nyquist) const;
     void computeQuad6(vec_ar3_CMatPP &fi, const vec_ar6_CMatPP &sij, int Nu, int nyquist) const;
-    
+
+private:    
     // operators
     RMatPP mDsDxii;
     RMatPP mDsDeta;

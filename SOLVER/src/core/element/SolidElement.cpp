@@ -16,7 +16,7 @@ SolidElement::SolidElement(Gradient *grad, PRT *prt,
     const std::array<Point *, nPntElem> &points, 
     Elastic *elas): 
 Element(grad, prt, points), mElastic(elas), mCrdTransTIso(0) {
-    mElastic->checkCompatibility(mMaxNr);
+    mElastic->checkCompatibility(mMaxNr, !mHasPRT);
     // TISO
     mInTIso = mHasPRT;
     if (mInTIso) {
@@ -101,7 +101,7 @@ void SolidElement::test() const {
     // stiffness matrix
     int totalDim = (mMaxNu + 1) * 3 * nPntElem;
     RMatXX K = RMatXX::Zero(totalDim, totalDim);
-    bool axial = axial();
+    bool axial = this->axial();
     
     for (int alpha = 0; alpha <= mMaxNu; alpha++) {
         if (mMaxNr % 2 == 0 && alpha == mMaxNu) {continue;}
@@ -214,7 +214,7 @@ void SolidElement::computeGroundMotion(Real phi, const RMatPP &weights, RRow3 &u
 }
 
 std::string SolidElement::verbose() const {
-    if (hasPRT()) {
+    if (mHasPRT) {
         return "SolidElement$" + mPRT->verbose() + "$" + mElastic->verbose();
     } else {
         return "SolidElement$" + mElastic->verbose();
@@ -223,7 +223,7 @@ std::string SolidElement::verbose() const {
 
 void SolidElement::displToStiff() const {
     if (mHasPRT) {
-        mGradient->computeGrad(sResponse.mDispl, sResponse.mStrain9, sResponse.mNu);
+        mGradient->computeGrad9(sResponse.mDispl, sResponse.mStrain9, sResponse.mNu, sResponse.mNyquist);
         if (mInTIso) {
             mCrdTransTIso->transformSPZ_RTZ(sResponse.mStrain9, sResponse.mNu);
         }    
@@ -232,7 +232,7 @@ void SolidElement::displToStiff() const {
         }
         mPRT->sphericalToUndulated(sResponse);
     } else {
-        mGradient->computeGrad(sResponse.mDispl, sResponse.mStrain6, sResponse.mNu);
+        mGradient->computeGrad6(sResponse.mDispl, sResponse.mStrain6, sResponse.mNu, sResponse.mNyquist);
         if (mInTIso) {
             mCrdTransTIso->transformSPZ_RTZ(sResponse.mStrain6, sResponse.mNu);
         }    
@@ -249,7 +249,7 @@ void SolidElement::displToStiff() const {
         if (mInTIso) {
             mCrdTransTIso->transformRTZ_SPZ(sResponse.mStress9, sResponse.mNu);
         }
-        mGradient->computeQuad(sResponse.mStiff, sResponse.mStress9, sResponse.mNu);
+        mGradient->computeQuad9(sResponse.mStiff, sResponse.mStress9, sResponse.mNu, sResponse.mNyquist);
     } else {
         if (mElem3D) {
             FieldFFT::transformF2P(sResponse.mStress6, sResponse.mNr);
@@ -257,7 +257,7 @@ void SolidElement::displToStiff() const {
         if (mInTIso) {
             mCrdTransTIso->transformRTZ_SPZ(sResponse.mStress6, sResponse.mNu);
         }
-        mGradient->computeQuad(sResponse.mStiff, sResponse.mStress6, sResponse.mNu);
+        mGradient->computeQuad6(sResponse.mStiff, sResponse.mStress6, sResponse.mNu, sResponse.mNyquist);
     }
     
 }

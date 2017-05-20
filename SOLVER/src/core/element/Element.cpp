@@ -45,7 +45,7 @@ std::string Element::costSignature() const {
 }
 
 #include "Geodesy.h"
-RDMatPP formThetaMat() const {
+RDMatPP Element::formThetaMat() const {
     RDMatPP theta;
     int ipnt = 0;
     for (int ipol = 0; ipol <= nPol; ipol++) {

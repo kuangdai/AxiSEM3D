@@ -100,7 +100,7 @@ void FluidElement::test() const {
     // stiffness matrix
     int totalDim = (mMaxNu + 1) * nPntElem;
     RMatXX K = RMatXX::Zero(totalDim, totalDim);
-    bool axial = axial();
+    bool axial = this->axial();
     
     for (int alpha = 0; alpha <= mMaxNu; alpha++) {
         if (mMaxNr % 2 == 0 && alpha == mMaxNu) {continue;}
@@ -164,7 +164,7 @@ void FluidElement::computeGroundMotion(Real phi, const RMatPP &weights, RRow3 &u
 }
 
 std::string FluidElement::verbose() const {
-    if (hasPRT()) {
+    if (mHasPRT) {
         return "FluidElement$" + mPRT->verbose() + "$" + mAcoustic->verbose();
     } else {
         return "FluidElement$" + mAcoustic->verbose();
@@ -172,7 +172,7 @@ std::string FluidElement::verbose() const {
 }
 
 void FluidElement::displToStiff() const {
-    mGradient->computeGrad(sResponse.mDispl, sResponse.mStrain, sResponse.mNu);
+    mGradient->computeGrad(sResponse.mDispl, sResponse.mStrain, sResponse.mNu, sResponse.mNyquist);
     if (mInTIso) {
         mCrdTransTIso->transformSPZ_RTZ(sResponse.mStrain, sResponse.mNu);
     }
@@ -192,7 +192,7 @@ void FluidElement::displToStiff() const {
     if (mInTIso) {
         mCrdTransTIso->transformRTZ_SPZ(sResponse.mStress, sResponse.mNu);
     }
-    mGradient->computeQuad(sResponse.mStiff, sResponse.mStress, sResponse.mNu);
+    mGradient->computeQuad(sResponse.mStiff, sResponse.mStress, sResponse.mNu, sResponse.mNyquist);
 }
 
 //-------------------------- static --------------------------//
