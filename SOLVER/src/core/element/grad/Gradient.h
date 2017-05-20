@@ -1,31 +1,32 @@
 // Gradient.h
-// created by Kuangdai on 23-Apr-2016 
+// created by Kuangdai on 19-May-2017 
 // elemental gradient
 
 #pragma once
 
 #include "eigenc.h"
+#include "eigenp.h"
+
+class FluidElementResponse;
+class SolidElementResponse;
 
 class Gradient {
-public:    
+public:
+    Gradient(const RDMatPP &dsdxii, const RDMatPP &dsdeta,  
+             const RDMatPP &dzdxii, const RDMatPP &dzdeta, 
+             const RDMatPP &inv_s, bool axial);
+    ~Gradient() {};
     
-    Gradient(const RMatPP &dsdxii, const RMatPP &dsdeta,  
-             const RMatPP &dzdxii, const RMatPP &dzdeta, const RMatPP &inv_s);
-             
-    virtual ~Gradient() {};         
+private:
     
-    // scalar
-    virtual void gradScalar(const vec_CMatPP &u, vec_ar3_CMatPP &u_i, int Nu, int nyquist) const;
-    virtual void quadScalar(const vec_ar3_CMatPP &f_i, vec_CMatPP &f, int Nu, int nyquist) const;
+    void computeGrad(FluidElementResponse &response) const;
+    void computeQuad(FluidElementResponse &response) const;
     
-    // deformation gradient 3x3
-    virtual void gradVector(const vec_ar3_CMatPP &ui, vec_ar9_CMatPP &ui_j, int Nu, int nyquist) const;
-    virtual void quadVector(const vec_ar9_CMatPP &fi_j, vec_ar3_CMatPP &fi, int Nu, int nyquist) const;
+    void computeGrad9(SolidElementResponse &response) const;
+    void computeQuad9(SolidElementResponse &response) const;
     
-    // if Voigt notation is used
-    virtual bool isVoigt() const {return false;};
-    
-protected:
+    void computeGrad6(SolidElementResponse &response) const;
+    void computeQuad6(SolidElementResponse &response) const;
     
     // operators
     RMatPP mDsDxii;
@@ -34,12 +35,19 @@ protected:
     RMatPP mDzDeta;
     RMatPP mInv_s;
     
+    // axis
+    bool mAxial;
+    RMatPP *sG_xii;
+    RMatPP *sGT_xii;
+    RMatPP *sG_eta;
+    RMatPP *sGT_eta;
+    
 //-------------------------- static --------------------------//
 public: 
     // set G Mat, shared by all elements
-    static void setGMat(const RMatPP &G_GLL, const RMatPP &G_GLJ);
+    static void setGMat(const RDMatPP &G_GLL, const RDMatPP &G_GLJ);
     
-protected: 
+private: 
     // G Mat storage
     static RMatPP sG_GLL;
     static RMatPP sG_GLJ;
