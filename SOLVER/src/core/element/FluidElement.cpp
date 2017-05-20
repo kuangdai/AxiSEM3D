@@ -38,7 +38,7 @@ Element(grad, prt, points), mAcoustic(acous), mCrdTransTIso(0) {
 
 FluidElement::~FluidElement() {
     delete mAcoustic;
-    if (mCrdTransTIso != 0) {
+    if (mInTIso) {
         delete mCrdTransTIso;
     }
 }
@@ -118,7 +118,7 @@ void FluidElement::test() const {
                 if (alpha == 0) {sResponse.mDispl[alpha](ipol, jpol) = two;}
                 
                 // compute stiff 
-                displToStiff(sResponse);
+                displToStiff();
                 
                 // positive-definite
                 Real sr = sResponse.mStiff[alpha](ipol, jpol).real();
