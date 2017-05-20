@@ -9,6 +9,7 @@ class Gradient;
 class PRT;
 
 #include "eigenc.h"
+#include "eigenp.h"
 
 class Element {
 public:    
@@ -45,8 +46,8 @@ public:
     // axial
     bool axial() const;
     
-    // do PRT
-    bool hasPRT() const {mPRT != 0;};
+    // form theta for TIso
+    RDMatPP formThetaMat() const;
     
 protected:
     int mMaxNu;
@@ -54,6 +55,9 @@ protected:
     std::array<Point *, nPntElem> mPoints;
     Gradient *mGradient;
     PRT *mPRT;
+    
+    // flags
+    bool mHasPRT;
     
 public:
     // domain tag, mainly for debug
