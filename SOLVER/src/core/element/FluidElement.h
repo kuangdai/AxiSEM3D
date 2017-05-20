@@ -7,11 +7,35 @@
 #include "Element.h"
 
 class Acoustic;
+class CrdTransTIsoFluid;
+
+// static workspaces
+struct FluidResponse {
+    // disp
+    vec_CMatPP mDispl;
+    // strain
+    vec_ar3_CMatPP mStrain;
+    // stress
+    vec_ar3_CMatPP mStress;
+    // stiff
+    vec_CMatPP mStiff;
+    // size
+    int mNu = 0;
+    int mNr = 1;
+    int mNyquist = 0;
+    void setNr(int nr) {
+        mNr = nr;
+        mNu = nr / 2;
+        mNyquist = (int)(mNr % 2 == 0);
+    };
+};
+
 
 class FluidElement : public Element {
 public:
     
-    FluidElement(Gradient *grad, const std::array<Point *, nPntElem> &points, Acoustic *acous);
+    FluidElement(Gradient *grad, PRT *prt, const std::array<Point *, nPntElem> &points, 
+        Acoustic *acous);
     ~FluidElement();
     
     // compute stiffness term
@@ -32,10 +56,15 @@ public:
 private:
     
     // displ ==> stiff
-    void displToStiff(const vec_CMatPP &displ, vec_CMatPP &stiff) const;
+    void displToStiff() const;
     
     // material
     Acoustic *mAcoustic;
+    CrdTransTIsoFluid *mCrdTransTIso;
+    
+    // flags
+    bool mInTIso;
+    bool mElem3D;
     
 //-------------------------- static --------------------------//    
 public:
@@ -44,8 +73,5 @@ public:
     
 private:
     // static workspaces
-    static vec_CMatPP sDispl;
-    static vec_CMatPP sStiff;
-    static vec_ar3_CMatPP sStrain;
-    static vec_ar3_CMatPP sStress;
+    static FluidResponse sResponse;
 };
