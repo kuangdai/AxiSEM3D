@@ -5,20 +5,20 @@
 #pragma once
 
 #include "Acoustic.h"
+#include "eigenc.h"
 
 class Acoustic1D: public Acoustic {
 public:
     // constructor
-    Acoustic1D(const RMatPP &KFluid);
+    Acoustic1D(const RDMatXN &KFluid);
     
     // STEP 2: strain ==> stress
-    void strainToStress(const vec_ar3_CMatPP &strain, vec_ar3_CMatPP &stress, int Nu) const;
+    void strainToStress(FluidElementResponse &response) const;
     
     // verbose
     std::string verbose() const {return "Acoustic1D";};
-
-private:
+    bool is1D() const {return true;};
     
-    RMatPP mK; 
-
+private:
+    RMatPP mKStruct; 
 };
