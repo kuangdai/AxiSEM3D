@@ -20,7 +20,7 @@ PRT_1D::PRT_1D(const RDMatXN4 &X) {
 }
 
 void PRT_1D::sphericalToUndulated(FluidResponse &response) const {
-    for (int alpha = 0; alpha < response.mNu; alpha++) {
+    for (int alpha = 0; alpha <= response.mNu; alpha++) {
         ar3_CMatPP &strain = response.mStrain[alpha];
         strain[0] = mXStruct[0].schur(strain[0]) 
                   + mXStruct[1].schur(strain[2]);
@@ -31,7 +31,7 @@ void PRT_1D::sphericalToUndulated(FluidResponse &response) const {
 }
 
 void PRT_1D::undulatedToSpherical(FluidResponse &response) const {
-    for (int alpha = 0; alpha < response.mNu; alpha++) {
+    for (int alpha = 0; alpha <= response.mNu; alpha++) {
         ar3_CMatPP &stress = response.mStress[alpha];
         stress[2] = mXStruct[1].schur(stress[0]) 
                   + mXStruct[2].schur(stress[1]) 
@@ -42,7 +42,7 @@ void PRT_1D::undulatedToSpherical(FluidResponse &response) const {
 }
 
 void PRT_1D::sphericalToUndulated(SolidResponse &response) const {
-    for (int alpha = 0; alpha < response.mNu; alpha++) {
+    for (int alpha = 0; alpha <= response.mNu; alpha++) {
         const ar9_CMatPP &sph = response.mStrainC9[alpha];
         ar6_CMatPP &und = response.mStrainC6[alpha];
         und[0] = mXStruct[0].schur(sph[0])
@@ -64,7 +64,7 @@ void PRT_1D::sphericalToUndulated(SolidResponse &response) const {
 }
 
 void PRT_1D::undulatedToSpherical(SolidResponse &response) const{
-    for (int alpha = 0; alpha < response.mNu; alpha++) {
+    for (int alpha = 0; alpha <= response.mNu; alpha++) {
         const ar6_CMatPP &und = response.mStressC6[alpha];
         ar9_CMatPP &sph = response.mStressC9[alpha];
         sph[0] = mXStruct[0].schur(und[0]);
