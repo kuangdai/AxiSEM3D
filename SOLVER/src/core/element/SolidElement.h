@@ -7,11 +7,36 @@
 #include "Element.h"
 
 class Elastic;
+class CrdTransTIsoSolid;
+
+// static workspaces
+struct SolidResponse {
+    // disp
+    vec_ar3_CMatPP mDispl;
+    // strain
+    vec_ar6_CMatPP mStrain6;
+    vec_ar9_CMatPP mStrain9;
+    // stress
+    vec_ar6_CMatPP mStress6;
+    vec_ar9_CMatPP mStress9;
+    // stiff
+    vec_ar3_CMatPP mStiff;
+    // size
+    int mNu = 0;
+    int mNr = 1;
+    int mNyquist = 0;
+    void setNr(int nr) {
+        mNr = nr;
+        mNu = nr / 2;
+        mNyquist = (int)(mNr % 2 == 0);
+    };
+};
 
 class SolidElement : public Element {
 public:
     
-    SolidElement(Gradient *grad, const std::array<Point *, nPntElem> &points, Elastic *elas);
+    SolidElement(Gradient *grad, PRT *prt, const std::array<Point *, nPntElem> &points, 
+        Elastic *elas);
     ~SolidElement();
     
     // compute stiffness term
@@ -32,10 +57,14 @@ public:
 private:
     
     // displ ==> stiff
-    void displToStiff(const vec_ar3_CMatPP &displ, vec_ar3_CMatPP &stiff) const;
+    void displToStiff() const;
     
     // material
     Elastic *mElastic;
+    CrdTransTIsoSolid *mCrdTransTIso;
+    // flags
+    bool mInTIso;
+    bool mElem3D;
     
 //-------------------------- static --------------------------//    
 public:
@@ -43,9 +72,7 @@ public:
     static void initWorkspace(int maxMaxNu);
     
 private:
-    // static workspaces
-    static vec_ar3_CMatPP sDispl;
-    static vec_ar3_CMatPP sStiff;
-    static vec_ar9_CMatPP sStrain;
-    static vec_ar9_CMatPP sStress;
+    static SolidResponse sResponse;
 };
+
+
