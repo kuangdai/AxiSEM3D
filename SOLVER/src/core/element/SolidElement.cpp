@@ -244,7 +244,7 @@ void SolidElement::displToStiff() const {
     if (mHasPRT) {
         mPRT->undulatedToSpherical(sResponse);
         if (mElem3D) {
-            FieldFFT::transformF2P(sResponse.mStress9, sResponse.mNr);
+            FieldFFT::transformP2F(sResponse.mStress9, sResponse.mNr);
         }
         if (mInTIso) {
             mCrdTransTIso->transformRTZ_SPZ(sResponse.mStress9, sResponse.mNu);
@@ -252,7 +252,7 @@ void SolidElement::displToStiff() const {
         mGradient->computeQuad9(sResponse.mStiff, sResponse.mStress9, sResponse.mNu, sResponse.mNyquist);
     } else {
         if (mElem3D) {
-            FieldFFT::transformF2P(sResponse.mStress6, sResponse.mNr);
+            FieldFFT::transformP2F(sResponse.mStress6, sResponse.mNr);
         }
         if (mInTIso) {
             mCrdTransTIso->transformRTZ_SPZ(sResponse.mStress6, sResponse.mNu);
