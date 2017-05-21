@@ -4,7 +4,6 @@
 
 #include "Acoustic1D.h"
 #include "FluidElement.h"
-#include "SolverFFTW_N3.h"
 
 Acoustic1D::Acoustic1D(const RDMatXN &KFluid) {
     for (int ipol = 0; ipol < nPntEdge; ipol++) {

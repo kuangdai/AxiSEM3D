@@ -9,9 +9,11 @@
     #define EIGEN_RUNTIME_NO_MALLOC
 #endif    
 
+////// Deprecated in Eigen3 //////
 // disable static alignment to enhance code portability
 // the extra cost is marginal unless one uses nPol=3
-#define EIGEN_DONT_ALIGN_STATICALLY
+// #define EIGEN_DONT_ALIGN_STATICALLY
+////// Deprecated in Eigen3 //////
 
 #include <Eigen/Dense>
 

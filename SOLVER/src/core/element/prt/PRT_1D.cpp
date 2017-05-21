@@ -6,10 +6,6 @@
 #include "SolidElement.h"
 #include "FluidElement.h"
 
-#include "SolverFFTW_N3.h"
-#include "SolverFFTW_N6.h"
-#include "SolverFFTW_N9.h"
-
 PRT_1D::PRT_1D(const RDMatXN4 &X) {
     for (int idim = 0; idim < 4; idim++) {
         for (int ipol = 0; ipol < nPntEdge; ipol++) {
