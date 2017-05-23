@@ -16,7 +16,7 @@ SolidElement::SolidElement(Gradient *grad, PRT *prt,
     const std::array<Point *, nPntElem> &points, 
     Elastic *elas): 
 Element(grad, prt, points), mElastic(elas), mCrdTransTIso(0) {
-    mElastic->checkCompatibility(mMaxNr, !mHasPRT);
+    mElastic->checkCompatibility(mMaxNr);
     // TISO
     mInTIso = mHasPRT;
     if (mInTIso) {
