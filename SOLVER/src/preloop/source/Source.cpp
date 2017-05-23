@@ -14,7 +14,7 @@
 #include "SpectralConstants.h"
 #include "XMPI.h"
 #include "PointForce.h"
-#include "XTimer.h"
+#include "MultilevelTimer.h"
 
 Source::Source(double depth, double lat, double lon):
 mDepth(depth), mLatitude(lat), mLongitude(lon) {
@@ -30,7 +30,7 @@ mDepth(depth), mLatitude(lat), mLongitude(lon) {
 }
 
 void Source::release(Domain &domain, const Mesh &mesh) const {
-    XTimer::begin("Locate Source", 2);
+    MultilevelTimer::begin("Locate Source", 2);
     // locate local
     int myrank = XMPI::nproc();
     int locTag;
@@ -42,9 +42,9 @@ void Source::release(Domain &domain, const Mesh &mesh) const {
     if (myrank_min == XMPI::nproc()) {
         throw std::runtime_error("Source::release || Error locating source.");
     }
-    XTimer::end("Locate Source", 2);
+    MultilevelTimer::end("Locate Source", 2);
 
-    XTimer::begin("Compute Source", 2);
+    MultilevelTimer::begin("Compute Source", 2);
     // release to me
     if (myrank_min == XMPI::rank()) {
         // compute source term
@@ -55,14 +55,14 @@ void Source::release(Domain &domain, const Mesh &mesh) const {
         Element *myElem = domain.getElement(myQuad->getElementTag());
         domain.addSourceTerm(new SourceTerm(myElem, fouriers));
     }
-    XTimer::end("Compute Source", 2);
+    MultilevelTimer::end("Compute Source", 2);
 }
 
 bool Source::locate(const Mesh &mesh, int &locTag, RDColP &interpFactZ) const {
-    XTimer::begin("R Source", 3);
+    MultilevelTimer::begin("R Source", 3);
     RDCol2 srcCrds = RDCol2::Zero();
     srcCrds(1) = mesh.computeRadiusRef(mDepth, mLatitude, mLongitude);
-    XTimer::end("R Source", 3);
+    MultilevelTimer::end("R Source", 3);
 
     if (srcCrds(0) > mesh.sMax() + tinySingle || srcCrds(0) < mesh.sMin() - tinySingle) return false;
     if (srcCrds(1) > mesh.zMax() + tinySingle || srcCrds(1) < mesh.zMin() - tinySingle) return false;
