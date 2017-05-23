@@ -7,6 +7,7 @@
 #include "SpectralConstants.h"
 #include "Geometric3D.h"
 #include "XMath.h"
+#include "Geodesy.h"
 #include "PreloopFFTW.h"
 
 Relabelling::Relabelling(const Quad *quad):
@@ -155,7 +156,7 @@ void Relabelling::formGradientUndulation() {
             
             // rotate s-phi-z to RTZ
             const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mMyQuad->isAxial());
-            double theta = XMath::theta(mMyQuad->mapping(xieta));
+            double theta = Geodesy::theta(mMyQuad->mapping(xieta));
             mStiff_dZdZ.col(ipnt) =  drdz * cos(theta) + drds * sin(theta);
             mStiff_dZdR.col(ipnt) = -drdz * sin(theta) + drds * cos(theta);
         }
