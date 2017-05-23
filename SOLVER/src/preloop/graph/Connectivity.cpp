@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <map>
 
-#include <XTimer.h>
+#include <MultilevelTimer.h>
 
 std::array<std::vector<IRow2>, 4> Connectivity::sNodeIJPol;
 std::array<std::vector<IRow2>, 4> Connectivity::sEdgeIJPol;
@@ -92,26 +92,26 @@ void Connectivity::decompose(const DecomposeOption &option,
     int &nGllLocal, std::vector<IMatPP> &elemToGllLocal, 
     MessagingInfo &msg, IColX &procMask) const {
     // domain decomposition
-    XTimer::begin("Metis Part", 3);
+    MultilevelTimer::begin("Metis Part", 3);
     IColX elemToProc;
     DualGraph::decompose(mConnectivity, option, XMPI::nproc(), elemToProc);
-    XTimer::end("Metis Part", 3);
+    MultilevelTimer::end("Metis Part", 3);
     
     // global element-gll mapping
     // neighbourhood with ncommon = 1 (NOT 2)
     // NOTE: Though we decompose with ncommon = 2, metis may still (but rarely) yields 
     //       a decomposition where two processors only share one single point. 
     //       This could happen when a large nproc is used on a relatively small mesh.
-    XTimer::begin("global element-gll", 3);
+    MultilevelTimer::begin("global element-gll", 3);
     int nElemGlobal = size();
     int nGllGlobal = 0;
     std::vector<IMatPP> elemToGllGlobal;
     std::vector<IColX> neighbours;
     formElemToGLL(nGllGlobal, elemToGllGlobal, neighbours);
-    XTimer::end("global element-gll", 3);
+    MultilevelTimer::end("global element-gll", 3);
     
     // map of to-be-communicated global gll points 
-    XTimer::begin("to-be-communicated global", 3);
+    MultilevelTimer::begin("to-be-communicated global", 3);
     // key: proc_id
     // value: map<global_gll, array_of_3(elem_id, ipol, jpol)>
     std::map<int, std::map<int, std::array<int, 3>>> gllCommGlb;
@@ -156,10 +156,10 @@ void Connectivity::decompose(const DecomposeOption &option,
                 throw std::runtime_error("Connectivity::decompose || Domain decomposition failed.");
         }
     }
-    XTimer::end("to-be-communicated global", 3);
+    MultilevelTimer::end("to-be-communicated global", 3);
     
     // global-to-local element map and local mask
-    XTimer::begin("global-to-local element", 3);
+    MultilevelTimer::begin("global-to-local element", 3);
     IColX elemGlbToLoc = IColX::Constant(nElemGlobal, -1);
     procMask = IColX::Zero(nElemGlobal);
     int nElemLocal = 0;
@@ -169,15 +169,15 @@ void Connectivity::decompose(const DecomposeOption &option,
             procMask(ielem) = 1;
         }
     } 
-    XTimer::end("global-to-local element", 3);
+    MultilevelTimer::end("global-to-local element", 3);
     
     // local element-gll mapping
-    XTimer::begin("local element-gll", 3);
+    MultilevelTimer::begin("local element-gll", 3);
     Connectivity(*this, procMask).formElemToGLL(nGllLocal, elemToGllLocal, neighbours);
-    XTimer::end("local element-gll", 3);
+    MultilevelTimer::end("local element-gll", 3);
     
     // form local messaging
-    XTimer::begin("local messaging", 3);
+    MultilevelTimer::begin("local messaging", 3);
     msg.mIProcComm.clear();
     msg.mNLocalPoints.clear();
     msg.mILocalPoints.clear();
@@ -199,7 +199,7 @@ void Connectivity::decompose(const DecomposeOption &option,
     MPI_Request req;
     msg.mReqSend = std::vector<MPI_Request>(msg.mNProcComm, req);
     msg.mReqRecv = std::vector<MPI_Request>(msg.mNProcComm, req);
-    XTimer::end("local messaging", 3);
+    MultilevelTimer::end("local messaging", 3);
 }
 
 void Connectivity::get_shared_DOF_quad(const IRow4 &connectivity1, const IRow4 &connectivity2, 
