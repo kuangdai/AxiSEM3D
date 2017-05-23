@@ -5,13 +5,6 @@
 #include "Acoustic1D.h"
 #include "FluidElement.h"
 
-Acoustic1D::Acoustic1D(const RDMatXN &KFluid) {
-    for (int ipol = 0; ipol < nPntEdge; ipol++) {
-        mKStruct.block(ipol, 0, 1, nPntEdge) 
-            = KFluid.block(0, nPntEdge * ipol, 1, nPntEdge).cast<Real>();
-    }
-}
-
 void Acoustic1D::strainToStress(FluidResponse &response) const {
     for (int alpha = 0; alpha <= response.mNu; alpha++) {
         const ar3_CMatPP &strain_alpha = response.mStrain[alpha];

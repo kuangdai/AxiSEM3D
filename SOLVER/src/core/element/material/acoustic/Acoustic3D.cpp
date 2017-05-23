@@ -6,10 +6,6 @@
 #include "FluidElement.h"
 #include "SolverFFTW_N3.h"
 
-Acoustic3D::Acoustic3D(const RDMatXN &KFluid) {
-    mKFlat = KFluid.cast<Real>();
-}
-
 void Acoustic3D::strainToStress(FluidResponse &response) const {
     int Nr = response.mNr;
     const RMatXN3 &strain = SolverFFTW_N3::getC2R_RMat(Nr);

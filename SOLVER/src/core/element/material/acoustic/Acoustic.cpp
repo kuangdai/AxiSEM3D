@@ -7,9 +7,14 @@
 
 Acoustic *Acoustic::createAcoustic(const RDMatXN &KFluid, bool elem1D) {
     if (elem1D) {
-        return new Acoustic1D(KFluid);
+        RMatPP kstruct;
+        for (int ipol = 0; ipol < nPntEdge; ipol++) {
+            kstruct.block(ipol, 0, 1, nPntEdge) = 
+            KFluid.block(0, nPntEdge * ipol, 1, nPntEdge).cast<Real>();
+        }
+        return new Acoustic1D(kstruct);
     } else {
-        return new Acoustic3D(KFluid);
+        return new Acoustic3D(KFluid.cast<Real>());
     }
 }
 

@@ -17,6 +17,8 @@ public:
     
     // verbose
     virtual std::string verbose() const = 0;
+    
+    // 1D or Fourier space
     virtual bool is1D() const = 0;
 
     // check compatibility
