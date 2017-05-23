@@ -7,7 +7,6 @@
 #include "Parameters.h"
 #include "XMPI.h"
 #include <boost/algorithm/string.hpp>
-#include "XMath.h"
 #include "NrFieldEnhanceCircle.h"
 
 NrFieldEnhance::NrFieldEnhance(int ref, bool decrease):
@@ -62,13 +61,13 @@ void NrFieldEnhance::buildInparam(std::vector<NrFieldEnhance *> &nrf,
             std::string strref;
             int ref;
             bool decrease;
-            XMath::castValue(r, params[0], source); r *= 1e3;
-            XMath::castValue(theta, params[1], source); theta *= degree;
-            XMath::castValue(diameter, params[2], source); diameter *= 1e3;
-            XMath::castValue(hwhm, params[3], source); hwhm *= 1e3;
-            XMath::castValue(value, params[4], source); 
-            XMath::castValue(strref, params[5], source); 
-            XMath::castValue(decrease, params[6], source);
+            Parameters::castValue(r, params[0], source); r *= 1e3;
+            Parameters::castValue(theta, params[1], source); theta *= degree;
+            Parameters::castValue(diameter, params[2], source); diameter *= 1e3;
+            Parameters::castValue(hwhm, params[3], source); hwhm *= 1e3;
+            Parameters::castValue(value, params[4], source); 
+            Parameters::castValue(strref, params[5], source); 
+            Parameters::castValue(decrease, params[6], source);
             if (boost::iequals(strref, "abs") || boost::iequals(strref, "absolute")) {
                 value = value * 2 + 1;
                 m = new NrFieldEnhanceCircle(0, decrease, r, theta, diameter, hwhm, value);
