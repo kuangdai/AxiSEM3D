@@ -19,10 +19,4 @@ public:
 
     // STEP 2.3: strain ==> R
     virtual void updateMemoryVariables(const vec_ar6_CMatPP &strain) = 0;
-    
-    // creator
-    static Attenuation1D *createAttenuation1D(
-        int nsls, const RDColX &alpha, const RDColX &beta, const RDColX &gamma,
-        const RDMatXN &dkappa, const RDMatXN &dmu, bool doKappa, 
-        bool elem1D, bool cg4) {return 0;};
 };
