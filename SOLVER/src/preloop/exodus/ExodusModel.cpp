@@ -10,15 +10,16 @@
 #include <sstream>
 #include <iomanip>
 #include <cmath>
+#include <cfloat>
 
 #include "XMPI.h"
 #include "Mapping.h"
 #include <boost/algorithm/string.hpp>
 
 #include "AttBuilder.h"
-#include "XMath.h"
+#include "Geodesy.h"
 
-#include "XTimer.h"
+#include "MultilevelTimer.h"
 
 // extern "C" {
 #include "hdf5.h"
@@ -34,18 +35,18 @@ ExodusModel::ExodusModel(const std::string &fileName): mExodusFileName(fileName)
 }
 
 void ExodusModel::initialize() {
-    XTimer::begin("Read Exodus", 1);
+    MultilevelTimer::begin("Read Exodus", 1);
     if (XMPI::root()) readRawData();
-    XTimer::end("Read Exodus", 1);
+    MultilevelTimer::end("Read Exodus", 1);
     
-    XTimer::begin("Bcast Exodus", 1);
+    MultilevelTimer::begin("Bcast Exodus", 1);
     bcastRawData();
-    XTimer::end("Bcast Exodus", 1);
+    MultilevelTimer::end("Bcast Exodus", 1);
     
-    XTimer::begin("Process Exodus", 1);
+    MultilevelTimer::begin("Process Exodus", 1);
     formStructured();
     finishReading();
-    XTimer::end("Process Exodus", 1);
+    MultilevelTimer::end("Process Exodus", 1);
 }
 
 void ExodusModel::readRawData() {
@@ -289,9 +290,9 @@ void ExodusModel::formStructured() {
 }
 
 void ExodusModel::finishReading() {
-    XTimer::begin("Process Exodus DistTol", 2);
+    MultilevelTimer::begin("Process Exodus DistTol", 2);
     // distance tolerance
-    double distTol = 1e100;
+    double distTol = DBL_MAX;
     for (int i = 0; i < mNumQuads; i++) {
         if (i % XMPI::nproc() != XMPI::rank()) continue;
         double s0 = mNodalS[mConnectivity[i][0]];
@@ -309,20 +310,20 @@ void ExodusModel::finishReading() {
         distTol = std::min({dist0, dist1, dist2, dist3, distTol});
     }
     mDistTolerance = XMPI::min(distTol);
-    XTimer::end("Process Exodus DistTol", 2);
+    MultilevelTimer::end("Process Exodus DistTol", 2);
     
     // surface radius
-    XTimer::begin("Process Exodus ROuter", 2);
+    MultilevelTimer::begin("Process Exodus ROuter", 2);
     double router = -1.;
     for (int i = 0; i < mNumNodes; i++) {
         if (i % XMPI::nproc() != XMPI::rank()) continue;
         router = std::max(router, mNodalZ[i]);
     } 
     mROuter = XMPI::max(router);
-    XTimer::end("Process Exodus ROuter", 2);
+    MultilevelTimer::end("Process Exodus ROuter", 2);
         
     // average gll spacing
-    XTimer::begin("Process Exodus GLL-Spacing", 2);
+    MultilevelTimer::begin("Process Exodus GLL-Spacing", 2);
     std::vector<std::vector<int>> refElem(mNumNodes, std::vector<int>());
     for (int i = 0; i < mNumQuads; i++) {
         refElem[mConnectivity[i][0]].push_back(i);
@@ -351,10 +352,10 @@ void ExodusModel::finishReading() {
         }
     } 
     XMPI::sumVector(mAveGLLSpacing);
-    XTimer::end("Process Exodus GLL-Spacing", 2);
+    MultilevelTimer::end("Process Exodus GLL-Spacing", 2);
     
     // rotate nodes of axial elements such that side 3 is on axis
-    XTimer::begin("Process Exodus Axis", 2);
+    MultilevelTimer::begin("Process Exodus Axis", 2);
     for (int axialQuad = 0; axialQuad < mNumQuads; axialQuad++) {
         // loop over t0
         int axialSide = getSideAxis(axialQuad);
@@ -393,10 +394,10 @@ void ExodusModel::finishReading() {
         // done
         // mSideSets.at(mSSNameAxis)[axialQuad] = 3;
     }
-    XTimer::end("Process Exodus Axis", 2);
+    MultilevelTimer::end("Process Exodus Axis", 2);
     
     // find elements that are not axial but neighboring axial elements
-    XTimer::begin("Process Exodus Vicinal", 2);
+    MultilevelTimer::begin("Process Exodus Vicinal", 2);
     std::array<int, 4> data = {-1, -1, -1, -1};
     mVicinalAxis = std::vector<std::array<int, 4>>(mNumQuads, data);
     // first find near-axis nodes and axial quads
@@ -419,10 +420,10 @@ void ExodusModel::finishReading() {
             if (nodeNearAxis[nTag]) mVicinalAxis[iquad][j] = j;
         }
     }
-    XTimer::end("Process Exodus Vicinal", 2);
+    MultilevelTimer::end("Process Exodus Vicinal", 2);
 
     // check if ocean presents in mesh
-    XTimer::begin("Process Exodus Check Ocean", 2);
+    MultilevelTimer::begin("Process Exodus Check Ocean", 2);
     std::string strVs = isIsotropic() ? "VS_0" : "VSV_0";
     for (int iQuad = 0; iQuad < mNumQuads; iQuad++) {
         if (iQuad % XMPI::nproc() != XMPI::rank()) continue;
@@ -432,7 +433,7 @@ void ExodusModel::finishReading() {
             "Ocean is detected in mesh. By far, realistic ocean is not implemented in AxiSEM3D. ||"
             "Use non-ocean models in the Mesher and add ocean load in inparam.basic.");
     }
-    XTimer::end("Process Exodus Check Ocean", 2);
+    MultilevelTimer::end("Process Exodus Check Ocean", 2);
 }
 
 std::string ExodusModel::verbose() const {
@@ -533,11 +534,11 @@ void ExodusModel::buildInparam(ExodusModel *&exModel, const Parameters &par,
     std::string emode = par.getValue<std::string>("MODEL_3D_ELLIPTICITY_MODE");
     if (boost::iequals(emode, "off")) {
         // no ellipticity
-        XMath::setEllipticity(0., exModel->mROuter, std::vector<double>(), std::vector<double>());
+        Geodesy::setup(exModel->mROuter, 0., std::vector<double>(), std::vector<double>());
     } else {
         double inv_f = par.getValue<double>("MODEL_3D_ELLIPTICITY_INVF");
         if (inv_f <= 0.) throw std::runtime_error("ExodusModel::buildInparam || Invalid flattening."); 
-        XMath::setEllipticity(1. / inv_f, exModel->mROuter, exModel->mEllipKnots, exModel->mEllipCoeffs);
+        Geodesy::setup(exModel->mROuter, 1. / inv_f, exModel->mEllipKnots, exModel->mEllipCoeffs);
     }
 }
 
