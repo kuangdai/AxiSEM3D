@@ -9,7 +9,7 @@
 
 class PRT_1D: public PRT {
 public:
-    PRT_1D(const RDMatXN4 &X);
+    PRT_1D(const std::array<RMatPP, 4> &X): mXStruct(X) {};
     ~PRT_1D() {};
     
     void sphericalToUndulated(FluidResponse &response) const;

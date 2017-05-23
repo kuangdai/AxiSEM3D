@@ -9,7 +9,7 @@
 
 class PRT_3D: public PRT {
 public:
-    PRT_3D(const RDMatXN4 &X);
+    PRT_3D(const RMatXN4 &X);
     ~PRT_3D() {};
     
     void sphericalToUndulated(FluidResponse &response) const;

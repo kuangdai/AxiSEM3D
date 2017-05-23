@@ -6,15 +6,6 @@
 #include "SolidElement.h"
 #include "FluidElement.h"
 
-PRT_1D::PRT_1D(const RDMatXN4 &X) {
-    for (int idim = 0; idim < 4; idim++) {
-        for (int ipol = 0; ipol < nPntEdge; ipol++) {
-            mXStruct[idim].block(ipol, 0, 1, nPntEdge) 
-                = X.block(0, nPE * idim + nPntEdge * ipol, 1, nPntEdge).cast<Real>();
-        }
-    }
-}
-
 void PRT_1D::sphericalToUndulated(FluidResponse &response) const {
     for (int alpha = 0; alpha <= response.mNu; alpha++) {
         ar3_CMatPP &strain = response.mStrain[alpha];

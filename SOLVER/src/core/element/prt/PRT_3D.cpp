@@ -10,12 +10,12 @@
 #include "SolverFFTW_N6.h"
 #include "SolverFFTW_N9.h"
 
-PRT_3D::PRT_3D(const RDMatXN4 &X) {
+PRT_3D::PRT_3D(const RMatXN4 &X) {
     int Nr = X.rows();
-    mXFlat0 = X.block(0, 0 * nPE, Nr, nPE).cast<Real>();
-    mXFlat1 = X.block(0, 1 * nPE, Nr, nPE).cast<Real>();
-    mXFlat2 = X.block(0, 2 * nPE, Nr, nPE).cast<Real>();
-    mXFlat3 = X.block(0, 3 * nPE, Nr, nPE).cast<Real>();
+    mXFlat0 = X.block(0, 0 * nPE, Nr, nPE);
+    mXFlat1 = X.block(0, 1 * nPE, Nr, nPE);
+    mXFlat2 = X.block(0, 2 * nPE, Nr, nPE);
+    mXFlat3 = X.block(0, 3 * nPE, Nr, nPE);
 }
 
 void PRT_3D::sphericalToUndulated(FluidResponse &response) const {
