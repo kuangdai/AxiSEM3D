@@ -9,7 +9,7 @@
 
 #include "SlicePlot.h"
 
-#include "XMath.h"
+#include "Geodesy.h"
 #include "XMPI.h"
 #include "Mesh.h"
 #include "Parameters.h"
@@ -46,9 +46,9 @@ mMesh(mesh) {
             mLon = boost::lexical_cast<double>(strs[3]);
             RDCol3 rtpG;
             rtpG(0) = 1.;
-            rtpG(1) = XMath::lat2Theta(mLat, 0.);
-            rtpG(2) = XMath::lon2Phi(mLon);
-            const RDCol3 &rtpS = XMath::rotateGlob2Src(rtpG, mMesh->mSrcLat, mMesh->mSrcLon, mMesh->mSrcDep);
+            rtpG(1) = Geodesy::lat2Theta_d(mLat, 0.);
+            rtpG(2) = Geodesy::lon2Phi(mLon);
+            const RDCol3 &rtpS = Geodesy::rotateGlob2Src(rtpG, mMesh->mSrcLat, mMesh->mSrcLon, mMesh->mSrcDep);
             mPhi = rtpS(2);
         }
         
