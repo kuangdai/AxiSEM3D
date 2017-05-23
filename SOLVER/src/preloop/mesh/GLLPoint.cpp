@@ -12,6 +12,7 @@
 #include "SFCoupling3D.h"
 #include "Domain.h"
 #include "XMath.h"
+#include "Geodesy.h"
 
 #include "MassOcean1D.h"
 #include "MassOcean3D.h"
@@ -54,7 +55,7 @@ int GLLPoint::release(Domain &domain) const {
         Mass *mass;
         if (mOceanDepth.array().abs().maxCoeff() > tinyDouble) {
             if (XMath::equalRows(mMassSolid) && XMath::equalRows(mOceanDepth) && XMath::equalRows(mSurfNormal)) {
-                double theta = XMath::theta(mCoords);
+                double theta = Geodesy::theta(mCoords);
                 double mass_solid = mMassSolid(0);
                 double mass_ocean = OceanLoad3D::mWaterDensity * mOceanDepth(0) * mSurfNormal.row(0).norm();
                 mass = new MassOcean1D(mass_solid, mass_ocean, theta);
