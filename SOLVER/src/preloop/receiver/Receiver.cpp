@@ -4,6 +4,7 @@
 
 #include "Receiver.h"
 #include "XMath.h"
+#include "Geodesy.h"
 #include "SeismometerRTZ.h"
 #include "SeismometerENZ.h"
 #include "RecorderAscii.h"
@@ -26,20 +27,20 @@ mName(name), mNetwork(network), mDepth(depth) {
     RDCol3 rtpG, rtpS;
     if (geographic) {
         rtpG(0) = 1.;
-        rtpG(1) = XMath::lat2Theta(theta_lat, mDepth);
-        rtpG(2) = XMath::lon2Phi(phi_lon);
-        rtpS = XMath::rotateGlob2Src(rtpG, srcLat, srcLon, srcDep);
+        rtpG(1) = Geodesy::lat2Theta_d(theta_lat, mDepth);
+        rtpG(2) = Geodesy::lon2Phi(phi_lon);
+        rtpS = Geodesy::rotateGlob2Src(rtpG, srcLat, srcLon, srcDep);
     } else {
         rtpS(0) = 1.;
         rtpS(1) = theta_lat * degree;
         rtpS(2) = phi_lon * degree;
-        rtpG = XMath::rotateSrc2Glob(rtpS, srcLat, srcLon, srcDep);
+        rtpG = Geodesy::rotateSrc2Glob(rtpS, srcLat, srcLon, srcDep);
     }
     mTheta = rtpS(1);
     mPhi = rtpS(2);
-    mLat = XMath::theta2Lat(rtpG(1), mDepth);
-    mLon = XMath::phi2Lon(rtpG(2));
-    mBackAzimuth = XMath::backAzimuth(srcLat, srcLon, srcDep, mLat, mLon, mDepth);
+    mLat = Geodesy::theta2Lat_d(rtpG(1), mDepth);
+    mLon = Geodesy::phi2Lon(rtpG(2));
+    mBackAzimuth = Geodesy::backAzimuth(srcLat, srcLon, srcDep, mLat, mLon, mDepth);
     // // test
     // XMPI::cout << "6371_" << round(mTheta / degree) << "_" << round(mPhi / degree) << " TEST "; 
     // XMPI::cout << mLat << " " << mLon << " " << " 0.0 " << mDepth << XMPI::endl;
