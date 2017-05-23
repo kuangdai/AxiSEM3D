@@ -84,5 +84,5 @@ void H5Reader::getIntData(int fid, const char *key, int &num, int &len, int *&da
 
 void H5Reader::hdf5Error(const int retval, const std::string &func_name) {
     if (retval < 0) throw std::runtime_error("H5Reader::hdf5Error || "
-        "Error in exodus function: " + func_name);
+        "Error in hdf5 function: " + func_name);
 }
