@@ -3,7 +3,7 @@
 // main of AxiSEM3D
 
 #include "axisem.h"
-#include "XTimer.h"
+#include "MultilevelTimer.h"
 
 #include "XMPI.h"
 #include "eigenc.h"
@@ -28,73 +28,73 @@ int axisem_main(int argc, char *argv[]) {
         Parameters::buildInparam(pl.mParameters, verbose);
         
         //////// preloop timer
-        XTimer::initialize(Parameters::sOutputDirectory + "/develop/preloop_timer.txt", 4);
-        if (pl.mParameters->getValue<bool>("DEVELOP_DIAGNOSE_PRELOOP")) XTimer::enable();
+        MultilevelTimer::initialize(Parameters::sOutputDirectory + "/develop/preloop_timer.txt", 4);
+        if (pl.mParameters->getValue<bool>("DEVELOP_DIAGNOSE_PRELOOP")) MultilevelTimer::enable();
         
         //////// exodus model and attenuation parameters 
-        XTimer::begin("Exodus", 0);
+        MultilevelTimer::begin("Exodus", 0);
         ExodusModel::buildInparam(pl.mExodusModel, *(pl.mParameters), pl.mAttParameters, verbose);
-        XTimer::end("Exodus", 0);
+        MultilevelTimer::end("Exodus", 0);
         
         //////// fourier field 
-        XTimer::begin("NrField", 0);
+        MultilevelTimer::begin("NrField", 0);
         NrField::buildInparam(pl.mNrField, *(pl.mParameters), pl.mExodusModel->getROuter(), verbose);
-        XTimer::end("NrField", 0);
+        MultilevelTimer::end("NrField", 0);
         
         //////// source
-        XTimer::begin("Source", 0);
+        MultilevelTimer::begin("Source", 0);
         Source::buildInparam(pl.mSource, *(pl.mParameters), verbose);
         double srcLat = pl.mSource->getLatitude();
         double srcLon = pl.mSource->getLongitude();
         double srcDep = pl.mSource->getDepth();
-        XTimer::end("Source", 0);
+        MultilevelTimer::end("Source", 0);
         
         //////// 3D models 
-        XTimer::begin("3D Models", 0);
+        MultilevelTimer::begin("3D Models", 0);
         Volumetric3D::buildInparam(pl.mVolumetric3D, *(pl.mParameters), pl.mExodusModel, 
             srcLat, srcLon, srcDep, verbose);
         Geometric3D::buildInparam(pl.mGeometric3D, *(pl.mParameters), verbose);
         OceanLoad3D::buildInparam(pl.mOceanLoad3D, *(pl.mParameters), verbose);
-        XTimer::end("3D Models", 0);
+        MultilevelTimer::end("3D Models", 0);
         
         //////// mesh, phase 1
         // define mesh
-        XTimer::begin("Mesh Definition", 0);
+        MultilevelTimer::begin("Mesh Definition", 0);
         pl.mMesh = new Mesh(pl.mExodusModel, pl.mNrField, srcLat, srcLon, srcDep, *(pl.mParameters));
         pl.mMesh->setVolumetric3D(pl.mVolumetric3D);
         pl.mMesh->setGeometric3D(pl.mGeometric3D);
         pl.mMesh->setOceanLoad3D(pl.mOceanLoad3D);
-        XTimer::end("Mesh Definition", 0);
+        MultilevelTimer::end("Mesh Definition", 0);
         
         // build unweighted local mesh 
-        XTimer::begin("Unweighted Mesh", 0);
+        MultilevelTimer::begin("Unweighted Mesh", 0);
         pl.mMesh->buildUnweighted();
-        XTimer::end("Unweighted Mesh", 0);
+        MultilevelTimer::end("Unweighted Mesh", 0);
         
         //////// static variables in solver, mainly FFTW
-        XTimer::begin("Initialize FFTW", 0);
+        MultilevelTimer::begin("Initialize FFTW", 0);
         initializeSolverStatic(pl.mMesh->getMaxNr()); 
-        XTimer::end("Initialize FFTW", 0);
+        MultilevelTimer::end("Initialize FFTW", 0);
         
         //////// dt
-        XTimer::begin("DT", 0);
+        MultilevelTimer::begin("DT", 0);
         double dt = pl.mParameters->getValue<double>("TIME_DELTA_T");
         if (dt < tinyDouble) dt = pl.mMesh->getDeltaT();
         double dt_fact = pl.mParameters->getValue<double>("TIME_DELTA_T_FACTOR");
         if (dt_fact < tinyDouble) dt_fact = 1.0;
         dt *= dt_fact;
-        XTimer::end("DT", 0);
+        MultilevelTimer::end("DT", 0);
         
         //////// attenuation
-        XTimer::begin("Attenuation", 0);
+        MultilevelTimer::begin("Attenuation", 0);
         AttBuilder::buildInparam(pl.mAttBuilder, *(pl.mParameters), *(pl.mAttParameters), dt, verbose);
-        XTimer::end("Attenuation", 0);
+        MultilevelTimer::end("Attenuation", 0);
         
         //////// mesh, phase 2
-        XTimer::begin("Weighted Mesh", 0);
+        MultilevelTimer::begin("Weighted Mesh", 0);
         pl.mMesh->setAttBuilder(pl.mAttBuilder);
         pl.mMesh->buildWeighted();
-        XTimer::end("Weighted Mesh", 0);
+        MultilevelTimer::end("Weighted Mesh", 0);
         
         //////// mesh test 
         // test positive-definiteness and self-adjointness of stiffness and mass matrices
@@ -104,47 +104,47 @@ int axisem_main(int argc, char *argv[]) {
         // exit(0);
         
         //////// source time function 
-        XTimer::begin("Source Time Function", 0);
+        MultilevelTimer::begin("Source Time Function", 0);
         STF::buildInparam(pl.mSTF, *(pl.mParameters), dt, verbose);
-        XTimer::end("Source Time Function", 0);
+        MultilevelTimer::end("Source Time Function", 0);
         
         //////// receivers
-        XTimer::begin("Receivers", 0);
+        MultilevelTimer::begin("Receivers", 0);
         ReceiverCollection::buildInparam(pl.mReceivers, 
             *(pl.mParameters), srcLat, srcLon, srcDep, verbose);
-        XTimer::end("Receivers", 0);    
+        MultilevelTimer::end("Receivers", 0);    
         
         //////// computational domain
-        XTimer::begin("Computationalion Domain", 0);
+        MultilevelTimer::begin("Computationalion Domain", 0);
         sv.mDomain = new Domain();
         
         // release mesh
-        XTimer::begin("Release Mesh", 1);
+        MultilevelTimer::begin("Release Mesh", 1);
         pl.mMesh->release(*(sv.mDomain));
-        XTimer::end("Release Mesh", 1);
+        MultilevelTimer::end("Release Mesh", 1);
         
         // release source 
-        XTimer::begin("Release Source", 1);
+        MultilevelTimer::begin("Release Source", 1);
         pl.mSource->release(*(sv.mDomain), *(pl.mMesh));
-        XTimer::end("Release Source", 1);
+        MultilevelTimer::end("Release Source", 1);
         
         // release stf 
-        XTimer::begin("Release STF", 1);
+        MultilevelTimer::begin("Release STF", 1);
         pl.mSTF->release(*(sv.mDomain));
-        XTimer::end("Release STF", 1);
+        MultilevelTimer::end("Release STF", 1);
         
         // release receivers
-        XTimer::begin("Release Receivers", 1);
+        MultilevelTimer::begin("Release Receivers", 1);
         pl.mReceivers->release(*(sv.mDomain), *(pl.mMesh));
-        XTimer::end("Release Receivers", 1);
+        MultilevelTimer::end("Release Receivers", 1);
         
         // verbose domain 
-        XTimer::begin("Verbose", 1);
+        MultilevelTimer::begin("Verbose", 1);
         if (verbose) XMPI::cout << sv.mDomain->verbose();
-        XTimer::end("Verbose", 1);
-        XTimer::end("Computationalion Domain", 0);
+        MultilevelTimer::end("Verbose", 1);
+        MultilevelTimer::end("Computationalion Domain", 0);
         
-        XTimer::finalize();
+        MultilevelTimer::finalize();
         
         //////////////////////// PREPROCESS DONE ////////////////////////
         
