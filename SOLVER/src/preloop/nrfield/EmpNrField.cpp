@@ -4,7 +4,7 @@
 
 #include "EmpNrField.h"
 #include "NrFieldEnhance.h"
-#include "XMath.h"
+#include "Geodesy.h"
 #include <sstream>
 
 EmpNrField::EmpNrField(bool useLucky, int nu_ref, int nu_min, 
@@ -24,7 +24,7 @@ int EmpNrField::getNrAtPoint(const RDCol2 &coords) const {
     double s = coords(0);
     double z = coords(1);
     double r, theta;
-    XMath::rtheta(coords, r, theta);
+    Geodesy::rtheta(coords, r, theta);
     double d = mROuter - r;
 
     // reference value
