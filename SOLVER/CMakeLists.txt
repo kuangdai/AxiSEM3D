@@ -88,6 +88,13 @@ endif ()
 find_package(HDF5 COMPONENTS C REQUIRED)
 include_directories(${HDF5_INCLUDE_DIRS})
 
+# NETCDF
+if (NETCDF_ROOT)
+    set(ENV{NETCDF_ROOT} ${NETCDF_ROOT})
+endif ()
+find_package(NETCDF REQUIRED)
+include_directories(${NETCDF_INCLUDE_DIRS})
+
 ############# local includes #############
 include_directories(
     src
@@ -100,16 +107,18 @@ include_directories(
     src/core/point/solid_fluid
 
     src/core/element
+    src/core/element/crd
+    src/core/element/fft
     src/core/element/grad
+    src/core/element/prt
 
-    src/core/material/attenuation
-    src/core/material/attenuation/1D
-    src/core/material/attenuation/3D
-    src/core/material/elastic
-    src/core/material/elastic/1D
-    src/core/material/elastic/3D
-    src/core/material/elastic/3X
-    src/core/material/acoustic
+    src/core/element/material/attenuation
+    src/core/element/material/attenuation/1D
+    src/core/element/material/attenuation/3D
+    src/core/element/material/elastic
+    src/core/element/material/elastic/1D
+    src/core/element/material/elastic/3D
+    src/core/element/material/acoustic
 
     src/core/source
     src/core/receiver
@@ -121,6 +130,7 @@ include_directories(
     ############################## preloop ##############################
     src/preloop
     src/preloop/utilities
+    src/preloop/utilities/netcdf
     src/preloop/spectral
     src/preloop/spectral/mapping
 
@@ -147,7 +157,7 @@ include_directories(
     src/3d_model/3d_geometric
     src/3d_model/3d_geometric/ellipticity
     src/3d_model/3d_geometric/crust1
-    src/3d_model/3d_geometric/internal
+    src/3d_model/3d_geometric/EMC
     src/3d_model/3d_oceanload
     src/3d_model/3d_oceanload/const
     src/3d_model/3d_oceanload/crust1
@@ -180,29 +190,31 @@ add_executable(
     src/core/point/solid_fluid/SFCoupling1D.cpp
     src/core/point/solid_fluid/SFCoupling3D.cpp
 
-    src/core/material/acoustic/Acoustic1D.cpp
-    src/core/material/acoustic/Acoustic3X.cpp
+    src/core/element/material/acoustic/Acoustic.cpp
+    src/core/element/material/acoustic/Acoustic1D.cpp
+    src/core/element/material/acoustic/Acoustic3D.cpp
 
-    src/core/material/attenuation/1D/Attenuation1D.cpp
-    src/core/material/attenuation/1D/Attenuation1D_Full.cpp
-    src/core/material/attenuation/1D/Attenuation1D_CG4.cpp
-    src/core/material/attenuation/3D/Attenuation3D.cpp
-    src/core/material/attenuation/3D/Attenuation3D_Full.cpp
-    src/core/material/attenuation/3D/Attenuation3D_CG4.cpp
+    src/core/element/material/attenuation/1D/Attenuation1D_Full.cpp
+    src/core/element/material/attenuation/1D/Attenuation1D_CG4.cpp
+    src/core/element/material/attenuation/3D/Attenuation3D_Full.cpp
+    src/core/element/material/attenuation/3D/Attenuation3D_CG4.cpp
 
-    src/core/material/elastic/1D/Elastic1D.cpp
-    src/core/material/elastic/1D/Isotropic1D.cpp
-    src/core/material/elastic/1D/TransverselyIsotropic1D.cpp
-    src/core/material/elastic/3D/Elastic3D.cpp
-    src/core/material/elastic/3D/Isotropic3D.cpp
-    src/core/material/elastic/3D/TransverselyIsotropic3D.cpp
-    src/core/material/elastic/3X/Isotropic3X.cpp
-    src/core/material/elastic/3X/TransverselyIsotropic3X.cpp
+    src/core/element/material/elastic/1D/Elastic1D.cpp
+    src/core/element/material/elastic/1D/Isotropic1D.cpp
+    src/core/element/material/elastic/1D/TransverselyIsotropic1D.cpp
+    src/core/element/material/elastic/3D/Elastic3D.cpp
+    src/core/element/material/elastic/3D/Isotropic3D.cpp
+    src/core/element/material/elastic/3D/TransverselyIsotropic3D.cpp
 
     src/core/element/grad/Gradient.cpp
-    src/core/element/grad/GradientVoigt.cpp
-    src/core/element/grad/GradientAxial.cpp
-    src/core/element/grad/GradientAxialVoigt.cpp
+    
+    src/core/element/crd/CrdTransTIsoSolid.cpp
+    src/core/element/crd/CrdTransTIsoFluid.cpp
+    src/core/element/fft/FieldFFT.cpp
+    src/core/element/prt/PRT.cpp
+    src/core/element/prt/PRT_1D.cpp
+    src/core/element/prt/PRT_3D.cpp
+    
     src/core/element/Element.cpp
     src/core/element/SolidElement.cpp
     src/core/element/FluidElement.cpp
@@ -220,11 +232,14 @@ add_executable(
 
     ############################## preloop ##############################
     src/preloop/utilities/XMath.cpp
+    src/preloop/utilities/Geodesy.cpp
     src/preloop/utilities/XMPI.cpp
     src/preloop/utilities/Parameters.cpp
     src/preloop/utilities/PreloopGradient.cpp
     src/preloop/utilities/PreloopFFTW.cpp
-    src/preloop/utilities/XTimer.cpp
+    src/preloop/utilities/MultilevelTimer.cpp
+    src/preloop/utilities/netcdf/NetCDF_Reader.cpp
+    src/preloop/utilities/netcdf/NetCDF_ReaderAscii.cpp
 
     src/preloop/spectral/SpectralConstants.cpp
     src/preloop/spectral/mapping/Mapping.cpp
@@ -281,7 +296,7 @@ add_executable(
     src/3d_model/3d_geometric/Geometric3D.cpp
     src/3d_model/3d_geometric/ellipticity/Ellipticity.cpp
     src/3d_model/3d_geometric/crust1/Geometric3D_crust1.cpp
-    src/3d_model/3d_geometric/internal/Geometric3D_Internal.cpp
+    src/3d_model/3d_geometric/EMC/Geometric3D_EMC.cpp
 
     src/3d_model/3d_oceanload/OceanLoad3D.cpp
     src/3d_model/3d_oceanload/const/OceanLoad3D_const.cpp
@@ -295,4 +310,5 @@ target_link_libraries(
     ${FFTW_LIBRARIES}
     ${METIS_LIBRARIES}
     ${HDF5_LIBRARIES}
+    ${NETCDF_LIBRARIES}
 )
