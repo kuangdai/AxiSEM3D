@@ -12,13 +12,10 @@ public:
     AttAxiSEM(bool cg4, int nsls, double fmin, double fmax, double fref,
         const RDColX &w, const RDColX &y, double deltat, bool doKappa);
     
-    void computeFactors(double QMu, double QKappa,
+    void computeAttFactors(const RDMatXN &QKp, const RDMatXN &QMu,
         RDColX &alpha, RDColX &beta, RDColX &gamma,
-        double &dKappaFact, double &dMuFact, 
-        double &kappaFactAtt, double &muFactAtt,
-        double &kappaFactNoAtt, double &muFactNoAtt, bool &doKappa) const;
-    
-    bool legacy() const {return false;};
+        RDMatXN &dKpFact, RDMatXN &kpFactAtt, RDMatXN &kpFactNoAtt, 
+        RDMatXN &dMuFact, RDMatXN &muFactAtt, RDMatXN &muFactNoAtt) const;
     bool doKappa() const {return mDoKappa;};
         
 private:

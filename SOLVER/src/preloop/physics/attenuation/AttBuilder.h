@@ -7,9 +7,14 @@
 #include "eigenp.h"
 
 class Parameters;
+class Attenuation1D;
+class Attenuation3D;
+class Quad;
 
+// attenuation parameters from exodus
 struct AttParameters {
-    AttParameters(int nsls, double fmin, double fmax, double fref, RDColX w, RDColX y):
+    AttParameters(int nsls, double fmin, double fmax, double fref, 
+        const RDColX &w, const RDColX &y):
         mNSLS(nsls), mFmin(fmin), mFmax(fmax), mFref(fref), mW(w), mY(y) {};
     int mNSLS;
     double mFmin;
@@ -26,22 +31,24 @@ public:
     
     virtual ~AttBuilder() {};
     
-    virtual void computeFactors(double QMu, double QKappa,
-        RDColX &alpha, RDColX &beta, RDColX &gamma,
-        double &dKappaFact, double &dMuFact, 
-        double &kappaFactAtt, double &muFactAtt,
-        double &kappaFactNoAtt, double &muFactNoAtt, bool &doKappa) const = 0;
-    
-    virtual bool legacy() const = 0;
-    virtual bool doKappa() const = 0;
-            
-    int getNSLS() const {return mNSLS;};
-    bool useCG4() const {return mUseCG4;};
-    
+    Attenuation1D *createAttenuation1D(const RDMatXN &QKp, const RDMatXN &QMu, 
+        RDMatXN &kp, RDMatXN &mu, const Quad *quad) const;
+    Attenuation3D *createAttenuation3D(const RDMatXN &QKp, const RDMatXN &QMu, 
+        RDMatXN &kp, RDMatXN &mu, const Quad *quad) const;
     std::string verbose() const;
-        
+    
     static void buildInparam(AttBuilder *&attBuild, const Parameters &par, 
         const AttParameters &attPar, double dt, int verbose);
+
+protected:    
+    virtual void computeAttFactors(const RDMatXN &QKp, const RDMatXN &QMu,
+        RDColX &alpha, RDColX &beta, RDColX &gamma,
+        RDMatXN &dKpFact, RDMatXN &kpFactAtt, RDMatXN &kpFactNoAtt, 
+        RDMatXN &dMuFact, RDMatXN &muFactAtt, RDMatXN &muFactNoAtt) const = 0;
+    
+    // only the SPECFEM one returns true;    
+    virtual bool legacy() const {return false;};
+    virtual bool doKappa() const = 0;
     
 protected:
     bool mUseCG4;
