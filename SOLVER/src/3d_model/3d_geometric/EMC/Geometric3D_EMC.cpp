@@ -19,20 +19,18 @@ void Geometric3D_EMC::initialize() {
         reader->read2D(mVarName, mGridData);
         reader->close();
         delete reader;
+        if (mGridData.rows() != mGridLat.size() || mGridData.cols() != mGridLon.size()) {
+            throw std::runtime_error("Geometric3D_EMC::initialize || "
+                "Inconsistent data dimensions.");
+        }
+        if (!XMath::sortedAscending(mGridLat) || !XMath::sortedAscending(mGridLon)) {
+            throw std::runtime_error("Geometric3D_EMC::initialize || "
+                "Grid coordinates are not sorted ascendingly.");
+        }
     }
     XMPI::bcastEigen(mGridLat);
     XMPI::bcastEigen(mGridLon);
     XMPI::bcastEigen(mGridData);
-    
-    if (!XMath::sortedAscending(mGridLat)) {
-        throw std::runtime_error("Geometric3D_EMC::initialize || "
-            "Latitudes are not sorted ascending.");
-    }
-    
-    if (!XMath::sortedAscending(mGridLon)) {
-        throw std::runtime_error("Geometric3D_EMC::initialize || "
-            "Longitudes are not sorted ascending.");
-    }
     
     // to SI
     mGridData *= 1e3;
@@ -116,7 +114,7 @@ double Geometric3D_EMC::getDeltaR(double r, double theta, double phi, double rEl
     llat1 = llat0 + 1;
     llon1 = llon0 + 1;
     wlat1 = 1. - wlat0;
-    wlon1 = 1. - wlon1;
+    wlon1 = 1. - wlon0;
     
     double dr = 0.;
     dr += mGridData(llat0, llon0) * wlat0 * wlon0;
