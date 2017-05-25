@@ -8,18 +8,16 @@
 
 class Quad;
 class Geometric3D;
+class PRT;
 
 class Relabelling {
 public:
     
     Relabelling(const Quad *quad);
     
-    void zeroUndulation();
-    bool isZeroStiff() const;
-    bool isZeroMass() const;
-    
     // add deltaR on mass sampling points
-    void addUndulation(const Geometric3D &g3D, double srcLat, double srcLon, double srcDep, double phi2D);
+    void addUndulation(const std::vector<Geometric3D> &g3D, 
+        double srcLat, double srcLon, double srcDep, double phi2D);
     
     // finishUndulation
     void finishUndulation();
@@ -34,6 +32,15 @@ public:
     // solid-fluid
     RDMatX3 getSFNormalRTZ(int ipol, int jpol) const;
     
+    // is undulation zero
+    bool isZero() const;
+    
+    // is undulation 1D
+    bool isPar1D() const;
+    
+    // create PRT pointer
+    PRT *createPRT(bool elem1D) const;
+    
     // deltaR
     const RDMatXN &getDeltaR() const {return mStiff_dZ;};
     
@@ -44,7 +51,7 @@ private:
     // compute gradient of deltaR 
     void formGradientUndulation();
     
-    // form deltaR on stiffness sampling points (based on mass)
+    // form deltaR on mass sampling points (based on stiffness)
     void formMassUndulation();
     
     // host Quad 

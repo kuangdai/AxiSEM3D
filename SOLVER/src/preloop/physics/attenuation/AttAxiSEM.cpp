@@ -40,19 +40,18 @@ void AttAxiSEM::computeAttFactors(const RDMatXN &QKp, const RDMatXN &QMu,
     RDMatXN ones = RDMatXN::Ones(QKp.rows(), QKp.cols());
     
     // kappa
-    kpFactNoAtt = ones + 2. * log(w_1 / w_0) / pi * QKp.array().pow(-1.0).matrix();
-    dKpFact.array() = kpFactNoAtt.array() / (1. / ysum * QKp + (1. - fact) * ones).array();
-    kpFactAtt = kpFactNoAtt + dKpFact * fact;
-
-    // mu
-    muFactNoAtt = ones + 2. * log(w_1 / w_0) / pi * QMu.array().pow(-1.0).matrix();
-    dMuFact.array() = muFactNoAtt.array() / (1. / ysum * QMu + (1. - fact) * ones).array();
-    muFactAtt = muFactNoAtt + dMuFact * fact;
-
-    // mask kappa
-    if (!mDoKappa) {
+    if (mDoKappa) {
+        kpFactNoAtt = ones + 2. * log(w_1 / w_0) / pi * QKp.array().pow(-1.0).matrix();
+        dKpFact.array() = kpFactNoAtt.array() / (1. / ysum * QKp + (1. - fact) * ones).array();
+        kpFactAtt = kpFactNoAtt + dKpFact * fact;
+    } else {
         dKpFact.setZero();
         kpFactAtt.fill(1.);
         kpFactNoAtt.fill(1.);
-    }    
+    }
+    
+    // mu
+    muFactNoAtt = ones + 2. * log(w_1 / w_0) / pi * QMu.array().pow(-1.0).matrix();
+    dMuFact.array() = muFactNoAtt.array() / (1. / ysum * QMu + (1. - fact) * ones).array();
+    muFactAtt = muFactNoAtt + dMuFact * fact;    
 }

@@ -7,10 +7,6 @@
 #include "PRT_3D.h"
 
 PRT *PRT::createPRT(const RDMatXN4 &X, bool elem1D) {
-    if (X.array().abs().maxCoeff() < tinyDouble) {
-        return 0;
-    }
-    
     if (elem1D) {
         std::array<RMatPP, 4> xstruct;
         for (int idim = 0; idim < 4; idim++) {
