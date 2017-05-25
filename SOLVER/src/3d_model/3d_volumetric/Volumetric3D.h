@@ -20,11 +20,11 @@ public:
         "Ref1D", "Ref3D", "RefPtb"};
         
     // allowed keys for material properties
-    enum MaterialProperty {VP, VPV, VPH, VS, VSV, VSH, RHO, ANIS_ETA, QMU, QKAPPA};
-    const std::vector<std::string> MaterialPropertyString = {"VP", "VPV", "VPH", 
-        "VS", "VSV", "VSH", "RHO", "ANIS_ETA", "QMU", "QKAPPA"};
-    const std::vector<double> MaterialPropertyAbsSI = {1e3, 1e3, 1e3, 
-        1e3, 1e3, 1e3, 1e3, 1., 1., 1.};    
+    enum MaterialProperty {VPV, VPH, VSV, VSH, RHO, ANIS_ETA, QKAPPA, QMU, VP, VS};
+    const std::vector<std::string> MaterialPropertyString = {"VPV", "VPH", "VSV", "VSH", 
+        "RHO", "ANIS_ETA", "QKAPPA", "QMU", "VP", "VS"};
+    const std::vector<double> MaterialPropertyAbsSI = {1e3, 1e3, 1e3, 1e3, 
+        1e3, 1., 1., 1., 1e3, 1e3};
     
     virtual ~Volumetric3D() {finalize();};
     
