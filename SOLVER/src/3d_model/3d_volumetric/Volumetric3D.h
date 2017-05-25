@@ -52,20 +52,6 @@ public:
         std::vector<MaterialRefType> &refTypes,
         std::vector<double> &values) const = 0;
         
-    // get perturbations or absolute values at location r/theta/phi 
-    // IMPORTANT: this function should be realized such that r/theta/phi are 
-    // the geocentric coordinates in the SPHERICAL reference configuration, that is,
-    // the perfect sphere before topography and ellipticity
-    // RETURN: a "false" return means the input location is out of model range
-    // rElemCenter: radius of the element center, used to decide whether the given 
-    // location is within model range. We use rElemCenter instead of r itself 
-    // to honour vertical discontinuities
-    virtual bool get3dProperties(double r, double theta, double phi, double rElemCenter,
-        double &vpv, double &vph, double &vsv, double &vsh, double &rho) const {return false;};
-    
-    // reference type
-    virtual MaterialRefType getReferenceType() const {return MaterialRefType::Absolute;};
-    
     // verbose 
     virtual std::string verbose() const = 0;
     
