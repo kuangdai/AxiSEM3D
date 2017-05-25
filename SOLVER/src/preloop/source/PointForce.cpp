@@ -32,7 +32,7 @@ void PointForce::computeSourceFourier(const Quad &myQuad, const RDColP &interpFa
     }
     // particle relabelling
     RDColP J_PRT;
-    if (myQuad.stiffRelabelling()) {
+    if (myQuad.hasRelabelling()) {
         const RDMatXN &JJ = myQuad.getRelabelling().getStiffJacobian();
         J_PRT = JJ.block(0, 0, 1, nPntEdge).transpose();
     }
@@ -50,7 +50,7 @@ void PointForce::computeSourceFourier(const Quad &myQuad, const RDColP &interpFa
                 const RDMat22 &J = axJ[jpol_src];
                 double dwds = J(1, 1) * GU(ipol_src, jpol_src) - J(1, 0) * UG(ipol_src, jpol_src);
                 double dwdz = J(0, 0) * UG(ipol_src, jpol_src) - J(0, 1) * GU(ipol_src, jpol_src);
-                if (myQuad.stiffRelabelling()) {
+                if (myQuad.hasRelabelling()) {
                     //particle relabelling point force
                     // monopole
                     fouriers[ipnt](0, 2) += w(ipol_src, jpol_src) * fact * pz / (2. * pi) * J_PRT[jpol_src];

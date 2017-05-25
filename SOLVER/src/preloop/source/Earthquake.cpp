@@ -34,7 +34,7 @@ void Earthquake::computeSourceFourier(const Quad &myQuad, const RDColP &interpFa
     }
     // particle relabelling
     RDColP VX0, VX1, VX2, VX3;
-    if (myQuad.stiffRelabelling()) {
+    if (myQuad.hasRelabelling()) {
         const RDMatXN4 &X = myQuad.getRelabelling().getStiffX();
         VX0 = X.block(0, nPE * 0, 1, nPntEdge).transpose();
         VX3 = X.block(0, nPE * 3, 1, nPntEdge).transpose();
@@ -56,7 +56,7 @@ void Earthquake::computeSourceFourier(const Quad &myQuad, const RDColP &interpFa
                 const RDMat22 &J = axJ[jpol_src];
                 double dwds = J(1, 1) * GU(ipol_src, jpol_src) - J(1, 0) * UG(ipol_src, jpol_src);
                 double dwdz = J(0, 0) * UG(ipol_src, jpol_src) - J(0, 1) * GU(ipol_src, jpol_src);
-                if (myQuad.stiffRelabelling()) {
+                if (myQuad.hasRelabelling()) {
                     double X0 = VX0(jpol_src);
                     double X1 = VX1(jpol_src);
                     double X2 = VX2(jpol_src);
