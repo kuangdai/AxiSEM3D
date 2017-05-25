@@ -48,9 +48,6 @@ void Relabelling::addUndulation(const std::vector<Geometric3D> &g3D,
             }
         }
     }
-}
-
-void Relabelling::finishUndulation() {
     checkHmin();
     formGradientUndulation();
     formMassUndulation();

@@ -19,9 +19,6 @@ public:
     void addUndulation(const std::vector<Geometric3D> &g3D, 
         double srcLat, double srcLon, double srcDep, double phi2D);
     
-    // finishUndulation
-    void finishUndulation();
-    
     // stiffness
     RDMatXN getStiffJacobian() const;
     RDMatXN4 getStiffX() const;
