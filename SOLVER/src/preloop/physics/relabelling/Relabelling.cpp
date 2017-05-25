@@ -9,7 +9,8 @@
 #include "XMath.h"
 #include "Geodesy.h"
 #include "PreloopFFTW.h"
-#include "PRT.h"
+#include "PRT_1D.h"
+#include "PRT_3D.h"
 
 Relabelling::Relabelling(const Quad *quad):
 mMyQuad(quad) {
@@ -161,7 +162,20 @@ PRT *Relabelling::createPRT(bool elem1D) const {
     if (isZero()) {
         return 0;
     }
-    return PRT::createPRT(getStiffX(), elem1D);
+    
+    const RDMatXN4 &X = getStiffX();
+    if (elem1D) {
+        std::array<RMatPP, 4> xstruct;
+        for (int idim = 0; idim < 4; idim++) {
+            for (int ipol = 0; ipol < nPntEdge; ipol++) {
+                xstruct[idim].block(ipol, 0, 1, nPntEdge) = 
+                X.block(0, nPE * idim + nPntEdge * ipol, 1, nPntEdge).cast<Real>();
+            }
+        }
+        return new PRT_1D(xstruct);
+    } else {
+        return new PRT_3D(X.cast<Real>());
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////

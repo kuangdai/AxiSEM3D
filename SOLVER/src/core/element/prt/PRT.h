@@ -24,6 +24,4 @@ public:
     virtual bool is1D() const = 0;
     
     virtual void checkCompatibility(int Nr) const {};
-    
-    static PRT *createPRT(const RDMatXN4 &X, bool elem1D);
 };

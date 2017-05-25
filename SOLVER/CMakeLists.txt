@@ -212,7 +212,6 @@ add_executable(
     src/core/element/crd/CrdTransTIsoSolid.cpp
     src/core/element/crd/CrdTransTIsoFluid.cpp
     src/core/element/fft/FieldFFT.cpp
-    src/core/element/prt/PRT.cpp
     src/core/element/prt/PRT_1D.cpp
     src/core/element/prt/PRT_3D.cpp
     
