@@ -23,8 +23,5 @@ public:
 
     // check compatibility
     virtual void checkCompatibility(int Nr) const {}; 
-    
-    // creator
-    static Acoustic *createAcoustic(const RDMatXN &KFluid, bool elem1D);
 };
 

@@ -191,7 +191,6 @@ add_executable(
     src/core/point/solid_fluid/SFCoupling1D.cpp
     src/core/point/solid_fluid/SFCoupling3D.cpp
 
-    src/core/element/material/acoustic/Acoustic.cpp
     src/core/element/material/acoustic/Acoustic1D.cpp
     src/core/element/material/acoustic/Acoustic3D.cpp
 
