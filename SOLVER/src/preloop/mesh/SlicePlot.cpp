@@ -283,9 +283,9 @@ int SlicePlot::numArgs(const std::string &parName) const {
     if (boost::iequals(parName, "vsv")) return 5;
     if (boost::iequals(parName, "vsh")) return 5;
     if (boost::iequals(parName, "rho")) return 5;
-    if (boost::iequals(parName, "eta")) return 2;
-    if (boost::iequals(parName, "Qmu")) return 2;
-    if (boost::iequals(parName, "Qkappa")) return 2;
+    if (boost::iequals(parName, "eta")) return 5;
+    if (boost::iequals(parName, "Qmu")) return 5;
+    if (boost::iequals(parName, "Qkappa")) return 5;
     if (boost::iequals(parName, "undulation")) return 4;
     if (boost::iequals(parName, "nu")) return 2;
     if (boost::iequals(parName, "eleType")) return 1;
