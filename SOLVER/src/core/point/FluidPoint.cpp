@@ -45,14 +45,18 @@ void FluidPoint::resetZero() {
 }
 
 void FluidPoint::randomDispl(Real factor, int seed) {
-    std::srand(seed); 
+    if (seed >= 0) {
+        std::srand(seed);
+    } 
     mDispl.setRandom(); 
     mDispl *= factor;
     maskField(mDispl);
 }
 
 void FluidPoint::randomStiff(Real factor, int seed) {
-    std::srand(seed); 
+    if (seed >= 0) {
+        std::srand(seed);
+    }
     mStiff.setRandom(); 
     mStiff *= factor;
     maskField(mStiff);
