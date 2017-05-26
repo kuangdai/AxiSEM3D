@@ -34,14 +34,24 @@ public:
         IColX orderRow, RDColX devRow, bool periodRow, 
         IColX orderCol, RDColX devCol, bool periodCol);
     
-    ////////////////// preproccessor-to-solver cast //////////////////
+    ////////////////// flatten-structured cast //////////////////
     // structured
-    static RMatPP castToSolver(const RDMatPP &mp);
+    template<class TIN>
+    static void structuredUseFirstRow(const TIN &flat, RDMatPP &strct) {
+        for (int ipol = 0; ipol < nPntEdge; ipol++) {
+            strct.block(ipol, 0, 1, nPntEdge) 
+            = flat.block(0, nPntEdge * ipol, 1, nPntEdge);
+        }
+    };
     
-    // flattened
-    template<class TIN, class TOUT>
-    static TOUT castToSolver(const TIN &mat) {
-        return mat.template cast<Real>();
+    // flatten
+    template<class TOUT>
+    static void flattenFillWithFirstRow(const RDMatPP &strct, TOUT &flat) {
+        int nr = flat.rows();
+        for (int ipol = 0; ipol < nPntEdge; ipol++) {
+            flat.block(0, nPntEdge * ipol, nr, nPntEdge) 
+            = strct.block(ipol, 0, 1, nPntEdge).colwise().replicate(nr); 
+        }
     };
     
     ////////////////// Fourier-related methods //////////////////

@@ -138,12 +138,6 @@ void XMath::gaussianSmoothing(RDMatXX &data,
     }
 }
 
-RMatPP XMath::castToSolver(const RDMatPP &mp) {
-    RMatPP ms = RMatPP::Zero();
-    ms.topLeftCorner(nPntEdge, nPntEdge) = mp.cast<Real>();
-    return ms;
-}
-
 RDColX XMath::trigonResampling(int newSize, const RDColX &original) {
     int nslices = original.rows();
     if (newSize == nslices) {

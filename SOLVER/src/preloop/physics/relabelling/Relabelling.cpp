@@ -164,10 +164,10 @@ PRT *Relabelling::createPRT() const {
     if (mMyQuad->elem1D()) {
         std::array<RMatPP, 4> xstruct;
         for (int idim = 0; idim < 4; idim++) {
-            for (int ipol = 0; ipol < nPntEdge; ipol++) {
-                xstruct[idim].block(ipol, 0, 1, nPntEdge) = 
-                X.block(0, nPE * idim + nPntEdge * ipol, 1, nPntEdge).cast<Real>();
-            }
+            RDRowN xi_flat = X.block(0, nPE * idim, 1, nPE);
+            RDMatPP xi_strct;
+            XMath::structuredUseFirstRow(xi_flat, xi_strct);
+            xstruct[idim] = xi_strct.cast<Real>();
         }
         return new PRT_1D(xstruct);
     } else {

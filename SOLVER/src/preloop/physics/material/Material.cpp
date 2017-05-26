@@ -205,10 +205,7 @@ Acoustic *Material::createAcoustic() const {
     }
     if (mMyQuad->elem1D()) {
         RDMatPP kstruct;
-        for (int ipol = 0; ipol < nPntEdge; ipol++) {
-            kstruct.block(ipol, 0, 1, nPntEdge) = 
-            fluidK.block(0, nPntEdge * ipol, 1, nPntEdge);
-        }
+        XMath::structuredUseFirstRow(fluidK, kstruct);
         return new Acoustic1D(kstruct.cast<Real>());
     } else {
         return new Acoustic3D(fluidK.cast<Real>());
@@ -265,13 +262,11 @@ Elastic *Material::createElastic(const AttBuilder *attBuild) const {
     // Elastic pointers
     if (mMyQuad->elem1D()) {
         RDMatPP A0, C0, F0, L0, N0;
-        for (int ipol = 0; ipol < nPntEdge; ipol++) {
-            A0.block(ipol, 0, 1, nPntEdge) = A.block(0, nPntEdge * ipol, 1, nPntEdge);
-            C0.block(ipol, 0, 1, nPntEdge) = C.block(0, nPntEdge * ipol, 1, nPntEdge);
-            F0.block(ipol, 0, 1, nPntEdge) = F.block(0, nPntEdge * ipol, 1, nPntEdge);
-            L0.block(ipol, 0, 1, nPntEdge) = L.block(0, nPntEdge * ipol, 1, nPntEdge);
-            N0.block(ipol, 0, 1, nPntEdge) = N.block(0, nPntEdge * ipol, 1, nPntEdge);
-        }
+        XMath::structuredUseFirstRow(A, A0);
+        XMath::structuredUseFirstRow(C, C0);
+        XMath::structuredUseFirstRow(F, F0);
+        XMath::structuredUseFirstRow(L, L0);
+        XMath::structuredUseFirstRow(N, N0);
         if (isIsotropic()) {
             return new Isotropic1D(A0.cast<Real>(), C0.cast<Real>(), att1D);
         } else {

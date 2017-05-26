@@ -12,6 +12,7 @@
 #include "Attenuation3D_Full.h"
 #include "Attenuation3D_CG4.h"
 #include "Quad.h"
+#include "XMath.h"
 
 Attenuation1D *AttBuilder::createAttenuation1D(const RDMatXN &QKp, const RDMatXN &QMu, 
     RDMatXN &kp, RDMatXN &mu, const Quad *quad) const {
@@ -28,18 +29,14 @@ Attenuation1D *AttBuilder::createAttenuation1D(const RDMatXN &QKp, const RDMatXN
     RDMatPP kpStr, muStr;
     RDMatPP dKpFactStr, kpFactAttStr, kpFactNoAttStr;
     RDMatPP dMuFactStr, muFactAttStr, muFactNoAttStr;
-    for (int ipol = 0; ipol < nPntEdge; ipol++) {
-        kpStr.block(ipol, 0, 1, nPntEdge) = kp.block(0, nPntEdge * ipol, 1, nPntEdge);
-        muStr.block(ipol, 0, 1, nPntEdge) = mu.block(0, nPntEdge * ipol, 1, nPntEdge);
-        
-        dKpFactStr.block(ipol, 0, 1, nPntEdge) = dKpFact.block(0, nPntEdge * ipol, 1, nPntEdge);
-        kpFactAttStr.block(ipol, 0, 1, nPntEdge) = kpFactAtt.block(0, nPntEdge * ipol, 1, nPntEdge);
-        kpFactNoAttStr.block(ipol, 0, 1, nPntEdge) = kpFactNoAtt.block(0, nPntEdge * ipol, 1, nPntEdge);
-
-        dMuFactStr.block(ipol, 0, 1, nPntEdge) = dMuFact.block(0, nPntEdge * ipol, 1, nPntEdge);
-        muFactAttStr.block(ipol, 0, 1, nPntEdge) = muFactAtt.block(0, nPntEdge * ipol, 1, nPntEdge);
-        muFactNoAttStr.block(ipol, 0, 1, nPntEdge) = muFactNoAtt.block(0, nPntEdge * ipol, 1, nPntEdge);
-    }    
+    XMath::structuredUseFirstRow(kp, kpStr);
+    XMath::structuredUseFirstRow(mu, muStr);
+    XMath::structuredUseFirstRow(dKpFact, dKpFactStr);
+    XMath::structuredUseFirstRow(dMuFact, dMuFactStr);
+    XMath::structuredUseFirstRow(kpFactAtt, kpFactAttStr);
+    XMath::structuredUseFirstRow(muFactAtt, muFactAttStr);
+    XMath::structuredUseFirstRow(kpFactNoAtt, kpFactNoAttStr);
+    XMath::structuredUseFirstRow(muFactNoAtt, muFactNoAttStr);
     
     // create attenuation model and change kp and mu in-place
     Attenuation1D *attPtr = 0;
@@ -76,11 +73,8 @@ Attenuation1D *AttBuilder::createAttenuation1D(const RDMatXN &QKp, const RDMatXN
     }
     
     // structured to flatten
-    int nr = quad->getNr();
-    for (int ipol = 0; ipol < nPntEdge; ipol++) {
-        kp.block(0, nPntEdge * ipol, nr, nPntEdge) = kpStr.block(ipol, 0, 1, nPntEdge).colwise().replicate(nr); 
-        mu.block(0, nPntEdge * ipol, nr, nPntEdge) = muStr.block(ipol, 0, 1, nPntEdge).colwise().replicate(nr);
-    }
+    XMath::flattenFillWithFirstRow(kpStr, kp);
+    XMath::flattenFillWithFirstRow(muStr, mu);
     
     return attPtr;
 }

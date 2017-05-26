@@ -74,7 +74,7 @@ int GLLPoint::release(Domain &domain) const {
                 mass = new Mass1D((Real)(1. / mMassSolid(0)));
             } else {
                 const RDColX &invMass = mMassSolid.array().pow(-1.).matrix(); 
-                mass = new Mass3D(XMath::castToSolver<RDColX, RColX>(invMass));
+                mass = new Mass3D(invMass.cast<Real>());
             }
         }
         solid = new SolidPoint(mNr, mIsAxial, mCoords, mass);
@@ -88,7 +88,7 @@ int GLLPoint::release(Domain &domain) const {
             mass = new Mass1D((Real)(1. / mMassFluid(0)));
         } else {
             const RDColX &invMass = mMassFluid.array().pow(-1.).matrix(); 
-            mass = new Mass3D(XMath::castToSolver<RDColX, RColX>(invMass));
+            mass = new Mass3D(invMass.cast<Real>());
         }
         fluid = new FluidPoint(mNr, mIsAxial, mCoords, mass);
     }
@@ -111,8 +111,7 @@ int GLLPoint::release(Domain &domain) const {
             normal_invmf.col(0).array() /= mMassFluid.array();
             normal_invmf.col(1).array() /= mMassFluid.array();
             normal_invmf.col(2).array() /= mMassFluid.array();
-            couple = new SFCoupling3D(XMath::castToSolver<RDMatX3, RMatX3>(mSFNormal), 
-                XMath::castToSolver<RDMatX3, RMatX3>(normal_invmf));
+            couple = new SFCoupling3D(mSFNormal.cast<Real>(), normal_invmf.cast<Real>());
         }
         SolidFluidPoint *sfpoint = new SolidFluidPoint(solid, fluid, couple);
         domain.addSFPoint(sfpoint);
