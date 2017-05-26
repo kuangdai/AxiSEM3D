@@ -42,7 +42,7 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
     
     // 2D mode
     mUse2D = par.getValue<bool>("MODEL_2D_MODE");
-    mPhi2D = -1.;
+    mPhi2D = -DBL_MAX;
     if (mUse2D) {
         double lat2D = par.getValue<double>("MODEL_2D_LATITUDE");
         double lon2D = par.getValue<double>("MODEL_2D_LONGITUDE");
@@ -232,12 +232,9 @@ void Mesh::buildLocal(const DecomposeOption &option) {
             // 1D Quad
             Quad *quad = new Quad(*mExModel, iquad, *mNrField);
             // 3D model
-            for (int j = 0; j < mVolumetric3D.size(); j++) 
-                quad->addVolumetric3D(*(mVolumetric3D[j]), mSrcLat, mSrcLon, mSrcDep, mPhi2D);
-            for (int j = 0; j < mGeometric3D.size(); j++) 
-                quad->addGeometric3D(*(mGeometric3D[j]), mSrcLat, mSrcLon, mSrcDep, mPhi2D);
+            quad->addVolumetric3D(mVolumetric3D, mSrcLat, mSrcLon, mSrcDep, mPhi2D);
+            quad->addGeometric3D(mGeometric3D, mSrcLat, mSrcLon, mSrcDep, mPhi2D);
             if (mOceanLoad3D != 0) quad->setOceanLoad3D(*mOceanLoad3D, mSrcLat, mSrcLon, mSrcDep, mPhi2D);    
-            quad->finishModel3D();
             // spatial range
             quad->getSpatialRange(s_max, s_min, z_max, z_min);
             mSMax = std::max(mSMax, s_max);
