@@ -36,7 +36,7 @@ public:
     bool isPar1D() const;
     
     // create PRT pointer
-    PRT *createPRT(bool elem1D) const;
+    PRT *createPRT() const;
     
     // deltaR
     const RDMatXN &getDeltaR() const {return mStiff_dZ;};

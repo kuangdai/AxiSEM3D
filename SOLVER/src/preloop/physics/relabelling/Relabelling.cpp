@@ -155,13 +155,13 @@ bool Relabelling::isPar1D() const {
     return XMath::equalRows(mStiff_dZ);
 }
 
-PRT *Relabelling::createPRT(bool elem1D) const {
+PRT *Relabelling::createPRT() const {
     if (isZero()) {
         return 0;
     }
     
     const RDMatXN4 &X = getStiffX();
-    if (elem1D) {
+    if (mMyQuad->elem1D()) {
         std::array<RMatPP, 4> xstruct;
         for (int idim = 0; idim < 4; idim++) {
             for (int ipol = 0; ipol < nPntEdge; ipol++) {
