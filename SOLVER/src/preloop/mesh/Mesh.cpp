@@ -136,7 +136,7 @@ void Mesh::release(Domain &domain) {
         int npoint = mMsgInfo->mNLocalPoints[i];
         for (int j = 0; j < npoint; j++) {
             int pTag = mMsgInfo->mILocalPoints[i][j];
-            sz_total += 1; //domain.getPoint(pTag)->sizeComm();
+            sz_total += domain.getPoint(pTag)->sizeComm();
         }
         buf->mBufferSend.push_back(CColX(sz_total));
         buf->mBufferRecv.push_back(CColX(sz_total));
