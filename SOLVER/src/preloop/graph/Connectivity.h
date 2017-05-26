@@ -5,8 +5,6 @@
 #pragma once
 
 #include <eigenp.h>
-typedef Eigen::Matrix<int, 1, 4> IRow4;
-typedef Eigen::Matrix<int, 1, 2> IRow2; // ipol, jpol
 
 struct DecomposeOption;
 struct MessagingInfo; 

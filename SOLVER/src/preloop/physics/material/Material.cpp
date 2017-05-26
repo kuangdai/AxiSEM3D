@@ -82,7 +82,7 @@ Material::Material(const Quad *myQuad, const ExodusModel &exModel): mMyQuad(myQu
     }
 }
 
-void Material::addVolumetric3D(const std::vector<Volumetric3D> &m3D, 
+void Material::addVolumetric3D(const std::vector<Volumetric3D *> &m3D, 
     double srcLat, double srcLon, double srcDep, double phi2D) {
     // pointers for fast access to material matrices
     std::vector<RDRow4 *>  prop1DPtr = {&mVpv1D, &mVph1D, &mVsv1D, &mVsh1D, &mRho1D, &mEta1D, &mQkp1D, &mQmu1D};
@@ -107,7 +107,7 @@ void Material::addVolumetric3D(const std::vector<Volumetric3D> &m3D,
                     std::vector<Volumetric3D::MaterialProperty> properties; 
                     std::vector<Volumetric3D::MaterialRefType> refTypes;
                     std::vector<double> values;
-                    if (!model.get3dProperties(r, t, p, rElemCenter, properties, refTypes, values)) {
+                    if (!model->get3dProperties(r, t, p, rElemCenter, properties, refTypes, values)) {
                         // point (r, t, p) not in model range
                         continue;
                     }
@@ -194,7 +194,7 @@ arPP_RDColX Material::computeElementalMass() const {
     return mass;
 }
 
-Acoustic *Material::createAcoustic() const {
+Acoustic *Material::createAcoustic(bool elem1D) const {
     const RDRowN &iFact = mMyQuad->getIntegralFactor();
     RDMatXN fluidK = mRho3D.array().pow(-1.);
     for (int ipnt = 0; ipnt < nPntElem; ipnt++) {
@@ -203,7 +203,7 @@ Acoustic *Material::createAcoustic() const {
     if (mMyQuad->hasRelabelling()) {
         fluidK *= mMyQuad->getRelabelling().getStiffJacobian();
     }
-    if (mMyQuad->elem1D()) {
+    if (elem1D) {
         RDMatPP kstruct;
         XMath::structuredUseFirstRow(fluidK, kstruct);
         return new Acoustic1D(kstruct.cast<Real>());
@@ -212,7 +212,7 @@ Acoustic *Material::createAcoustic() const {
     }
 }
 
-Elastic *Material::createElastic(const AttBuilder *attBuild) const {
+Elastic *Material::createElastic(bool elem1D, const AttBuilder *attBuild) const {
     // elasticity tensor
     const RDRowN &iFact = mMyQuad->getIntegralFactor(); 
     RDMatXN A(mRho3D), C(mRho3D), F(mRho3D), L(mRho3D), N(mRho3D);
@@ -247,7 +247,7 @@ Elastic *Material::createElastic(const AttBuilder *attBuild) const {
         F -= (kappa - 2. / 3. * mu);
         L -= mu;
         N -= mu;
-        if (mMyQuad->elem1D()) {
+        if (elem1D) {
             att1D = attBuild->createAttenuation1D(mQkp3D, mQmu3D, kappa, mu, mMyQuad);
         } else {
             att3D = attBuild->createAttenuation3D(mQkp3D, mQmu3D, kappa, mu, mMyQuad);
@@ -260,7 +260,7 @@ Elastic *Material::createElastic(const AttBuilder *attBuild) const {
     }
     
     // Elastic pointers
-    if (mMyQuad->elem1D()) {
+    if (elem1D) {
         RDMatPP A0, C0, F0, L0, N0;
         XMath::structuredUseFirstRow(A, A0);
         XMath::structuredUseFirstRow(C, C0);

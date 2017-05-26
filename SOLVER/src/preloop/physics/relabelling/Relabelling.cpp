@@ -29,7 +29,7 @@ mMyQuad(quad) {
     }
 }
 
-void Relabelling::addUndulation(const std::vector<Geometric3D> &g3D, 
+void Relabelling::addUndulation(const std::vector<Geometric3D *> &g3D, 
     double srcLat, double srcLon, double srcDep, double phi2D) {
     double rElemCenter = mMyQuad->computeCenterRadius();
     int Nr = mMyQuad->getNr();
@@ -43,14 +43,16 @@ void Relabelling::addUndulation(const std::vector<Geometric3D> &g3D,
                 double t = rtpS(alpha, 1);
                 double p = rtpS(alpha, 2);
                 for (const auto &model: g3D) {
-                    mStiff_dZ(alpha, ipnt) += model.getDeltaR(r, t, p, rElemCenter); 
+                    mStiff_dZ(alpha, ipnt) += model->getDeltaR(r, t, p, rElemCenter); 
                 }
             }
         }
     }
-    checkHmin();
-    formGradientUndulation();
-    formMassUndulation();
+    if (!isZero()) {
+        checkHmin();
+        formGradientUndulation();
+        formMassUndulation();
+    }
 }
 
 RDMatXN Relabelling::getStiffJacobian() const {
@@ -155,13 +157,13 @@ bool Relabelling::isPar1D() const {
     return XMath::equalRows(mStiff_dZ);
 }
 
-PRT *Relabelling::createPRT() const {
+PRT *Relabelling::createPRT(bool elem1D) const {
     if (isZero()) {
         return 0;
     }
     
     const RDMatXN4 &X = getStiffX();
-    if (mMyQuad->elem1D()) {
+    if (elem1D) {
         std::array<RMatPP, 4> xstruct;
         for (int idim = 0; idim < 4; idim++) {
             RDRowN xi_flat = X.block(0, nPE * idim, 1, nPE);
@@ -234,7 +236,7 @@ void Relabelling::formGradientUndulation() {
     // gradient
     const ar3_CDMatPP zero_ar3_CDMatPP = {CDMatPP::Zero(), CDMatPP::Zero(), CDMatPP::Zero()};
     vec_ar3_CDMatPP nablaDeltaR_C(Nu + 1, zero_ar3_CDMatPP);
-    mMyQuad->computeGradientScalar(deltaR_C, nablaDeltaR_C, Nu);
+    mMyQuad->computeGradientScalar(deltaR_C, nablaDeltaR_C);
     
     // FFT C2R
     for (int ipol = 0; ipol <= nPol; ipol++) {

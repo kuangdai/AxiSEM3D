@@ -12,14 +12,13 @@
 #include "SpectralConstants.h"
 
 #include "Material.h"
+#include "Relabelling.h"
+
 #include "Elastic.h"
 #include "Acoustic.h"
 
-#include "GradientVoigt.h"
-#include "GradientAxialVoigt.h"
 #include "Gradient.h"
 #include "PreloopGradient.h"
-#include "GradientAxial.h"
 #include "SolidElement.h"
 #include "FluidElement.h"
 #include "Domain.h"
@@ -28,9 +27,12 @@
 #include "NrField.h"
 
 #include "XMath.h"
-#include "Relabelling.h"
+#include "Geodesy.h"
 
 #include "OceanLoad3D.h"
+
+#include "PreloopFFTW.h"
+#include <cfloat>
 
 Quad::Quad(const ExodusModel &exModel, int quadTag, const NrField &nrf): 
 mQuadTag(quadTag) {
@@ -40,8 +42,7 @@ mQuadTag(quadTag) {
         int nodeTag = exModel.getConnectivity()[mQuadTag][i];
         mNodalCoords(0, i) = exModel.getNodalS(nodeTag);
         mNodalCoords(1, i) = exModel.getNodalZ(nodeTag);
-        mNodalAveGLLSpacing(i) = exModel.getAveGLLSpacing(nodeTag);
-        mGlobalNodeTags[i] = nodeTag;
+        mGlobalNodeTags(i) = nodeTag;
     }
     
     // geometric mapping
@@ -54,11 +55,13 @@ mQuadTag(quadTag) {
         double r1 = mNodalCoords.col(1).norm();
         double r2 = mNodalCoords.col(2).norm();
         double r3 = mNodalCoords.col(3).norm();
-        if (std::abs(r0 - r1) < distTol && std::abs(r2 - r3) < distTol) 
+        if (std::abs(r0 - r1) < distTol && std::abs(r2 - r3) < distTol) {
             mCurvedOuter = r2 > r0 ? 2 : 0;
-        else if (std::abs(r1 - r2) < distTol && std::abs(r3 - r0) < distTol) 
+        } else if (std::abs(r1 - r2) < distTol && std::abs(r3 - r0) < distTol) {
             mCurvedOuter = r3 > r1 ? 3 : 1;       
-        else throw std::runtime_error("Quad::Quad || Invalid spherical element shape.");
+        } else {
+            throw std::runtime_error("Quad::Quad || Invalid spherical element shape.");
+        }
     } else if (etype < 1.5) {
         // etype = 1.0, linear
         mMapping = new LinearMapping();
@@ -70,15 +73,17 @@ mQuadTag(quadTag) {
         double r1 = mNodalCoords.col(1).norm();
         double r2 = mNodalCoords.col(2).norm();
         double r3 = mNodalCoords.col(3).norm();
-        if (std::abs(r0 - r1) < distTol && r0 > r2) 
+        if (std::abs(r0 - r1) < distTol && r0 > r2) {
             mCurvedOuter = 0;
-        else if (std::abs(r1 - r2) < distTol && r1 > r3)
+        } else if (std::abs(r1 - r2) < distTol && r1 > r3) {
             mCurvedOuter = 1;
-        else if (std::abs(r2 - r3) < distTol && r2 > r0)
+        } else if (std::abs(r2 - r3) < distTol && r2 > r0) {
             mCurvedOuter = 2;
-        else if (std::abs(r3 - r0) < distTol && r3 > r1)
+        } else if (std::abs(r3 - r0) < distTol && r3 > r1) {
             mCurvedOuter = 3;
-        else throw std::runtime_error("Quad::Quad || Invalid semi-spherical element shape.");
+        } else {
+            throw std::runtime_error("Quad::Quad || Invalid semi-spherical element shape.");
+        }
     }
     
     // solid fluid
@@ -89,9 +94,12 @@ mQuadTag(quadTag) {
     mAxialSide = exModel.getSideAxis(mQuadTag);
     if (mAxialSide >= 0) {
         mIsAxial = true;
-        if (mMapping->getType() != Mapping::MappingTypes::Linear && (mAxialSide + mCurvedOuter) % 2 == 0) 
+        if (mMapping->getType() != Mapping::MappingTypes::Linear && (mAxialSide + mCurvedOuter) % 2 == 0) {
             throw std::runtime_error("Quad::Quad || Conflict in axial setting.");
-        if (mAxialSide != 3) throw std::runtime_error("Quad::Quad || Axial side must be 3.");
+        }
+        if (mAxialSide != 3) {
+            throw std::runtime_error("Quad::Quad || Axial side must be 3.");
+        }
     }
 
     // solid-fluid boundary
@@ -100,12 +108,15 @@ mQuadTag(quadTag) {
     if (mSFSide >= 0) {
         mOnSFBoundary = true;
         if (!exModel.isCartesian()) {
-            if (mMapping->getType() == Mapping::MappingTypes::Linear) 
+            if (mMapping->getType() == Mapping::MappingTypes::Linear) {
                 throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
-            if (mMapping->getType() == Mapping::MappingTypes::Spherical && (mSFSide + mCurvedOuter) % 2 != 0) 
+            }
+            if (mMapping->getType() == Mapping::MappingTypes::Spherical && (mSFSide + mCurvedOuter) % 2 != 0) {
                 throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
-            if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && mSFSide != mCurvedOuter) 
+            }
+            if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && mSFSide != mCurvedOuter) {
                 throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
+            }
         }
     }
     
@@ -115,22 +126,29 @@ mQuadTag(quadTag) {
     if (mSurfaceSide >= 0) {
         mOnSurface = true;
         if (!exModel.isCartesian()) {
-            if (mMapping->getType() == Mapping::MappingTypes::Linear) 
+            if (mMapping->getType() == Mapping::MappingTypes::Linear) {
                 throw std::runtime_error("Quad::Quad || Conflict in surface setting.");
-            if (mMapping->getType() == Mapping::MappingTypes::Spherical && mSurfaceSide != mCurvedOuter) 
+            }
+            if (mMapping->getType() == Mapping::MappingTypes::Spherical && mSurfaceSide != mCurvedOuter) {
                 throw std::runtime_error("Quad::Quad || Conflict in surface setting.");
-            if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && mSurfaceSide != mCurvedOuter) 
+            }
+            if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && mSurfaceSide != mCurvedOuter) {
                 throw std::runtime_error("Quad::Quad || Conflict in surface setting.");
+            }
         }
-        if (mIsFluid) throw std::runtime_error("Quad::Quad || Fluid element on surface.");
-        if (mOnSFBoundary) throw std::runtime_error("Quad::Quad || Element on both surface and solid-fluid boundary.");
+        if (mIsFluid) {
+            throw std::runtime_error("Quad::Quad || Fluid element on surface. Not implemented.");
+        }
+        if (mOnSFBoundary) {
+            throw std::runtime_error("Quad::Quad || Element on both surface and solid-fluid boundary.");
+        }
     }
     
-    // fourier 
-    mNearAxisNodes = IColX::Constant(4, -1);
-    const std::array<int, 4> &vass = exModel.getVicinalAxis(quadTag);
-    for (int j = 0; j < 4; j++) mNearAxisNodes(j) = vass[j];
-    
+    // nr field 
+    for (int j = 0; j < 4; j++) {
+        mNearAxisNodes(j) = exModel.getVicinalAxis(quadTag)[j];
+        mNodalAveGLLSpacing(j) = exModel.getAveGLLSpacing(mGlobalNodeTags(j));
+    } 
     formNrField(nrf);
     
     // integral factor
@@ -152,10 +170,6 @@ mQuadTag(quadTag) {
             mOceanDepth[ipnt] = RDColX::Zero(mPointNr(ipol, jpol));    
         }
     }
-    
-    // debug relabelling
-    // delete mMapping;
-    // mMapping = new LinearMapping();
 }
 
 Quad::~Quad() {
@@ -164,17 +178,21 @@ Quad::~Quad() {
     delete mRelabelling;
 }
 
-void Quad::addVolumetric3D(const Volumetric3D &m3D, double srcLat, double srcLon, double srcDep, double phi2D) {
-    if (isFluid()) return;
+void Quad::addVolumetric3D(const std::vector<Volumetric3D *> &m3D, 
+    double srcLat, double srcLon, double srcDep, double phi2D) {
     mMaterial->addVolumetric3D(m3D, srcLat, srcLon, srcDep, phi2D);
 }
 
-void Quad::addGeometric3D(const Geometric3D &g3D, double srcLat, double srcLon, double srcDep, double phi2D) {
+void Quad::addGeometric3D(const std::vector<Geometric3D *> &g3D, 
+    double srcLat, double srcLon, double srcDep, double phi2D) {
     mRelabelling->addUndulation(g3D, srcLat, srcLon, srcDep, phi2D);
 }
 
-void Quad::setOceanLoad3D(const OceanLoad3D &o3D, double srcLat, double srcLon, double srcDep, double phi2D) {
-    if (!mOnSurface) return;
+void Quad::setOceanLoad3D(const OceanLoad3D &o3D, 
+    double srcLat, double srcLon, double srcDep, double phi2D) {
+    if (!mOnSurface) {
+        return;
+    }
     for (int ipol = 0; ipol <= nPol; ipol++) {
         for (int jpol = 0; jpol <= nPol; jpol++) {
             bool surface = mOnSurface && (
@@ -197,18 +215,8 @@ void Quad::setOceanLoad3D(const OceanLoad3D &o3D, double srcLat, double srcLon, 
     }
 }
 
-void Quad::finishModel3D() {
-    if (stiffRelabelling()) mRelabelling->finishUndulation();
-    // debug relabelling
-    // testRelabelling();
-}
-
-bool Quad::massRelabelling() const {
-    return !mRelabelling->isZeroMass();
-}
-
-bool Quad::stiffRelabelling() const {
-    return !mRelabelling->isZeroStiff();
+bool Quad::hasRelabelling() const {
+    return !mRelabelling->isZero();
 }
 
 double Quad::getDeltaT() const {
@@ -265,10 +273,11 @@ void Quad::setupGLLPoints(std::vector<GLLPoint *> &gllPoints, const IMatPP &myPo
             gllPoints[pointTag]->setup(mPointNr(ipol, jpol), axial, surface, crds, distTol);
             
             // add mass 
-            if (mIsFluid) 
+            if (mIsFluid) {
                 gllPoints[pointTag]->addMassFluid(mass[ipnt]);
-            else 
+            } else {
                 gllPoints[pointTag]->addMassSolid(mass[ipnt]);
+            }
             
             //////// boundary terms ////////
             bool sfbry = mOnSFBoundary && (
@@ -297,31 +306,40 @@ void Quad::setupGLLPoints(std::vector<GLLPoint *> &gllPoints, const IMatPP &myPo
 }
 
 int Quad::release(Domain &domain, const IMatPP &myPointTags, const AttBuilder *attBuild) const {
-    if (mIsFluid) 
+    if (mIsFluid) {
         return releaseFluid(domain, myPointTags);
-    else 
+    } else {
         return releaseSolid(domain, myPointTags, attBuild);
+    } 
 }
 
 int Quad::releaseSolid(Domain &domain, const IMatPP &myPointTags, const AttBuilder *attBuild) const {
+    bool elem1D = mRelabelling->isPar1D() && mMaterial->isSolidPar1D(attBuild != 0);
     std::array<Point *, nPntElem> points;
-    for (int ipol = 0; ipol <= nPol; ipol++) 
-        for (int jpol = 0; jpol <= nPol; jpol++) 
+    for (int ipol = 0; ipol <= nPol; ipol++) {
+        for (int jpol = 0; jpol <= nPol; jpol++) {
             points[ipol * nPntEdge + jpol] = domain.getPoint(myPointTags(ipol, jpol));
+        }
+    }
     Gradient *grad = createGraident();
-    Elastic *elas = mMaterial->createElastic(attBuild);
-    Element *elem = new SolidElement(grad, points, elas);
+    PRT *prt = mRelabelling->createPRT(elem1D);
+    Elastic *elas = mMaterial->createElastic(elem1D, attBuild);
+    Element *elem = new SolidElement(grad, prt, points, elas);
     return domain.addElement(elem);
 }
 
 int Quad::releaseFluid(Domain &domain, const IMatPP &myPointTags) const {
+    bool elem1D = mRelabelling->isPar1D() && mMaterial->isFluidPar1D();
     std::array<Point *, nPntElem> points;
-    for (int ipol = 0; ipol <= nPol; ipol++) 
-        for (int jpol = 0; jpol <= nPol; jpol++) 
+    for (int ipol = 0; ipol <= nPol; ipol++) {
+        for (int jpol = 0; jpol <= nPol; jpol++) {
             points[ipol * nPntEdge + jpol] = domain.getPoint(myPointTags(ipol, jpol));
+        }
+    }
     Gradient *grad = createGraident();
-    Acoustic *acous = mMaterial->createAcoustic(); 
-    Element *elem = new FluidElement(grad, points, acous);
+    PRT *prt = mRelabelling->createPRT(elem1D);
+    Acoustic *acous = mMaterial->createAcoustic(elem1D);
+    Element *elem = new FluidElement(grad, prt, points, acous);
     return domain.addElement(elem);
 }
 
@@ -343,29 +361,31 @@ bool Quad::invMapping(const RDCol2 &sz, RDCol2 &xieta) const {
 
 RDRow4 Quad::computeWeightsCG4() const {
     RDRow4 weights_cg4;
-    weights_cg4(0) = (mIntegralFactor(0, 0) + mIntegralFactor(0, 1)
-                   + mIntegralFactor(1, 0) + mIntegralFactor(1, 1)
-            + 0.5 * (mIntegralFactor(0, 2) + mIntegralFactor(1, 2)
-                   + mIntegralFactor(2, 0) + mIntegralFactor(2, 1))
-            + 0.25 * mIntegralFactor(2, 2)) / mIntegralFactor(1, 1);
+    RDMatPP ifact;
+    XMath::structuredUseFirstRow(mIntegralFactor, ifact);
+    weights_cg4(0) = (ifact(0, 0) + ifact(0, 1)
+                   + ifact(1, 0) + ifact(1, 1)
+            + 0.5 * (ifact(0, 2) + ifact(1, 2)
+                   + ifact(2, 0) + ifact(2, 1))
+            + 0.25 * ifact(2, 2)) / ifact(1, 1);
             
-    weights_cg4(1) = (mIntegralFactor(0, 3) + mIntegralFactor(0, 4)
-                   + mIntegralFactor(1, 3) + mIntegralFactor(1, 4)
-            + 0.5 * (mIntegralFactor(0, 2) + mIntegralFactor(1, 2)
-                   + mIntegralFactor(2, 3) + mIntegralFactor(2, 4))
-            + 0.25 * mIntegralFactor(2, 2)) / mIntegralFactor(1, 3);
+    weights_cg4(1) = (ifact(0, 3) + ifact(0, 4)
+                   + ifact(1, 3) + ifact(1, 4)
+            + 0.5 * (ifact(0, 2) + ifact(1, 2)
+                   + ifact(2, 3) + ifact(2, 4))
+            + 0.25 * ifact(2, 2)) / ifact(1, 3);
             
-    weights_cg4(2) = (mIntegralFactor(3, 0) + mIntegralFactor(3, 1)
-                   + mIntegralFactor(4, 0) + mIntegralFactor(4, 1)
-            + 0.5 * (mIntegralFactor(2, 0) + mIntegralFactor(2, 1)
-                   + mIntegralFactor(3, 2) + mIntegralFactor(4, 2))
-            + 0.25 * mIntegralFactor(2, 2)) / mIntegralFactor(3, 1);
+    weights_cg4(2) = (ifact(3, 0) + ifact(3, 1)
+                   + ifact(4, 0) + ifact(4, 1)
+            + 0.5 * (ifact(2, 0) + ifact(2, 1)
+                   + ifact(3, 2) + ifact(4, 2))
+            + 0.25 * ifact(2, 2)) / ifact(3, 1);
             
-    weights_cg4(3) = (mIntegralFactor(3, 3) + mIntegralFactor(3, 4)
-                   + mIntegralFactor(4, 3) + mIntegralFactor(4, 4)
-            + 0.5 * (mIntegralFactor(2, 3) + mIntegralFactor(2, 4)
-                   + mIntegralFactor(3, 2) + mIntegralFactor(4, 2))
-            + 0.25 * mIntegralFactor(2, 2)) / mIntegralFactor(3, 3);            
+    weights_cg4(3) = (ifact(3, 3) + ifact(3, 4)
+                   + ifact(4, 3) + ifact(4, 4)
+            + 0.5 * (ifact(2, 3) + ifact(2, 4)
+                   + ifact(3, 2) + ifact(4, 2))
+            + 0.25 * ifact(2, 2)) / ifact(3, 3);            
     return weights_cg4;
 }
 
@@ -373,13 +393,13 @@ RDMatX3 Quad::computeGeocentricGlobal(double srcLat, double srcLon, double srcDe
     const RDCol2 &xieta, int npnt, double phi2D) const {
     RDMatX3 rtpG_Nr(npnt, 3);
     RDCol3 rtpS;
-    XMath::rtheta(mapping(xieta), rtpS(0), rtpS(1));
+    Geodesy::rtheta(mapping(xieta), rtpS(0), rtpS(1));
     // debug relabelling
-    // rtpS(1) = XMath::theta(mapping(RDCol2::Zero()));
+    // rtpS(1) = Geodesy::theta(mapping(RDCol2::Zero()));
     double dphi = 2. * pi / npnt;
     for (int i = 0; i < npnt; i++) {
-        rtpS(2) = phi2D < 0. ? dphi * i : phi2D;
-        rtpG_Nr.row(i) = XMath::rotateSrc2Glob(rtpS, srcLat, srcLon, srcDep).transpose();
+        rtpS(2) = phi2D < -DBL_MAX * .9 ? dphi * i : phi2D;
+        rtpG_Nr.row(i) = Geodesy::rotateSrc2Glob(rtpS, srcLat, srcLon, srcDep).transpose();
     }
     return rtpG_Nr;
 }
@@ -389,7 +409,7 @@ double Quad::computeCenterRadius() const {
     return mapping(RDCol2::Zero()).norm();
 }
 
-void Quad::computeGradientScalar(const vec_CDMatPP &u, vec_ar3_CDMatPP &u_i, int Nu) const {
+void Quad::computeGradientScalar(const vec_CDMatPP &u, vec_ar3_CDMatPP &u_i) const {
     // create Gradient object
     RDMatPP dsdxii, dsdeta, dzdxii, dzdeta, inv_s;
     for (int ipol = 0; ipol <= nPol; ipol++) {
@@ -407,7 +427,7 @@ void Quad::computeGradientScalar(const vec_CDMatPP &u, vec_ar3_CDMatPP &u_i, int
     }
     PreloopGradient grad(dsdxii, dsdeta, dzdxii, dzdeta, inv_s, mIsAxial);
     // compute gradient
-    grad.gradScalar(u, u_i, Nu, mNr % 2 == 0);
+    grad.gradScalar(u, u_i, mNr / 2, mNr % 2 == 0);
 }
 
 Gradient *Quad::createGraident() const {
@@ -425,21 +445,7 @@ Gradient *Quad::createGraident() const {
             inv_s(ipol, jpol) = (mIsAxial && ipol == 0) ? 0. : 1. / s;
         }
     }
-    if (stiffRelabelling()) {
-        if (mIsAxial)
-            return new GradientAxial(XMath::castToSolver(dsdxii), XMath::castToSolver(dsdeta), 
-                XMath::castToSolver(dzdxii), XMath::castToSolver(dzdeta), XMath::castToSolver(inv_s));
-        else 
-            return new Gradient(XMath::castToSolver(dsdxii), XMath::castToSolver(dsdeta), 
-                XMath::castToSolver(dzdxii), XMath::castToSolver(dzdeta), XMath::castToSolver(inv_s));  
-    } else {
-        if (mIsAxial)
-            return new GradientAxialVoigt(XMath::castToSolver(dsdxii), XMath::castToSolver(dsdeta), 
-                XMath::castToSolver(dzdxii), XMath::castToSolver(dzdeta), XMath::castToSolver(inv_s));
-        else 
-            return new GradientVoigt(XMath::castToSolver(dsdxii), XMath::castToSolver(dsdeta), 
-                XMath::castToSolver(dzdxii), XMath::castToSolver(dzdeta), XMath::castToSolver(inv_s));      
-    }
+    return new Gradient(dsdxii, dsdeta, dzdxii, dzdeta, inv_s, mIsAxial);  
 }
 
 void Quad::formIntegralFactor() {
@@ -453,12 +459,12 @@ void Quad::formIntegralFactor() {
             if (mIsAxial) {
                 if (ipol == 0) {
                     const RDMat22 &J = jacobian(xieta);
-                    mIntegralFactor(ipol, jpol) = wxi_weta * J(0, 0) * detJ; 
+                    mIntegralFactor(ipol * nPntEdge + jpol) = wxi_weta * J(0, 0) * detJ; 
                 } else {
-                    mIntegralFactor(ipol, jpol) = wxi_weta * s / (1. + xieta(0)) * detJ; 
+                    mIntegralFactor(ipol * nPntEdge + jpol) = wxi_weta * s / (1. + xieta(0)) * detJ; 
                 }
             } else {
-                mIntegralFactor(ipol, jpol) = wxi_weta * s * detJ;  
+                mIntegralFactor(ipol * nPntEdge + jpol) = wxi_weta * s * detJ;  
             }
         }
     }
@@ -521,7 +527,7 @@ void Quad::formNrField(const NrField &nrf) {
             }
             
             // luck number
-            if (nrf.useLuckyNumber()) mPointNr(ipol, jpol) = XMath::nextLuckyNumber(mPointNr(ipol, jpol), forceOdd);
+            if (nrf.useLuckyNumber()) mPointNr(ipol, jpol) = PreloopFFTW::nextLuckyNumber(mPointNr(ipol, jpol), forceOdd);
         }
     }
     mNr = mPointNr.maxCoeff();
@@ -530,7 +536,7 @@ void Quad::formNrField(const NrField &nrf) {
 double Quad::getCourant() const {
     // 1D reference
     double vmaxRef = mMaterial->getVMaxRef();
-    double hminRef = 1e100;
+    double hminRef = DBL_MAX;
     for (int i = 0; i < 4; i++) {
         double sideLen = (mNodalCoords.col(i) - mNodalCoords.col(Mapping::period0123(i + 1))).norm();
         hminRef = std::min(hminRef, sideLen);
@@ -552,14 +558,14 @@ RDColX Quad::getHminSlices() const {
     int nslices = getNr();
     RDColX hmin = RDColX::Constant(nslices, XMath::findClosestDist(coordsRef));
     // hmin of deformed mesh
-    if (stiffRelabelling()) {
+    if (hasRelabelling()) {
         const RDMatXN &deltaR = mRelabelling->getDeltaR();
         for (int islice = 0; islice < nslices; islice++) {
             std::vector<RDCol2> coordsSlice = coordsRef;
             for (int ipol = 0; ipol <= nPol; ipol++) {
                 for (int jpol = 0; jpol <= nPol; jpol++) {
                     int ipnt = ipol * nPntEdge + jpol;
-                    double theta = XMath::theta(coordsRef[ipnt]);
+                    double theta = Geodesy::theta(coordsRef[ipnt]);
                     coordsSlice[ipnt](0) += deltaR(islice, ipnt) * sin(theta);
                     coordsSlice[ipnt](1) += deltaR(islice, ipnt) * cos(theta);
                 }
@@ -572,15 +578,17 @@ RDColX Quad::getHminSlices() const {
 
 RDMatX3 Quad::computeNormal(int side, int ipol, int jpol) const {
     // check element-side type
-    if (mMapping->getType() == Mapping::MappingTypes::Spherical && (side + mCurvedOuter) % 2 != 0)
+    if (mMapping->getType() == Mapping::MappingTypes::Spherical && (side + mCurvedOuter) % 2 != 0) {
         throw std::runtime_error("Quad::computeNormal || Computing normal on non-spherical side.");
-    if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && side != mCurvedOuter)    
+    }
+    if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && side != mCurvedOuter) {
         throw std::runtime_error("Quad::computeNormal || Computing normal on non-spherical side.");
+    }
     
     // compute common boundary terms
     double r0, r1, theta0, theta1;
-    XMath::rtheta(mNodalCoords.col(side), r0, theta0);
-    XMath::rtheta(mNodalCoords.col(Mapping::period0123(side + 1)), r1, theta1);
+    Geodesy::rtheta(mNodalCoords.col(side), r0, theta0);
+    Geodesy::rtheta(mNodalCoords.col(Mapping::period0123(side + 1)), r1, theta1);
     double rsf = .5 * (r0 + r1);
     double half_r_dtheta = .5 * rsf * std::abs(theta1 - theta0);
     double half_r2_dtheta = .5 * rsf * rsf * std::abs(theta1 - theta0);  
@@ -597,7 +605,7 @@ RDMatX3 Quad::computeNormal(int side, int ipol, int jpol) const {
     Q(2, 0) = -sint;
     Q(2, 2) = cost;
     RDMatX3 nRTZ(mPointNr(ipol, jpol), 3);
-    if (massRelabelling()) {
+    if (hasRelabelling()) {
         nRTZ = mRelabelling->getSFNormalRTZ(ipol, jpol);
     } else {
         nRTZ.col(0).fill(0.);
@@ -618,7 +626,9 @@ RDMatX3 Quad::computeNormal(int side, int ipol, int jpol) const {
     } else {
         normal *= wsf * sint * half_r2_dtheta;
     }
-    if (side != mCurvedOuter) normal *= -1.;
+    if (side != mCurvedOuter) {
+        normal *= -1.;
+    }
     return normal;
 }
 
@@ -644,202 +654,4 @@ bool Quad::nearMe(double s, double z) const {
         z < mNodalCoords.row(1).minCoeff() - tinySingle) return false;
     return true;
 }
-
-bool Quad::isIsotropic() const {
-    return mMaterial->isIsotropic();
-}
-
-bool Quad::isStiffness1D() const {
-    return mMaterial->isStiffness1D();
-}
-
-// #include "XMPI.h"
-// void Quad::testRelabelling() {
-//     if (!stiffRelabelling()) return;
-//     if (!mIsAxial) return;
-//     
-//     ///////////////////// test data
-//     int nu = getNu();
-//     vec_ar3_CMatPP disp = vec_ar3_CMatPP(nu + 1, zero_ar3_CMatPP);
-//     
-//     for (int alpha = 0; alpha <= 0; alpha++) {
-//         disp[alpha][0] = CMatPP::Random();
-//         disp[alpha][1] = CMatPP::Random();
-//         disp[alpha][2] = CMatPP::Random();
-//     }
-//     disp[0][0].imag().setZero();
-//     disp[0][1].imag().setZero();
-//     disp[0][2].imag().setZero();
-//     if (getNr() % 2 == 0) {
-//         disp[nu][0].imag().setZero();
-//         disp[nu][1].imag().setZero();
-//         disp[nu][2].imag().setZero();
-//     }
-//     if (mIsAxial) {
-//         disp[0][0].row(0).setZero();
-//         disp[0][1].row(0).setZero();
-//         disp[1][1].row(0) = ii * disp[1][0].row(0);
-//         disp[1][2].row(0).setZero();
-//         for (int alpha = 2; alpha <= nu; alpha++) {
-//             disp[alpha][0].row(0).setZero();
-//             disp[alpha][1].row(0).setZero();
-//             disp[alpha][2].row(0).setZero();
-//         }
-//     }
-//     
-//     std::cout << "==========="<< mIsAxial << " ";
-//     std::cout << XMath::rtheta(mapping(RDCol2::Zero())).transpose() << " ";
-//     std::cout << "===========" << std::endl;
-//     
-//     // slice to compare
-//     int islice = 0;
-//     
-//     ///////////////////// 1D copy with stretched nodes /////////////////////
-// 
-//     // backup original coordinates
-//     RDMat24 originalCrds = mNodalCoords;
-//     
-//     // stretch coordinates
-//     const RDMatXN &deltaR = mRelabelling->getDeltaR();
-//     for (int i = 0; i < 4; i++) {
-//         const RDCol2 &crds = mNodalCoords.col(i);
-//         double theta = XMath::theta(crds);
-//         int ipnt = 0;
-//         if (i == 0) ipnt = 0 * nPntEdge + 0; 
-//         if (i == 1) ipnt = nPol * nPntEdge + 0;
-//         if (i == 2) ipnt = nPol * nPntEdge + nPol; 
-//         if (i == 3) ipnt = 0 * nPntEdge + nPol;
-//         std::cout << deltaR(islice, ipnt) << " ";
-//         mNodalCoords(0, i) += deltaR(islice, ipnt) * sin(theta);
-//         mNodalCoords(1, i) += deltaR(islice, ipnt) * cos(theta);
-//     } 
-//     std::cout<<"\n";
-//     formIntegralFactor();
-// 
-//     // stretched gradient
-//     RDMatPP dsdxii, dsdeta, dzdxii, dzdeta, inv_s;
-//     for (int ipol = 0; ipol <= nPol; ipol++) {
-//         for (int jpol = 0; jpol <= nPol; jpol++) {
-//             const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mIsAxial);
-//             const RDMat22 &J = jacobian(xieta);
-//             double detJ = J.determinant();
-//             dsdxii(ipol, jpol) = J(0, 0) / detJ;
-//             dsdeta(ipol, jpol) = -J(0, 1) / detJ;
-//             dzdxii(ipol, jpol) = -J(1, 0) / detJ;
-//             dzdeta(ipol, jpol) = J(1, 1) / detJ;
-//             double s = mapping(xieta)(0);
-//             inv_s(ipol, jpol) = (mIsAxial && ipol == 0) ? 0. : 1. / s;
-//         }
-//     }
-//     Gradient *stretchedGrad;
-//     if (mIsAxial)
-//         stretchedGrad = new GradientAxialVoigt(XMath::castToSolver(dsdxii), XMath::castToSolver(dsdeta), 
-//             XMath::castToSolver(dzdxii), XMath::castToSolver(dzdeta), XMath::castToSolver(inv_s));
-//     else 
-//         stretchedGrad = new GradientVoigt(XMath::castToSolver(dsdxii), XMath::castToSolver(dsdeta), 
-//             XMath::castToSolver(dzdxii), XMath::castToSolver(dzdeta), XMath::castToSolver(inv_s)); 
-//     
-//     // elastic
-//     Elastic *stretchedElas = mMaterial->createElasticTEST(0);
-//     std::cout << stretchedElas->verbose() << std::endl;
-//     
-//     // compute
-//     vec_ar3_CMatPP stiff0 = vec_ar3_CMatPP(nu + 1, zero_ar3_CMatPP);
-//     vec_ar9_CMatPP strain0 = vec_ar9_CMatPP(nu + 1, zero_ar9_CMatPP);
-//     vec_ar9_CMatPP stress0 = vec_ar9_CMatPP(nu + 1, zero_ar9_CMatPP);
-//     stretchedGrad->gradVector(disp, strain0, nu);
-//     stretchedElas->strainToStress(strain0, stress0, nu);
-//     stretchedGrad->quadVector(stress0, stiff0, nu);
-//     
-//     stiff0[0][0].imag().setZero();
-//     stiff0[0][1].imag().setZero();
-//     stiff0[0][2].imag().setZero();
-//     if (getNr() % 2 == 0) {
-//         stiff0[nu][0].imag().setZero();
-//         stiff0[nu][1].imag().setZero();
-//         stiff0[nu][2].imag().setZero();
-//     }
-//     if (mIsAxial) {
-//         stiff0[0][0].row(0).setZero();
-//         stiff0[0][1].row(0).setZero();
-//         stiff0[1][1].row(0) = -ii * stiff0[1][0].row(0);
-//         stiff0[1][2].row(0).setZero();
-//         for (int alpha = 2; alpha <= nu; alpha++) {
-//             stiff0[alpha][0].row(0).setZero();
-//             stiff0[alpha][1].row(0).setZero();
-//             stiff0[alpha][2].row(0).setZero();
-//         }
-//     }
-//     // std::cout << stiff0[0][0] << std::endl;
-//     // std::cout << stiff0[0][1] << std::endl;
-//     // std::cout << stiff0[0][2] << std::endl;
-//     
-//     // delete
-//     delete stretchedElas;
-//     delete stretchedGrad;
-//     
-//     ///////////////////// particle relabelling /////////////////////
-//     
-//     // mapping
-//     // delete mMapping;
-//     // mMapping = new SphericalMapping();
-//     
-//     // restore coords
-//     // std::cout << "..."<<std::endl;
-//     // std::cout << mNodalCoords<<std::endl;
-//     // std::cout << originalCrds<<std::endl;
-//     // std::cout << "..."<<std::endl;
-//     mNodalCoords = originalCrds;
-//     formIntegralFactor();
-//     
-//     // gradient, elastic 
-//     Gradient *relabelledGrad = createGraident();
-//     Elastic *relabelledElas = mMaterial->createElastic(0);
-//     std::cout << relabelledElas->verbose() << std::endl;
-//     
-//     // compute
-//     vec_ar3_CMatPP stiff1 = vec_ar3_CMatPP(nu + 1, zero_ar3_CMatPP);
-//     vec_ar9_CMatPP strain1 = vec_ar9_CMatPP(nu + 1, zero_ar9_CMatPP);
-//     vec_ar9_CMatPP stress1 = vec_ar9_CMatPP(nu + 1, zero_ar9_CMatPP);
-//     relabelledGrad->gradVector(disp, strain1, nu);    
-//     relabelledElas->strainToStress(strain1, stress1, nu);
-//     relabelledGrad->quadVector(stress1, stiff1, nu);
-//     
-//     stiff1[0][0].imag().setZero();
-//     stiff1[0][1].imag().setZero();
-//     stiff1[0][2].imag().setZero();
-//     if (getNr() % 2 == 0) {
-//         stiff1[nu][0].imag().setZero();
-//         stiff1[nu][1].imag().setZero();
-//         stiff1[nu][2].imag().setZero();
-//     }
-//     if (mIsAxial) {
-//         stiff1[0][0].row(0).setZero();
-//         stiff1[0][1].row(0).setZero();
-//         stiff1[1][1].row(0) = -ii * stiff1[1][0].row(0);
-//         stiff1[1][2].row(0).setZero();
-//         for (int alpha = 2; alpha <= nu; alpha++) {
-//             stiff1[alpha][0].row(0).setZero();
-//             stiff1[alpha][1].row(0).setZero();
-//             stiff1[alpha][2].row(0).setZero();
-//         }
-//     }
-//     
-//     // std::cout << stiff1[0][0] << std::endl;
-//     // std::cout << stiff1[0][1] << std::endl;
-//     // std::cout << stiff1[0][2] << std::endl;
-//     
-//     // delete
-//     delete relabelledElas;
-//     delete relabelledGrad;
-//     
-//     
-//     //////////// end ////////////
-//     std::cout << "======================\n" << std::endl;
-//     static int a = 0;
-//     a++;
-//     if (a==3) exit(0);
-//      
-// }
-// 
 

@@ -21,17 +21,17 @@ public:
     Material(const Quad *myQuad, const ExodusModel &exModel);
     
     // add 3D
-    void addVolumetric3D(const std::vector<Volumetric3D> &m3D, 
+    void addVolumetric3D(const std::vector<Volumetric3D *> &m3D, 
         double srcLat, double srcLon, double srcDep, double phi2D);
         
     // Mass
     arPP_RDColX computeElementalMass() const;
     
     // Acoustic
-    Acoustic *createAcoustic() const;
+    Acoustic *createAcoustic(bool elem1D) const;
     
     // Elastic
-    Elastic *createElastic(const AttBuilder *attBuild) const;
+    Elastic *createElastic(bool elem1D, const AttBuilder *attBuild) const;
         
     // get v_max to compute dt 
     double getVMaxRef() const;

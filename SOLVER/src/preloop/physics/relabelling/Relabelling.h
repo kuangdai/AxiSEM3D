@@ -16,7 +16,7 @@ public:
     Relabelling(const Quad *quad);
     
     // add deltaR on mass sampling points
-    void addUndulation(const std::vector<Geometric3D> &g3D, 
+    void addUndulation(const std::vector<Geometric3D *> &g3D, 
         double srcLat, double srcLon, double srcDep, double phi2D);
     
     // stiffness
@@ -36,7 +36,7 @@ public:
     bool isPar1D() const;
     
     // create PRT pointer
-    PRT *createPRT() const;
+    PRT *createPRT(bool elem1D) const;
     
     // deltaR
     const RDMatXN &getDeltaR() const {return mStiff_dZ;};
