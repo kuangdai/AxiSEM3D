@@ -185,7 +185,7 @@ arPP_RDColX Material::computeElementalMass() const {
     const RDRowN &iFact = mMyQuad->getIntegralFactor();
     for (int ipnt = 0; ipnt < nPntElem; ipnt++) {
         if (mMyQuad->isFluid()) {
-            mass[ipnt] = (mRhoMass3D[ipnt].array() * mVpFluid3D[ipnt].array().pow(2.)).matrix();
+            mass[ipnt] = (mRhoMass3D[ipnt].array() * mVpFluid3D[ipnt].array().pow(2.)).pow(-1.).matrix();
         } else {
             mass[ipnt] = mRhoMass3D[ipnt];
         }
