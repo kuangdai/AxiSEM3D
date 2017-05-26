@@ -11,10 +11,9 @@ class Volumetric3D;
 class Acoustic;
 class Elastic;
 class AttBuilder;
-class Attenuation1D;
-class Attenuation3D;
 
 #include "eigenp.h"
+#include <array>
 
 class Material {
 public:
@@ -22,7 +21,8 @@ public:
     Material(const Quad *myQuad, const ExodusModel &exModel);
     
     // add 3D
-    void addVolumetric3D(const Volumetric3D &m3D, double srcLat, double srcLon, double srcDep, double phi2D);
+    void addVolumetric3D(const std::vector<Volumetric3D> &m3D, 
+        double srcLat, double srcLon, double srcDep, double phi2D);
         
     // Mass
     arPP_RDColX computeElementalMass() const;
@@ -37,38 +37,34 @@ public:
     double getVMaxRef() const;
     RDColX getVMax() const;
     
+    // check 1D
+    bool isFluidPar1D() const;
+    bool isSolidPar1D(bool attenuation) const;
+    
     // check isotropic
     bool isIsotropic() const;
-    
-    // check 1D
-    bool isStiffness1D() const;
     
     // get properties
     RDMatXN getProperty(const std::string &vname, int refType);
         
 private:
-    // elastic
-    Elastic *createElastic1D(const AttBuilder *attBuild) const;
-    Elastic *createElastic3D(const AttBuilder *attBuild) const;
-    
-    // attenuation
-    void makeAttenuation1D(const AttBuilder &attBuild, 
-        RDMatPP &kappa, RDMatPP &mu, Attenuation1D *&att) const;
-    void makeAttenuation3D(const AttBuilder &attBuild, 
-        RDMatXN &kappa, RDMatXN &mu, Attenuation3D *&att) const;
-    
-    // 1D reference
+    // 1D reference material
     RDRow4 mVpv1D, mVph1D;
     RDRow4 mVsv1D, mVsh1D;
     RDRow4 mRho1D;
-    RDRow4 mEta;
-    RDRow4 mQmu, mQkp;
+    RDRow4 mEta1D;
+    RDRow4 mQkp1D, mQmu1D;
     
-    // 3D
+    // 3D material
     RDMatXN mVpv3D, mVph3D;
     RDMatXN mVsv3D, mVsh3D;
     RDMatXN mRho3D;
+    RDMatXN mEta3D;
+    RDMatXN mQkp3D, mQmu3D;
+    
+    // 3D material sampled at mass points
     arPP_RDColX mRhoMass3D;
+    arPP_RDColX mVpFluid3D;
     
     // Quad host
     const Quad *mMyQuad;
