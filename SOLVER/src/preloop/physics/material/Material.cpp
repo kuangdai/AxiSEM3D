@@ -182,30 +182,23 @@ arPP_RDColX Material::computeElementalMass() const {
         }
     }
     // general mass term
-    const RDMatPP &iFact = mMyQuad->getIntegralFactor();
-    for (int ipol = 0; ipol <= nPol; ipol++) {
-        for (int jpol = 0; jpol <= nPol; jpol++) {
-            int ipnt = ipol * nPntEdge + jpol;
-            if (mMyQuad->isFluid()) {
-                mass[ipnt] = (J[ipnt].array() * mRhoMass3D[ipnt].array() 
-                    * mVpFluid3D[ipnt].array().pow(2.)).matrix();
-            } else {
-                mass[ipnt] = J[ipnt].schur(mRhoMass3D[ipnt]);
-            }
-            mass[ipnt] *= iFact(ipol, jpol);
+    const RDRowN &iFact = mMyQuad->getIntegralFactor();
+    for (int ipnt = 0; ipnt < nPntElem; ipnt++) {
+        if (mMyQuad->isFluid()) {
+            mass[ipnt] = (mRhoMass3D[ipnt].array() * mVpFluid3D[ipnt].array().pow(2.)).matrix();
+        } else {
+            mass[ipnt] = mRhoMass3D[ipnt];
         }
+        mass[ipnt].array() *= iFact(ipnt) * J[ipnt].array();
     }
     return mass;
 }
 
 Acoustic *Material::createAcoustic() const {
-    const RDMatPP &iFact = mMyQuad->getIntegralFactor();
+    const RDRowN &iFact = mMyQuad->getIntegralFactor();
     RDMatXN fluidK = mRho3D.array().pow(-1.);
-    for (int ipol = 0; ipol <= nPol; ipol++) {
-       for (int jpol = 0; jpol <= nPol; jpol++) {
-           int ipnt = ipol * nPntEdge + jpol;
-           fluidK.col(ipnt) *= iFact(ipol, jpol);
-       }
+    for (int ipnt = 0; ipnt < nPntElem; ipnt++) {
+       fluidK.col(ipnt) *= iFact(ipnt);
     }
     if (mMyQuad->hasRelabelling()) {
         fluidK *= mMyQuad->getRelabelling().getStiffJacobian();
@@ -224,17 +217,14 @@ Acoustic *Material::createAcoustic() const {
 
 Elastic *Material::createElastic(const AttBuilder *attBuild) const {
     // elasticity tensor
-    const RDMatPP &iFact = mMyQuad->getIntegralFactor(); 
+    const RDRowN &iFact = mMyQuad->getIntegralFactor(); 
     RDMatXN A(mRho3D), C(mRho3D), F(mRho3D), L(mRho3D), N(mRho3D);
-    for (int ipol = 0; ipol <= nPol; ipol++) {
-        for (int jpol = 0; jpol <= nPol; jpol++) {
-            // A C L N
-            int ipnt = ipol * nPntEdge + jpol;
-            A.col(ipnt).array() *= mVph3D.col(ipnt).array().pow(2.) * iFact(ipol, jpol);
-            C.col(ipnt).array() *= mVpv3D.col(ipnt).array().pow(2.) * iFact(ipol, jpol);
-            L.col(ipnt).array() *= mVsv3D.col(ipnt).array().pow(2.) * iFact(ipol, jpol);
-            N.col(ipnt).array() *= mVsh3D.col(ipnt).array().pow(2.) * iFact(ipol, jpol);
-        }
+    for (int ipnt = 0; ipnt < nPntElem; ipnt++) {
+        // A C L N
+        A.col(ipnt).array() *= mVph3D.col(ipnt).array().pow(2.) * iFact(ipnt);
+        C.col(ipnt).array() *= mVpv3D.col(ipnt).array().pow(2.) * iFact(ipnt);
+        L.col(ipnt).array() *= mVsv3D.col(ipnt).array().pow(2.) * iFact(ipnt);
+        N.col(ipnt).array() *= mVsh3D.col(ipnt).array().pow(2.) * iFact(ipnt);
     }
     // F
     F = mEta3D.schur(A - 2. * L);
