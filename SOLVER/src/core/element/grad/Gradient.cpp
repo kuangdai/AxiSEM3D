@@ -14,10 +14,10 @@ mDzDxii(dzdxii.cast<Real>()), mDzDeta(dzdeta.cast<Real>()),
 mInv_s(inv_s.cast<Real>()), mAxial(axial) {
     if (mAxial) {
         sG_xii = &sG_GLL;
-        sGT_xii = &sGT_GLL;
+        sGT_xii = &sGT_GLJ;
     } else {
         sG_xii = &sG_GLJ;
-        sGT_xii = &sGT_GLJ;
+        sGT_xii = &sGT_GLL;
     }
     sG_eta = &sG_GLL;
     sGT_eta = &sGT_GLL;
