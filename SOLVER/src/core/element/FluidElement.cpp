@@ -24,13 +24,13 @@ Element(grad, prt, points), mAcoustic(acous), mCrdTransTIso(0) {
     } 
     // 3D
     bool acous1D = mAcoustic->is1D();
-    bool prt1D = false;
     if (mHasPRT) {
-        prt1D = mPRT->is1D();
-    } else {
-        prt1D = true;
-    }
-    mElem3D = !(prt1D && acous1D);
+        if (acous1D != mPRT->is1D()) {
+            throw std::runtime_error("FluidElement::FluidElement || "
+                "Particle Relabelling and Elasticity are generated in different spaces.");  
+        }
+    } 
+    mElem3D = !acous1D;
 }
 
 FluidElement::~FluidElement() {

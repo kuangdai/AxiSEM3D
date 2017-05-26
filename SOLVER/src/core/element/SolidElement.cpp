@@ -24,13 +24,13 @@ Element(grad, prt, points), mElastic(elas), mCrdTransTIso(0) {
     } 
     // 3D
     bool elas1D = mElastic->is1D();
-    bool prt1D = false;
     if (mHasPRT) {
-        prt1D = mPRT->is1D();
-    } else {
-        prt1D = true;
-    }
-    mElem3D = !(prt1D && elas1D);
+        if (elas1D != mPRT->is1D()) {
+            throw std::runtime_error("SolidElement::SolidElement || "
+                "Particle Relabelling and Elasticity are generated in different spaces.");  
+        }
+    } 
+    mElem3D = !elas1D;
 }
 
 SolidElement::~SolidElement() {
