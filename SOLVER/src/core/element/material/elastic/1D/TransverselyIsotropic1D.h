@@ -20,6 +20,9 @@ public:
     // verbose
     std::string verbose() const {return "TransverselyIsotropic1D";};
     
+    // need TIso
+    bool needTIso() const {return true;};
+    
 private:
     
     // Cijkl scaled by integral factor

@@ -24,6 +24,9 @@ public:
     // 1D or Fourier space
     virtual bool is1D() const = 0;
     
+    // need TIso
+    virtual bool needTIso() const = 0;
+    
     // reset to zero 
     virtual void resetZero() = 0; 
 };

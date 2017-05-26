@@ -18,7 +18,7 @@ SolidElement::SolidElement(Gradient *grad, PRT *prt,
 Element(grad, prt, points), mElastic(elas), mCrdTransTIso(0) {
     mElastic->checkCompatibility(mMaxNr);
     // TISO
-    mInTIso = mHasPRT;
+    mInTIso = mHasPRT || mElastic->needTIso();
     if (mInTIso) {
         mCrdTransTIso = new CrdTransTIsoSolid(formThetaMat());
     } 

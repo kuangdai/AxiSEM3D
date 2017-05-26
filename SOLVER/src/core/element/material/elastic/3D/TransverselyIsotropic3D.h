@@ -23,6 +23,9 @@ public:
     // verbose
     std::string verbose() const {return "TransverselyIsotropic3D";};
     
+    // need TIso
+    bool needTIso() const {return true;};
+    
 private:
     // Cijkl scaled by integral factor
     RMatXN mA;

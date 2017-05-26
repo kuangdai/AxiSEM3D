@@ -21,6 +21,9 @@ public:
     
     // verbose
     std::string verbose() const {return "Isotropic3D";};
+    
+    // need TIso
+    bool needTIso() const {return false;};
                 
 private:    
     // Cijkl scaled by integral factor
