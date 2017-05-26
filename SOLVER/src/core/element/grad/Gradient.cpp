@@ -13,10 +13,10 @@ mDsDxii(dsdxii.cast<Real>()), mDsDeta(dsdeta.cast<Real>()),
 mDzDxii(dzdxii.cast<Real>()), mDzDeta(dzdeta.cast<Real>()), 
 mInv_s(inv_s.cast<Real>()), mAxial(axial) {
     if (mAxial) {
-        sG_xii = &sG_GLL;
+        sG_xii = &sG_GLJ;
         sGT_xii = &sGT_GLJ;
     } else {
-        sG_xii = &sG_GLJ;
+        sG_xii = &sG_GLL;
         sGT_xii = &sGT_GLL;
     }
     sG_eta = &sG_GLL;
@@ -262,6 +262,7 @@ void Gradient::computeGrad6(const vec_ar3_CMatPP &ui, vec_ar6_CMatPP &eij, int N
     }   
 }
 
+#include <iostream>
 void Gradient::computeQuad6(vec_ar3_CMatPP &fi, const vec_ar6_CMatPP &sij, int Nu, int nyquist) const {
     // hardcode for mbeta = 0
     static RMatPP X0R, X1R, X2R, Y0R, Y1R, Y2R; 
@@ -278,6 +279,10 @@ void Gradient::computeQuad6(vec_ar3_CMatPP &fi, const vec_ar6_CMatPP &sij, int N
         fi[0][0].real() += (*sG_xii).col(0) * mDzDeta.row(0).schur(sij[0][1].real().row(0));
         fi[0][1].real() -= (*sG_xii).col(0) * mDzDeta.row(0).schur(sij[0][5].real().row(0));
     }
+    
+    std::cout << sij[0][0]<<std::endl;
+    std::cout << fi[0][0]<<std::endl;
+    exit(0);
     
     // mbeta > 0
     static CMatPP g0, g1, g2, X0, X1, X2, Y0, Y1, Y2;
