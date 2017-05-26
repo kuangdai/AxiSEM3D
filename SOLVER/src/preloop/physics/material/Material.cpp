@@ -268,7 +268,7 @@ Elastic *Material::createElastic(bool elem1D, const AttBuilder *attBuild) const 
         XMath::structuredUseFirstRow(L, L0);
         XMath::structuredUseFirstRow(N, N0);
         if (isIsotropic()) {
-            return new Isotropic1D(A0.cast<Real>(), C0.cast<Real>(), att1D);
+            return new Isotropic1D(F0.cast<Real>(), L0.cast<Real>(), att1D);
         } else {
             return new TransverselyIsotropic1D(A0.cast<Real>(), C0.cast<Real>(), 
                 F0.cast<Real>(), L0.cast<Real>(), N0.cast<Real>(), att1D);
