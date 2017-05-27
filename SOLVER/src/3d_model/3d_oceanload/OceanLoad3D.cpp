@@ -20,38 +20,34 @@ const double OceanLoad3D::mWaterDensity = 1027.;
 void OceanLoad3D::buildInparam(OceanLoad3D *&model,
                                const Parameters &par, int verbose) {
     // delete    
-    if (model) delete model;
+    if (model) {
+        delete model;
+    }
     
     // get keyword
     std::string mstr = par.getValue<std::string>("MODEL_3D_OCEAN_LOAD");
-    boost::trim_if(mstr, boost::is_any_of("\t "));
+    std::vector<std::string> strs = Parameters::splitString(mstr, "$");
+    std::string name(strs[0]);
+    std::vector<std::string> params(strs.begin() + 1, strs.end());
     
-    // check ocean type
-    if (boost::iequals(mstr, "none")) {
-        // no ocean
+    // create model
+    if (boost::iequals(name, "none")) {
         model = 0;
+    } else if (boost::iequals(name, "constant")) {
+        model = new OceanLoad3D_const();
+    } else if (boost::iequals(name, "crust1")) {
+        model = new OceanLoad3D_crust1();
+    
+    /////////////////////////////// 
+    // user-defined models here
+    /////////////////////////////// 
+        
     } else {
-        // split model name and parameters
-        std::vector<std::string> strs;
-        boost::split(strs, mstr, boost::is_any_of("$"), boost::token_compress_on);
-        std::string name = strs[0];
-        std::vector<std::string> params(strs.begin() + 1, strs.end());
-        
-        // create model
-        if (boost::iequals(name, "constant")) {
-            model = new OceanLoad3D_const();
-        } else if (boost::iequals(name, "crust1")) {
-            model = new OceanLoad3D_crust1();
-            
-        /////////////////////////////// 
-        // user-defined models here
-        /////////////////////////////// 
-            
-        } else {
-            throw std::runtime_error("OceanLoad3D::buildInparam || "
-                "Unknown ocean load model: " + name + ".");
-        }
-        
+        throw std::runtime_error("OceanLoad3D::buildInparam || "
+            "Unknown ocean-load model name " + name + ".");
+    }
+    
+    if (model != 0) {
         // initialize model
         model->initialize(params);
         
