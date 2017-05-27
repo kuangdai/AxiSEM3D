@@ -29,7 +29,9 @@ int axisem_main(int argc, char *argv[]) {
         
         //////// preloop timer
         MultilevelTimer::initialize(Parameters::sOutputDirectory + "/develop/preloop_timer.txt", 4);
-        if (pl.mParameters->getValue<bool>("DEVELOP_DIAGNOSE_PRELOOP")) MultilevelTimer::enable();
+        if (pl.mParameters->getValue<bool>("DEVELOP_DIAGNOSE_PRELOOP")) {
+            MultilevelTimer::enable();
+        }
         
         //////// exodus model and attenuation parameters 
         MultilevelTimer::begin("Exodus", 0);
@@ -79,9 +81,13 @@ int axisem_main(int argc, char *argv[]) {
         //////// dt
         MultilevelTimer::begin("DT", 0);
         double dt = pl.mParameters->getValue<double>("TIME_DELTA_T");
-        if (dt < tinyDouble) dt = pl.mMesh->getDeltaT();
+        if (dt < tinyDouble) {
+            dt = pl.mMesh->getDeltaT();
+        }
         double dt_fact = pl.mParameters->getValue<double>("TIME_DELTA_T_FACTOR");
-        if (dt_fact < tinyDouble) dt_fact = 1.0;
+        if (dt_fact < tinyDouble) {
+            dt_fact = 1.0;
+        }
         dt *= dt_fact;
         MultilevelTimer::end("DT", 0);
         
@@ -140,7 +146,9 @@ int axisem_main(int argc, char *argv[]) {
         
         // verbose domain 
         MultilevelTimer::begin("Verbose", 1);
-        if (verbose) XMPI::cout << sv.mDomain->verbose();
+        if (verbose) {
+            XMPI::cout << sv.mDomain->verbose();
+        }
         MultilevelTimer::end("Verbose", 1);
         MultilevelTimer::end("Computationalion Domain", 0);
         
