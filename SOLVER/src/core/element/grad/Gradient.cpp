@@ -29,6 +29,7 @@ void Gradient::computeGrad(const vec_CMatPP &u, vec_ar3_CMatPP &u_i, int Nu, int
     GUR = (*sGT_xii) * u[0].real();  
     UGR = u[0].real() * (*sG_eta);
     u_i[0][0].real() = mDzDeta.schur(GUR) + mDzDxii.schur(UGR);
+    u_i[0][1].real().setZero();
     u_i[0][2].real() = mDsDeta.schur(GUR) + mDsDxii.schur(UGR);
     
     // alpha > 0
@@ -96,6 +97,7 @@ void Gradient::computeGrad9(const vec_ar3_CMatPP &ui, vec_ar9_CMatPP &ui_j, int 
     ui_j[0][4].real() = mInv_s.schur(ui[0][0].real()); 
     ui_j[0][5].real() = mDsDeta.schur(GU1R) + mDsDxii.schur(UG1R);
     ui_j[0][6].real() = mDzDeta.schur(GU2R) + mDzDxii.schur(UG2R);
+    ui_j[0][7].real().setZero();
     ui_j[0][8].real() = mDsDeta.schur(GU2R) + mDsDxii.schur(UG2R);
     if (mAxial) {
         ui_j[0][4].row(0).real() += mDzDeta.row(0).schur((*sGT_xii).row(0) * ui[0][0].real());
