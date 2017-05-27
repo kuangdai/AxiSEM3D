@@ -28,7 +28,9 @@ Mesh::~Mesh() {
     destroy(); // local build
     delete mDDPar;
     delete mLearnPar;
-    for (const auto &sp: mSlicePlots) delete sp;    
+    for (const auto &sp: mSlicePlots) {
+        delete sp;
+    }    
 }
 
 Mesh::Mesh(const ExodusModel *exModel, const NrField *nrf, 
@@ -60,14 +62,16 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
         std::fstream fs;
         // node coordinates
         fs.open(Parameters::sOutputDirectory + "/plots/mesh_coordinates.txt", std::fstream::out);
-        for (int i = 0; i < exModel->getNumNodes(); i++) 
+        for (int i = 0; i < exModel->getNumNodes(); i++) {
             fs << exModel->getNodalS(i) << " " << exModel->getNodalZ(i) << std::endl; 
+        }
         fs.close();
         // element connectivity
         const std::vector<std::array<int, 4>> &con = exModel->getConnectivity();
         fs.open(Parameters::sOutputDirectory + "/plots/mesh_connectivity.txt", std::fstream::out);
-        for (int i = 0; i < exModel->getNumQuads(); i++) 
+        for (int i = 0; i < exModel->getNumQuads(); i++) {
             fs << con[i][0] << " " << con[i][1] << " " << con[i][2] << " " << con[i][3] << std::endl;
+        }
         fs.close();
     }
 }
@@ -77,10 +81,11 @@ void Mesh::buildUnweighted() {
     // balance solid and fluid separately
     DecomposeOption option(nElemGlobal, true, 0., 1, mDDPar->mNPartMetis, false);
     for (int iquad = 0; iquad < nElemGlobal; iquad++) {
-        if (mExModel->getElementalVariables().at("fluid")[iquad] > .5) 
+        if (mExModel->getElementalVariables().at("fluid")[iquad] > .5) {
             option.mElemWeights2[iquad] = 1.; // fluid
-        else 
+        } else {
             option.mElemWeights1[iquad] = 1.; // solid
+        }
     }
     MultilevelTimer::begin("Build Local", 1);
     buildLocal(option);
@@ -93,8 +98,9 @@ void Mesh::buildUnweighted() {
 
 double Mesh::getDeltaT() const {
     double dt = DBL_MAX;
-    for (int i = 0; i < getNumQuads(); i++) 
+    for (int i = 0; i < getNumQuads(); i++) {
         dt = std::min(dt, mQuads[i]->getDeltaT());
+    }
     return XMPI::min(dt);
 }
 
@@ -113,13 +119,17 @@ void Mesh::buildWeighted() {
     MultilevelTimer::end("Build Local", 1);
     // slice plots
     MultilevelTimer::begin("Plot at Weighted Phase", 1);
-    for (const auto &sp: mSlicePlots) sp->plotWeighted();
+    for (const auto &sp: mSlicePlots) {
+        sp->plotWeighted();
+    }
     MultilevelTimer::end("Plot at Weighted Phase", 1);
 }
 
 void Mesh::release(Domain &domain) {
     MultilevelTimer::begin("Release Points", 2);
-    for (const auto &point: mGLLPoints) point->release(domain);
+    for (const auto &point: mGLLPoints) {
+        point->release(domain);
+    }
     MultilevelTimer::end("Release Points", 2);
     
     MultilevelTimer::begin("Release Elements", 2);
@@ -169,7 +179,9 @@ double Mesh::computeRadiusRef(double depth, double lat, double lon) const {
     }
     
     // surface receivers
-    if (depth < tinyDouble) return router;
+    if (depth < tinyDouble) {
+        return router;
+    }
     
     // target
     double R = computeRPhysical(router, theta, phi) - depth;
@@ -184,11 +196,14 @@ double Mesh::computeRadiusRef(double depth, double lat, double lon) const {
     int iter = 0;
     while (iter++ <= maxIter) {
         double diff = computeRPhysical(current, theta, phi) - R;
-        if (std::abs(diff) < distTol) return current;
-        if (diff > 0.) 
+        if (std::abs(diff) < distTol) {
+            return current;
+        }
+        if (diff > 0.) {
             upper = current;
-        else 
+        } else {
             lower = current;
+        }
         current = .5 * (lower + upper);
     }
     throw std::runtime_error("Mesh::computeRadiusRef || Failed to find reference radius.");
@@ -196,8 +211,9 @@ double Mesh::computeRadiusRef(double depth, double lat, double lon) const {
 
 double Mesh::computeRPhysical(double r, double theta, double phi) const {
     double deltaR = 0.;
-    for (const auto &g3D: mGeometric3D) 
+    for (const auto &g3D: mGeometric3D) {
         deltaR += g3D->getDeltaR(r, theta, phi, r);
+    }
     return r + deltaR;
 }
 
@@ -217,8 +233,9 @@ void Mesh::buildLocal(const DecomposeOption &option) {
     // form empty points 
     MultilevelTimer::begin("Generate Points", 2);
     mGLLPoints.reserve(nGllLocal);
-    for (int i = 0; i < nGllLocal; i++) 
+    for (int i = 0; i < nGllLocal; i++) {
         mGLLPoints.push_back(new GLLPoint());
+    }
     MultilevelTimer::end("Generate Points", 2);
     
     // quads 
@@ -234,7 +251,9 @@ void Mesh::buildLocal(const DecomposeOption &option) {
             // 3D model
             quad->addVolumetric3D(mVolumetric3D, mSrcLat, mSrcLon, mSrcDep, mPhi2D);
             quad->addGeometric3D(mGeometric3D, mSrcLat, mSrcLon, mSrcDep, mPhi2D);
-            if (mOceanLoad3D != 0) quad->setOceanLoad3D(*mOceanLoad3D, mSrcLat, mSrcLon, mSrcDep, mPhi2D);    
+            if (mOceanLoad3D != 0) {
+                quad->setOceanLoad3D(*mOceanLoad3D, mSrcLat, mSrcLon, mSrcDep, mPhi2D);
+            }    
             // spatial range
             quad->getSpatialRange(s_max, s_min, z_max, z_min);
             mSMax = std::max(mSMax, s_max);
@@ -309,10 +328,14 @@ void Mesh::buildLocal(const DecomposeOption &option) {
 
 void Mesh::destroy() {
     // points
-    for (const auto &point: mGLLPoints) delete point;
+    for (const auto &point: mGLLPoints) {
+        delete point;
+    }
     mGLLPoints.clear();
     // quads
-    for (const auto &quad: mQuads) delete quad;
+    for (const auto &quad: mQuads) {
+        delete quad;
+    }
     mQuads.clear();
     // l2g mapping
     mLocalElemToGLL.clear();
@@ -366,7 +389,9 @@ void Mesh::measure(DecomposeOption &measured) {
                     // use minimum
                     elemCostLibrary.at(coststr) = std::min(elemOther->measure(nstep), 
                         elemCostLibrary.at(coststr));
-                    if (++sameKindFound == nMeasureSameKind) break;
+                    if (++sameKindFound == nMeasureSameKind) {
+                        break;
+                    }
                 }
             }
         }
@@ -427,7 +452,9 @@ void Mesh::measure(DecomposeOption &measured) {
                 if (pointOther->costSignature() == coststr) {
                     pointCostLibrary.at(coststr) = std::min(pointOther->measure(nstep),
                         pointCostLibrary.at(coststr));
-                    if (++sameKindFound == nMeasureSameKind) break;
+                    if (++sameKindFound == nMeasureSameKind) {
+                        break;
+                    }
                 }
             }
         }
@@ -462,9 +489,11 @@ void Mesh::measure(DecomposeOption &measured) {
     RDColX eWgtPnt = RDColX::Zero(nElemGlobal);
     for (int iloc = 0; iloc < getNumQuads(); iloc++) {
         int quadTag = mQuads[iloc]->getQuadTag();
-        for (int ipol = 0; ipol <= nPol; ipol++) 
-            for (int jpol = 0; jpol <= nPol; jpol++) 
+        for (int ipol = 0; ipol <= nPol; ipol++) {
+            for (int jpol = 0; jpol <= nPol; jpol++) {
                 eWgtPnt(quadTag) += pWgt(mLocalElemToGLL[iloc](ipol, jpol));
+            }
+        }
     }
     
     // sum up
@@ -493,11 +522,13 @@ void Mesh::measure(DecomposeOption &measured) {
         std::string fname = Parameters::sOutputDirectory + "/develop/measured_costs.txt";
         std::fstream fs(fname, std::fstream::out);
         fs << "*** Element Types ***" << std::endl;
-        for (auto it = elemCostLibraryGlobal.begin(); it != elemCostLibraryGlobal.end(); it++) 
+        for (auto it = elemCostLibraryGlobal.begin(); it != elemCostLibraryGlobal.end(); it++) {
             fs << it->first << "    " << it->second << std::endl;
+        }
         fs << std::endl << "*** Point Types ***" << std::endl;    
-        for (auto it = pointCostLibraryGlobal.begin(); it != pointCostLibraryGlobal.end(); it++) 
+        for (auto it = pointCostLibraryGlobal.begin(); it != pointCostLibraryGlobal.end(); it++) {
             fs << it->first << "    " << it->second << std::endl;    
+        }
         fs.close();    
     }
     
@@ -524,12 +555,15 @@ Mesh::DDParameters::DDParameters(const Parameters &par) {
     mNPartMetis = par.getValue<int>("DD_NPART_METIS");
     mCommVolMetis = par.getValue<bool>("DD_COMM_VOL_METIS");
     mReportMeasure = par.getValue<bool>("DEVELOP_MEASURED_COSTS");
-    if (mNPartMetis <= 0) mNPartMetis = 10;
+    if (mNPartMetis <= 0) {
+        mNPartMetis = 10;
+    }
 }
 
 int Mesh::getMaxNr() const {
     int maxNr = -1;
-    for (int i = 0; i < getNumQuads(); i++) 
+    for (int i = 0; i < getNumQuads(); i++) {
         maxNr = std::max(maxNr, mQuads[i]->getNr());
+    }
     return XMPI::max(maxNr);
 }
