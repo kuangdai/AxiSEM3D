@@ -55,20 +55,22 @@ void Receiver::release(Domain &domain, const Mesh &mesh,
                     
     // seismometer
     Seismometer *seis;
-    if (component == 0) 
+    if (component == 0) {
         seis = new SeismometerRTZ(mPhi, interpFact.cast<Real>(), myElem, mTheta);
-    else if (component == 1)
+    } else if (component == 1) {
         seis = new SeismometerENZ(mPhi, interpFact.cast<Real>(), myElem, mTheta, mBackAzimuth * degree);
-    else 
+    } else {
         seis = new Seismometer(mPhi, interpFact.cast<Real>(), myElem);
+    }
                 
     // recorder
     Recorder *rec;
     std::string fname = path + "/" + mNetwork + "_" + mName;
-    if (binary) 
+    if (binary) {
         rec = new RecorderBinary(bufferSize, fname, append);
-    else 
+    } else {
         rec = new RecorderAscii(bufferSize, fname, append);
+    }
     
     // station    
     domain.addStation(new Station(recordInterval, seis, rec));
@@ -79,11 +81,17 @@ bool Receiver::locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const
     double r = mesh.computeRadiusRef(mDepth, mLat, mLon);
     recCrds(0) = r * sin(mTheta);
     recCrds(1) = r * cos(mTheta);
-    if (recCrds(0) > mesh.sMax() + tinySingle || recCrds(0) < mesh.sMin() - tinySingle) return false;
-    if (recCrds(1) > mesh.zMax() + tinySingle || recCrds(1) < mesh.zMin() - tinySingle) return false;
+    if (recCrds(0) > mesh.sMax() + tinySingle || recCrds(0) < mesh.sMin() - tinySingle) {
+        return false;
+    }
+    if (recCrds(1) > mesh.zMax() + tinySingle || recCrds(1) < mesh.zMin() - tinySingle) {
+        return false;
+    }
     for (int iloc = 0; iloc < mesh.getNumQuads(); iloc++) {
         const Quad *quad = mesh.getQuad(iloc);
-        if (!quad->nearMe(recCrds(0), recCrds(1))) continue;
+        if (!quad->nearMe(recCrds(0), recCrds(1))) {
+            continue;
+        }
         if (quad->invMapping(recCrds, srcXiEta)) {
             if (std::abs(srcXiEta(0)) <= 1.000001 && std::abs(srcXiEta(1)) <= 1.000001) {
                 elemTag = quad->getElementTag();

@@ -20,15 +20,17 @@ mInputFile(fileRec), mGeographic(geographic) {
     std::vector<double> theta, phi, depth;
     if (XMPI::root()) {
         std::fstream fs(mInputFile, std::fstream::in);
-        if (!fs) throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
-            "Error opening receiver data file " + mInputFile + ".");
+        if (!fs) {
+            throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
+                "Error opening receiver data file " + mInputFile + ".");
+        }
         std::string line;
         while (getline(fs, line)) {
             try {
-                std::vector<std::string> strs;
-                boost::trim_if(line, boost::is_any_of("\t "));
-                boost::split(strs, line, boost::is_any_of("\t "), boost::token_compress_on);
-                if (strs.size() < 5 || strs.size() > 6) continue;
+                std::vector<std::string> strs = Parameters::splitString(line, "\t ");
+                if (strs.size() < 5 || strs.size() > 6) {
+                    continue;
+                }
                 name.push_back(strs[0]);
                 network.push_back(strs[1]);
                 theta.push_back(boost::lexical_cast<double>(strs[2]));
@@ -142,8 +144,12 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec,
     }
     rec->mAppend = false;
     rec->mBufferSize = par.getValue<int>("OUT_STATIONS_DUMP_INTERVAL");
-    if (rec->mBufferSize <= 0) rec->mBufferSize = 100;
+    if (rec->mBufferSize <= 0) {
+        rec->mBufferSize = 100;
+    }
     
-    if (verbose) XMPI::cout << rec->verbose();
+    if (verbose) {
+        XMPI::cout << rec->verbose();
+    }
 }
 
