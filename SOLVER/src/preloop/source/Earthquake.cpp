@@ -22,8 +22,9 @@ Earthquake::Earthquake(double depth, double lat, double lon,
 void Earthquake::computeSourceFourier(const Quad &myQuad, const RDColP &interpFactZ,
     arPP_CMatX3 &fouriers) const {
     // set zero
-    for (int ipnt = 0; ipnt < nPntElem; ipnt++) 
+    for (int ipnt = 0; ipnt < nPntElem; ipnt++) {
         fouriers[ipnt] = CMatX3::Zero(3, 3);
+    }
     // Jacobian on axis
     std::array<RDMat22, nPntEdge> axJ;
     int ipol_src = 0;

@@ -648,10 +648,12 @@ void Quad::getSpatialRange(double &s_max, double &s_min, double &z_max, double &
 }
 
 bool Quad::nearMe(double s, double z) const {
-    if (s > mNodalCoords.row(0).maxCoeff() + tinySingle || 
-        s < mNodalCoords.row(0).minCoeff() - tinySingle) return false;
-    if (z > mNodalCoords.row(1).maxCoeff() + tinySingle || 
-        z < mNodalCoords.row(1).minCoeff() - tinySingle) return false;
+    if (s > mNodalCoords.row(0).maxCoeff() + tinySingle || s < mNodalCoords.row(0).minCoeff() - tinySingle) {
+        return false;
+    }
+    if (z > mNodalCoords.row(1).maxCoeff() + tinySingle || z < mNodalCoords.row(1).minCoeff() - tinySingle) {
+        return false;
+    }
     return true;
 }
 

@@ -9,11 +9,9 @@
 #include "Element.h"
 #include "SourceTerm.h"
 #include "Mesh.h"
-#include "Mapping.h"
 #include "XMath.h"
 #include "SpectralConstants.h"
 #include "XMPI.h"
-#include "PointForce.h"
 #include "MultilevelTimer.h"
 
 Source::Source(double depth, double lat, double lon):
@@ -35,7 +33,9 @@ void Source::release(Domain &domain, const Mesh &mesh) const {
     int myrank = XMPI::nproc();
     int locTag;
     RDColP interpFactZ;
-    if (locate(mesh, locTag, interpFactZ)) myrank = XMPI::rank();
+    if (locate(mesh, locTag, interpFactZ)) {
+        myrank = XMPI::rank();
+    }
 
     // min recRank
     int myrank_min = XMPI::min(myrank);
@@ -64,17 +64,25 @@ bool Source::locate(const Mesh &mesh, int &locTag, RDColP &interpFactZ) const {
     srcCrds(1) = mesh.computeRadiusRef(mDepth, mLatitude, mLongitude);
     MultilevelTimer::end("R Source", 3);
 
-    if (srcCrds(0) > mesh.sMax() + tinySingle || srcCrds(0) < mesh.sMin() - tinySingle) return false;
-    if (srcCrds(1) > mesh.zMax() + tinySingle || srcCrds(1) < mesh.zMin() - tinySingle) return false;
+    // check range of subdomain
+    if (srcCrds(0) > mesh.sMax() + tinySingle || srcCrds(0) < mesh.sMin() - tinySingle) {
+        return false;
+    }
+    if (srcCrds(1) > mesh.zMax() + tinySingle || srcCrds(1) < mesh.zMin() - tinySingle) {
+        return false;
+    }
+    // find host element
     RDCol2 srcXiEta;
     for (int iloc = 0; iloc < mesh.getNumQuads(); iloc++) {
         const Quad *quad = mesh.getQuad(iloc);
-        if (!quad->isAxial() || quad->isFluid()) continue;
-        if (!quad->nearMe(srcCrds(0), srcCrds(1))) continue;
+        if (!quad->isAxial() || quad->isFluid() || !quad->nearMe(srcCrds(0), srcCrds(1))) {
+            continue;
+        }
         if (quad->invMapping(srcCrds, srcXiEta)) {
             if (std::abs(srcXiEta(1)) <= 1.000001) {
-                if (std::abs(srcXiEta(0) + 1.) > tinySingle)
+                if (std::abs(srcXiEta(0) + 1.) > tinySingle) {
                     throw std::runtime_error("Source::locate || Bad source location.");
+                }
                 locTag = iloc;
                 XMath::interpLagrange(srcXiEta(1), nPntEdge,
                     SpectralConstants::getP_GLL().data(), interpFactZ.data());
@@ -87,17 +95,22 @@ bool Source::locate(const Mesh &mesh, int &locTag, RDColP &interpFactZ) const {
 
 #include "Parameters.h"
 #include "Earthquake.h"
+#include "PointForce.h"
 #include "NullSource.h"
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 
 void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
-    if (src) delete src;
+    if (src) {
+        delete src;
+    }
 
     // null source
     if (par.getValue<bool>("DEVELOP_NON_SOURCE_MODE")) {
         src = new NullSource();
-        if (verbose) XMPI::cout << src->verbose();
+        if (verbose) {
+            XMPI::cout << src->verbose();
+        }
         return;
     }
 
@@ -110,8 +123,10 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
         double Mrr, Mtt, Mpp, Mrt, Mrp, Mtp;
         if (XMPI::root()) {
             std::fstream fs(cmtfile, std::fstream::in);
-            if (!fs) throw std::runtime_error("Source::buildInparam || "
-                "Error opening CMT data file: ||" + cmtfile);
+            if (!fs) {
+                throw std::runtime_error("Source::buildInparam || "
+                    "Error opening CMT data file: ||" + cmtfile);
+            }
             std::string junk;
             std::getline(fs, junk);
             std::getline(fs, junk);
@@ -145,7 +160,6 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
         XMPI::bcast(Mrp);
         XMPI::bcast(Mtp);
         src = new Earthquake(depth, lat, lon, Mrr, Mtt, Mpp, Mrt, Mrp, Mtp);
-        if (verbose) XMPI::cout << src->verbose();
     } else if (boost::iequals(src_type, "point_force")) {
         // point force
         std::string pointffile = Parameters::sInputDirectory + "/" + src_file;
@@ -153,8 +167,10 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
         double f1, f2, f3;
         if (XMPI::root()) {
             std::fstream fs(pointffile, std::fstream::in);
-            if (!fs) throw std::runtime_error("Source::buildInparam || "
-                "Error opening point force data file: ||" + pointffile);
+            if (!fs) {
+                throw std::runtime_error("Source::buildInparam || "
+                    "Error opening point force data file: ||" + pointffile);
+            }
             std::string junk;
             std::getline(fs, junk);
             std::getline(fs, junk);
@@ -176,8 +192,11 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
         XMPI::bcast(f2);
         XMPI::bcast(f3);
         src = new PointForce(depth, lat, lon, f1, f2, f3);
-        if (verbose) XMPI::cout << src->verbose();
     } else {
          throw std::runtime_error("Source::buildInparam || Unknown source type: " + src_type);
+    }
+    
+    if (verbose) {
+        XMPI::cout << src->verbose();
     }
 }

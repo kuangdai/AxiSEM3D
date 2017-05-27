@@ -20,8 +20,9 @@ PointForce::PointForce(double depth, double lat, double lon,
 void PointForce::computeSourceFourier(const Quad &myQuad, const RDColP &interpFactZ,
     arPP_CMatX3 &fouriers) const {
     // set zero
-    for (int ipnt = 0; ipnt < nPntElem; ipnt++)
+    for (int ipnt = 0; ipnt < nPntElem; ipnt++) {
         fouriers[ipnt] = CMatX3::Zero(2, 3);
+    }
     // Jacobian on axis
     std::array<RDMat22, nPntEdge> axJ;
     int ipol_src = 0;
