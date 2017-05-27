@@ -10,7 +10,7 @@
 
 void FieldFFT::transformF2P(const vec_ar3_CMatPP &uc, int Nr) {
     int Nu = Nr / 2;
-    CMatXN3 &ucf = SolverFFTW_N3::getR2C_CMat(Nr);
+    CMatXN3 &ucf = SolverFFTW_N3::getC2R_CMat(Nr);
     makeFlat<vec_ar3_CMatPP, CMatXN3>(uc, ucf, Nu);
     SolverFFTW_N3::computeC2R(Nr);
     // output to SolverFFTW_N3::getC2R_RMat(Nr);
@@ -18,7 +18,7 @@ void FieldFFT::transformF2P(const vec_ar3_CMatPP &uc, int Nr) {
 
 void FieldFFT::transformF2P(const vec_ar6_CMatPP &uc, int Nr) {
     int Nu = Nr / 2;
-    CMatXN6 &ucf = SolverFFTW_N6::getR2C_CMat(Nr);
+    CMatXN6 &ucf = SolverFFTW_N6::getC2R_CMat(Nr);
     makeFlat<vec_ar6_CMatPP, CMatXN6>(uc, ucf, Nu);
     SolverFFTW_N6::computeC2R(Nr);
     // output to SolverFFTW_N6::getC2R_RMat(Nr);
@@ -26,7 +26,7 @@ void FieldFFT::transformF2P(const vec_ar6_CMatPP &uc, int Nr) {
 
 void FieldFFT::transformF2P(const vec_ar9_CMatPP &uc, int Nr) {
     int Nu = Nr / 2;
-    CMatXN9 &ucf = SolverFFTW_N9::getR2C_CMat(Nr);
+    CMatXN9 &ucf = SolverFFTW_N9::getC2R_CMat(Nr);
     makeFlat<vec_ar9_CMatPP, CMatXN9>(uc, ucf, Nu);
     SolverFFTW_N9::computeC2R(Nr);
     // output to SolverFFTW_N9::getC2R_RMat(Nr);
