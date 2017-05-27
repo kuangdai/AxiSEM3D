@@ -201,7 +201,7 @@ Acoustic *Material::createAcoustic(bool elem1D) const {
        fluidK.col(ipnt) *= iFact(ipnt);
     }
     if (mMyQuad->hasRelabelling()) {
-        fluidK *= mMyQuad->getRelabelling().getStiffJacobian();
+        fluidK.array() *= mMyQuad->getRelabelling().getStiffJacobian().array();
     }
     if (elem1D) {
         RDMatPP kstruct;
