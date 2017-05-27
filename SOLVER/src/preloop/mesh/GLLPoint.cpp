@@ -25,8 +25,9 @@ GLLPoint::GLLPoint(): mNr(0) {
 void GLLPoint::setup(int nr, bool axial, bool surface, const RDCol2 &crds, double distTol) {
     if (mNr > 0) {
         // already set
-        if (mNr != nr || mIsAxial != axial || mOnSurface != surface || (crds - mCoords).norm() > distTol)
+        if (mNr != nr || mIsAxial != axial || mOnSurface != surface || (crds - mCoords).norm() > distTol) {
             throw std::runtime_error("GLLPoint::setup || Conflict in GLL point setup.");
+        }
         mReferenceCount++;    
     } else {
         // not set yet
@@ -101,8 +102,9 @@ int GLLPoint::release(Domain &domain) const {
             double np = mSFNormal_assmble(0, 1);
             double nz = mSFNormal_assmble(0, 2);
             // in 1D cases, the normal vector should be in-slice 
-            if (std::abs(np) > tinyDouble * sqrt(ns * ns + nz * nz)) 
+            if (std::abs(np) > tinyDouble * sqrt(ns * ns + nz * nz)) {
                 throw std::runtime_error("GLLPoint::release || Invalid 1D solid-fluid boundary normal.");
+            }
             couple = new SFCoupling1D((Real)mSFNormal(0, 0), (Real)mSFNormal(0, 2), 
                 (Real)(mSFNormal_assmble(0, 0) / mMassFluid(0)), 
                 (Real)(mSFNormal_assmble(0, 2) / mMassFluid(0)));
