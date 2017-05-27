@@ -93,6 +93,9 @@ void Geometric3D_crust1::initialize() {
         mDeltaRSurf.row(i) = (deltaRSurf.row(i - 1) + deltaRSurf.row(i)) * .5;
         mDeltaRMoho.row(i) = (deltaRMoho.row(i - 1) + deltaRMoho.row(i)) * .5; 
     }
+    // reverse south to north
+    mDeltaRSurf = mDeltaRSurf.colwise().reverse().eval();
+    mDeltaRMoho = mDeltaRMoho.colwise().reverse().eval();
     
     // apply factor
     mDeltaRSurf *= mSurfFactor;
@@ -199,7 +202,7 @@ double Geometric3D_crust1::getDeltaR(double r, double theta, double phi, double 
     llat1 = llat0 + 1;
     llon1 = llon0 + 1;
     wlat1 = 1. - wlat0;
-    wlon1 = 1. - wlon1;
+    wlon1 = 1. - wlon0;
     if (llon1 == sNLon) {
         llon1 = 0;
     }

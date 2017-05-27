@@ -71,6 +71,17 @@ void Volumetric3D_crust1::initialize() {
         mVs.block(i * sNLon, 0, sNLon, sNLayer) = (v_s.block(i * sNLon, 0, sNLon, sNLayer) + v_s.block((i - 1) * sNLon, 0, sNLon, sNLayer)) * .5;
         mRh.block(i * sNLon, 0, sNLon, sNLayer) = (rho.block(i * sNLon, 0, sNLon, sNLayer) + rho.block((i - 1) * sNLon, 0, sNLon, sNLayer)) * .5;
     } 
+    // reverse south to north
+    mRl = mRl.colwise().reverse().eval();
+    mVp = mVp.colwise().reverse().eval();
+    mVs = mVs.colwise().reverse().eval();
+    mRh = mRh.colwise().reverse().eval();
+    for (int i = 0; i <= sNLat; i++) {
+        mRl.block(i * sNLon, 0, sNLon, sNLayer) = mRl.block(i * sNLon, 0, sNLon, sNLayer).colwise().reverse().eval();
+        mVp.block(i * sNLon, 0, sNLon, sNLayer) = mVp.block(i * sNLon, 0, sNLon, sNLayer).colwise().reverse().eval();
+        mVs.block(i * sNLon, 0, sNLon, sNLayer) = mVs.block(i * sNLon, 0, sNLon, sNLayer).colwise().reverse().eval();
+        mRh.block(i * sNLon, 0, sNLon, sNLayer) = mRh.block(i * sNLon, 0, sNLon, sNLayer).colwise().reverse().eval();
+    }
     
     // convert to SI
     mVp *= 1e3;
@@ -237,7 +248,7 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
     llat[1] = llat[0] + 1;
     llon[1] = llon[0] + 1;
     wlat[1] = 1. - wlat[0];
-    wlon[1] = 1. - wlon[1];
+    wlon[1] = 1. - wlon[0];
     if (llon[1] == sNLon) {
         llon[1] = 0;
     }

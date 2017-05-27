@@ -79,6 +79,8 @@ void OceanLoad3D_crust1::initialize() {
     for (int i = 1; i < sNLat; i++) {
         mDepth.row(i) = (depth.row(i - 1) + depth.row(i)) * .5;
     }
+    // reverse south to north
+    mDepth = mDepth.colwise().reverse().eval();
     
     // grid lat and lon
     mGridLat = RDColX(sNLat + 1);
@@ -137,7 +139,7 @@ double OceanLoad3D_crust1::getOceanDepth(double theta, double phi) const {
     llat1 = llat0 + 1;
     llon1 = llon0 + 1;
     wlat1 = 1. - wlat0;
-    wlon1 = 1. - wlon1;
+    wlon1 = 1. - wlon0;
     if (llon1 == sNLon) {
         llon1 = 0;
     }
