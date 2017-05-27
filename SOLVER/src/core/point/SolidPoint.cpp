@@ -235,7 +235,7 @@ void SolidPoint::learnWisdom(Real cutoff) {
         Real L2norm = mDispl.col(idim).norm();
         Real L2norm_sq = L2norm * L2norm;
         // Hilbert norm
-        Real hnorm_sq = L2norm - .5 * mDispl(0, idim).real() * mDispl(0, idim).real();
+        Real hnorm_sq = L2norm_sq - .5 * mDispl(0, idim).real() * mDispl(0, idim).real();
         if (hnorm_sq <= mMaxDisplWisdom(idim)) {
             continue;
         }
@@ -243,7 +243,7 @@ void SolidPoint::learnWisdom(Real cutoff) {
         
         // try smaller orders
         Real tol = hnorm_sq * cutoff * cutoff;
-        Real diff = L2norm;
+        Real diff = L2norm_sq;
         for (int newNu = 0; newNu < mNu; newNu++) {
             Real norm = std::norm(mDispl(newNu, idim));
             diff -= norm * norm;

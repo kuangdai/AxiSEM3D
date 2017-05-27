@@ -197,7 +197,7 @@ void FluidPoint::learnWisdom(Real cutoff) {
     Real L2norm = mDispl.norm();
     Real L2norm_sq = L2norm * L2norm;
     // Hilbert norm
-    Real hnorm_sq = L2norm - .5 * mDispl(0).real() * mDispl(0).real();
+    Real hnorm_sq = L2norm_sq - .5 * mDispl(0).real() * mDispl(0).real();
     if (hnorm_sq <= mMaxDisplWisdom) {
         return;
     }
@@ -205,7 +205,7 @@ void FluidPoint::learnWisdom(Real cutoff) {
     
     // try smaller orders
     Real tol = hnorm_sq * cutoff * cutoff;
-    Real diff = L2norm;
+    Real diff = L2norm_sq;
     for (int newNu = 0; newNu < mNu; newNu++) {
         Real norm = std::norm(mDispl(newNu));
         diff -= norm * norm;
