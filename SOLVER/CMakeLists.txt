@@ -277,7 +277,6 @@ add_executable(
     src/preloop/source/NullSource.cpp
     src/preloop/source/stf/STF.cpp
     src/preloop/source/stf/ErfSTF.cpp
-    src/preloop/source/stf/FileSTF.cpp
     src/preloop/source/stf/GaussSTF.cpp
     src/preloop/source/stf/RickerSTF.cpp
     src/preloop/receiver/Receiver.cpp

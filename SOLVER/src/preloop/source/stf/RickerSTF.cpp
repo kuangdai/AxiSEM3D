@@ -16,7 +16,8 @@ mHalfDuration(hdur), mDecay(decay) {
     int nStep = nStepBeforeZero + nStepAfterZero;
     for (int i = 0; i <= nStep; i++) {
         double t = -mShift + i * mDeltaT;
-        mSTF.push_back(2 * pow(mDecay / mHalfDuration, 2) * exp(-pow((mDecay / mHalfDuration * t),2)) * ( 2 * pow(t, 2) * pow(mDecay / mHalfDuration, 2) -1));
+        mSTF.push_back(2. * pow(mDecay / mHalfDuration, 2.) * exp(-pow((mDecay / mHalfDuration * t), 2.)) 
+            * (2. * pow(t, 2.) * pow(mDecay / mHalfDuration, 2.) - 1.));
     }
 }
 
