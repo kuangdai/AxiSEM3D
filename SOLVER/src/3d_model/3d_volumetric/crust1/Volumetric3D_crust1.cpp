@@ -171,6 +171,37 @@ void Volumetric3D_crust1::initialize() {
             }
         }
     }
+    
+    // grid lat and lon
+    mGridLat = RDColX(sNLat + 1);
+    mGridLon = RDColX(sNLon + 1); // one bigger than data
+    for (int i = 0; i < sNLat + 1; i++) {
+        mGridLat[i] = i * 1. - 90.;
+    }
+    for (int i = 0; i < sNLon + 1; i++) {
+        mGridLon[i] = i * 1. - 180.;
+    }
+    
+    // std::fstream fsdr;
+    // fsdr.open("/Users/kuangdai/Desktop/crust1/vp1.txt", std::fstream::out);
+    // double r = (mRMoho + mRSurf) / 2.; 
+    // int intGrid = 4;
+    // for (int i = 0; i <= 180 * intGrid; i++) {
+    //     double theta = i * degree / intGrid;
+    //     for (int j = -180 * intGrid; j <= 180 * intGrid; j++) {
+    //         double phi = j * degree / intGrid;
+    //         if (phi < 0) phi += 2. * pi;
+    //         std::vector<MaterialProperty> properties; 
+    //         std::vector<MaterialRefType> refTypes;
+    //         std::vector<double> values;
+    //         get3dProperties(r, theta, phi, r,
+    //             properties, refTypes, values);
+    //         fsdr << values[0] << " ";
+    //     }
+    //     fsdr << std::endl;
+    // }   
+    // fsdr.close();
+    // exit(0);
 }
 
 void Volumetric3D_crust1::initialize(const std::vector<std::string> &params) {
