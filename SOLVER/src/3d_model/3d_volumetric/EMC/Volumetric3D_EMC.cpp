@@ -167,17 +167,19 @@ bool Volumetric3D_EMC::get3dProperties(double r, double theta, double phi, doubl
 std::string Volumetric3D_EMC::verbose() const {
     std::stringstream ss;
     ss << "\n======================= 3D Volumetric =======================" << std::endl;
-    ss << "  Model Name        =   EMC" << std::endl;
-    ss << "  Data File         =   " << mFileName << std::endl;
-    ss << "  Variable Name     =   " << mVarName << std::endl;
-    ss << "  Num. Depths       =   " << mGridDep.size() << std::endl;
-    ss << "  Num. Latitudes    =   " << mGridLat.size() << std::endl;
-    ss << "  Num. Longitudes   =   " << mGridLon.size() << std::endl;
-    ss << "  Depth Range       =   [" << mGridDep.minCoeff() << ", " << mGridDep.maxCoeff() << "]" << std::endl;
-    ss << "  Latitude Range    =   [" << mGridLat.minCoeff() << ", " << mGridLat.maxCoeff() << "]" << std::endl;
-    ss << "  Longitude Range   =   [" << mGridLon.minCoeff() << ", " << mGridLon.maxCoeff() << "]" << std::endl;
-    ss << "  Factor            =   " << mFactor << std::endl;
-    ss << "  Use Geographic    =   " << (mGeographic ? "YES" : "NO") << std::endl;
+    ss << "  Model Name          =   EMC" << std::endl;
+    ss << "  Data File           =   " << mFileName << std::endl;
+    ss << "  Variable Name       =   " << mVarName << std::endl;
+    ss << "  Material Property   =   " << MaterialPropertyString[mMaterialProp] << std::endl;
+    ss << "  Reference Type      =   " << MaterialRefTypeString[mReferenceType] << std::endl;
+    ss << "  Num. Depths         =   " << mGridDep.size() << std::endl;
+    ss << "  Num. Latitudes      =   " << mGridLat.size() << std::endl;
+    ss << "  Num. Longitudes     =   " << mGridLon.size() << std::endl;
+    ss << "  Depth Range         =   [" << mGridDep.minCoeff() << ", " << mGridDep.maxCoeff() << "]" << std::endl;
+    ss << "  Latitude Range      =   [" << mGridLat.minCoeff() << ", " << mGridLat.maxCoeff() << "]" << std::endl;
+    ss << "  Longitude Range     =   [" << mGridLon.minCoeff() << ", " << mGridLon.maxCoeff() << "]" << std::endl;
+    ss << "  Factor              =   " << mFactor << std::endl;
+    ss << "  Use Geographic      =   " << (mGeographic ? "YES" : "NO") << std::endl;
     ss << "======================= 3D Volumetric =======================\n" << std::endl;
     return ss.str();
 }
