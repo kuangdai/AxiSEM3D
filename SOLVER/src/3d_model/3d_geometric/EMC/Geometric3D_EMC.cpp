@@ -21,11 +21,11 @@ void Geometric3D_EMC::initialize() {
         delete reader;
         if (mGridData.rows() != mGridLat.size() || mGridData.cols() != mGridLon.size()) {
             throw std::runtime_error("Geometric3D_EMC::initialize || "
-                "Inconsistent data dimensions.");
+                "Inconsistent data dimensions || File = " + mFileName);
         }
         if (!XMath::sortedAscending(mGridLat) || !XMath::sortedAscending(mGridLon)) {
             throw std::runtime_error("Geometric3D_EMC::initialize || "
-                "Grid coordinates are not sorted ascendingly.");
+                "Grid coordinates are not sorted ascendingly || File = " + mFileName);
         }
     }
     XMPI::bcastEigen(mGridLat);

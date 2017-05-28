@@ -24,13 +24,13 @@ void Volumetric3D_EMC::initialize() {
         reader->close();
         delete reader;
         if (dims.size() != 3) {
-            throw std::runtime_error("Geometric3D_EMC::initialize || Inconsistent data dimensions.");
+            throw std::runtime_error("Geometric3D_EMC::initialize || Inconsistent data dimensions || File = " + mFileName);
         }
         if (dims[0] != mGridDep.size() || dims[1] != mGridLat.size() || dims[2] != mGridLon.size()) {
-            throw std::runtime_error("Geometric3D_EMC::initialize || Inconsistent data dimensions.");
+            throw std::runtime_error("Geometric3D_EMC::initialize || Inconsistent data dimensions || File = " + mFileName);
         }
         if (!XMath::sortedAscending(mGridDep) || !XMath::sortedAscending(mGridLat) || !XMath::sortedAscending(mGridLon)) {
-            throw std::runtime_error("Geometric3D_EMC::initialize || Grid coordinates are not sorted ascendingly.");
+            throw std::runtime_error("Geometric3D_EMC::initialize || Grid coordinates are not sorted ascendingly || File = " + mFileName);
         }
     }
     XMPI::bcastEigen(mGridDep);
