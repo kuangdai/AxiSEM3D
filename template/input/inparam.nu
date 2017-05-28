@@ -116,13 +116,13 @@ NU_WISDOM_LEARN_INTERVAL                    5
 # WHAT: a file to save the learned Wisdom
 # TYPE: string (path to file)
 # NOTE: format of each row -- s, z, learned_nu, starting_nu
-NU_WISDOM_LEARN_OUTPUT                      name.nu_wisdom
+NU_WISDOM_LEARN_OUTPUT                      name.nu_wisdom.nc
 
 # WHAT: a Wisdom file that will be used in the next simulation
 # TYPE: string (path to file)
 # NOTE: A Wisdom can be applied to a mesh different from the one
 #       with which it was learned 
-NU_WISDOM_REUSE_INPUT                       name.nu_wisdom
+NU_WISDOM_REUSE_INPUT                       name.nu_wisdom.nc
 
 # WHAT: a factor multiplied to Nu(s,z)  specified in NU_WISDOM_REUSE_INPUT
 # TYPE: real
