@@ -17,7 +17,6 @@ public:
     std::string verbose() const;
     
 private:
-    int mNr;
     std::string mFileName;
     double mFactor;
     

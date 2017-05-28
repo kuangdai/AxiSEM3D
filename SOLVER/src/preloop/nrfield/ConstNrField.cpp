@@ -3,18 +3,18 @@
 // constant nr integer field
 
 #include "ConstNrField.h"
-#include "NrFieldEnhance.h"
-#include "XMath.h"
 #include <sstream>
 
 ConstNrField::ConstNrField(bool useLucky, int nu): 
 NrField(useLucky), mNu(nu) {
-    if (mNu < 0) throw std::runtime_error("ConstNrField::ConstNrField || Negative Nu.");
+    if (mNu < 0) {
+        throw std::runtime_error("ConstNrField::ConstNrField || Negative Nu.");
+    }
 }
 
 int ConstNrField::getNrAtPoint(const RDCol2 &coords) const {
     int nr = 2 * mNu + 1;
-    return enhancedNr(coords, nr);
+    return nr;
 }
 
 std::string ConstNrField::verbose() const {

@@ -9,7 +9,7 @@ class EmpNrField: public NrField {
 public:
     EmpNrField(bool useLucky, int nu_ref, int nu_min, 
         bool scaleS = true, bool scaleT = true, bool scaleD = true, 
-        double router = 6371e3, double powS = 1.,
+        double powS = 1.,
         double factPI = 5., double startT = pi / 4, double powT = 3.,
         double factD0 = 2., double startD = 200e3, double endD = 300e3);
     

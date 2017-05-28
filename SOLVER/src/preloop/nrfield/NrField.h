@@ -6,27 +6,22 @@
 #include "eigenp.h"
 
 class Parameters;
-class NrFieldEnhance;
 
 class NrField {
 public:
     
     NrField(bool useLucky): mUseLuckyNumber(useLucky) {};
-    virtual ~NrField();
+    virtual ~NrField() {};
     
     virtual int getNrAtPoint(const RDCol2 &coords) const = 0;
     
     virtual std::string verbose() const = 0;
     
-    static void buildInparam(NrField *&nrf, const Parameters &par, 
-        double router, int verbose);
+    static void buildInparam(NrField *&nrf, const Parameters &par, int verbose);
         
-    virtual bool useLuckyNumber() const {return mUseLuckyNumber;};
-    
-    int enhancedNr(const RDCol2 &coords, int nr_base) const;
+    bool useLuckyNumber() const {return mUseLuckyNumber;};
     
 protected:
     bool mUseLuckyNumber;
-    std::vector<NrFieldEnhance *> mEnhance;
 };
 

@@ -3,8 +3,6 @@
 // wisdom nr field
 
 #include "WisdomNrField.h"
-#include "NrFieldEnhance.h"
-#include "XMath.h"
 #include <sstream>
 
 #include "NuWisdom.h"
@@ -12,7 +10,7 @@
 WisdomNrField::WisdomNrField(bool useLucky, const std::string &fname, double factor): 
 NrField(useLucky), mFileName(fname), mFactor(factor) {
     mNuWisdom = new NuWisdom();
-    mNuWisdom->readFromFile(fname, false);
+    mNuWisdom->readFromFile(fname);
 }
 
 WisdomNrField::~WisdomNrField() {
@@ -22,7 +20,7 @@ WisdomNrField::~WisdomNrField() {
 int WisdomNrField::getNrAtPoint(const RDCol2 &coords) const {
     int nu = round(mNuWisdom->getNu(coords(0), coords(1), mNumInterpPoints) * mFactor);
     int nr = nu * 2 + 1;
-    return enhancedNr(coords, nr);
+    return nr;
 }
 
 std::string WisdomNrField::verbose() const {

@@ -6,19 +6,16 @@
 #include "ConstNrField.h"
 #include "EmpNrField.h"
 #include "WisdomNrField.h"
-#include "NrFieldEnhance.h"
 
 #include "Parameters.h"
 #include "XMPI.h"
 #include <boost/algorithm/string.hpp>
 
-NrField::~NrField() {
-    for (const auto &m: mEnhance) delete m;
-}
-
-void NrField::buildInparam(NrField *&nrf, const Parameters &par, 
-    double router, int verbose) {
-    if (nrf) delete nrf;
+void NrField::buildInparam(NrField *&nrf, const Parameters &par, int verbose) {
+    if (nrf) {
+        delete nrf;
+    }
+    
     std::string type = par.getValue<std::string>("NU_TYPE");
     bool useLucky = par.getValue<bool>("NU_FFTW_LUCKY_NUMBER");
     
@@ -39,25 +36,20 @@ void NrField::buildInparam(NrField *&nrf, const Parameters &par,
         double startD = par.getValue<double>("NU_EMP_DEPTH_START") * 1e3;
         double endD = par.getValue<double>("NU_EMP_DEPTH_END") * 1e3;
         nrf = new EmpNrField(useLucky, nu_ref, nu_min, scaleS, scaleT, scaleD, 
-            router, powS, factPI, startT, powT, factD0, startD, endD);
+            powS, factPI, startT, powT, factD0, startD, endD);
     } else if (boost::iequals(type, "wisdom")) {
         std::string fname = Parameters::sInputDirectory + "/" + par.getValue<std::string>("NU_WISDOM_REUSE_INPUT");
         double factor = par.getValue<double>("NU_WISDOM_REUSE_FACTOR");
-        if (factor <= tinyDouble) factor = 1.0;
+        if (factor <= tinyDouble) {
+            factor = 1.0;
+        }
         nrf = new WisdomNrField(useLucky, fname, factor);
     } else {
         throw std::runtime_error("NrField::build || "
             "Invalid parameter, keyword = NU_TYPE.");
     }
     
-    if (verbose == 2) XMPI::cout << nrf->verbose();
-    
-    // enhanced
-    NrFieldEnhance::buildInparam(nrf->mEnhance, par, verbose);
-}
-
-int NrField::enhancedNr(const RDCol2 &coords, int nr_base) const {
-    int nr_cur = nr_base;
-    for (const auto &m: mEnhance) m->updateNrAtPoint(coords, nr_base, nr_cur);
-    return nr_cur;
+    if (verbose) {
+        XMPI::cout << nrf->verbose();
+    }
 }

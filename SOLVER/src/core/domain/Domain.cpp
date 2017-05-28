@@ -405,7 +405,7 @@ void Domain::dumpWisdom() const {
             wis.insert(buffer[i * 4], buffer[i * 4 + 1], 
                 round(buffer[i * 4 + 2]), round(buffer[i * 4 + 3]));
         }
-        wis.writeToFile(mLearnPar->mFileName, false);
+        wis.writeToFile(mLearnPar->mFileName);
     }
     
     #ifdef _MEASURE_TIMELOOP

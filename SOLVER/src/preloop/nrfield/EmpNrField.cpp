@@ -3,18 +3,17 @@
 // constant nr integer field
 
 #include "EmpNrField.h"
-#include "NrFieldEnhance.h"
 #include "Geodesy.h"
 #include <sstream>
 
 EmpNrField::EmpNrField(bool useLucky, int nu_ref, int nu_min, 
     bool scaleS, bool scaleT, bool scaleD, 
-    double router, double powS,
+    double powS,
     double factPI, double startT, double powT,
     double factD0, double startD, double endD): 
 NrField(useLucky), mNuRef(nu_ref), mNuMin(nu_min),
 mScaleS(scaleS), mScaleT(scaleT), mScaleD(scaleD),
-mROuter(router), mPowS(powS), 
+mROuter(Geodesy::getROuter()), mPowS(powS), 
 mFactPI(factPI), mStartT(startT), mPowT(powT),
 mFactD0(factD0), mStartD(startD), mEndD(endD) {
     // nothing
@@ -30,19 +29,27 @@ int EmpNrField::getNrAtPoint(const RDCol2 &coords) const {
     // reference value
     double nu = (double)mNuRef;
     // distance to axis
-    if (mScaleS) nu *= pow(s / mROuter, mPowS);
+    if (mScaleS) {
+        nu *= pow(s / mROuter, mPowS);
+    }
     // epicentral distance
-    if (mScaleT && theta > mStartT) 
+    if (mScaleT && theta > mStartT) {
         nu *= 1. + (mFactPI - 1.) * pow((theta - mStartT) / (pi - mStartT), mPowT);
+    }
     // surface wave 
     if (mScaleD && d <= mEndD) {
-        if (d <= mStartD) nu *= mFactD0;
-        else nu *= 1. + (mFactD0 - 1.) / (mStartD - mEndD) * (d - mEndD);
+        if (d <= mStartD) {
+            nu *= mFactD0;
+        } else {
+            nu *= 1. + (mFactD0 - 1.) / (mStartD - mEndD) * (d - mEndD);
+        }
     }
     // minimum value
     int nr = 2 * std::max(mNuMin, (int)ceil(nu)) + 1;
-    if (nr <= 0) throw std::runtime_error("EmpNrField::getNrAtPoint || Non-positive Nr.");
-    return enhancedNr(coords, nr);
+    if (nr <= 0) {
+        throw std::runtime_error("EmpNrField::getNrAtPoint || Non-positive Nr.");
+    }
+    return nr;
 }
 
 std::string EmpNrField::verbose() const {
