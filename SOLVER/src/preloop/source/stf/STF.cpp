@@ -79,7 +79,7 @@ void STF::buildInparam(STF *&stf, const Parameters &par, double dt, int verbose)
     }
     
     // verbose
-    if (verbose == 2) {
+    if (verbose) {
         XMPI::cout << stf->verbose();
     }
 }
