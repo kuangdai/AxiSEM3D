@@ -23,7 +23,7 @@ void NetCDF_Reader::close() {
     }
 }
 
-void NetCDF_Reader::readMetaData(const std::string &vname, RDColX &data, std::vector<size_t> &dims) {
+void NetCDF_Reader::readMetaData(const std::string &vname, RDColX &data, std::vector<size_t> &dims) const {
     // access variable
     int var_id;
     if (nc_inq_varid(mFileID, vname.c_str(), &var_id) != NC_NOERR) {
@@ -50,7 +50,7 @@ void NetCDF_Reader::readMetaData(const std::string &vname, RDColX &data, std::ve
     netcdfError(nc_get_var_double(mFileID, var_id, data.data()), "nc_get_var_double");
 }
 
-void NetCDF_Reader::read1D(const std::string &vname, RDColX &data) {
+void NetCDF_Reader::read1D(const std::string &vname, RDColX &data) const {
     // read meta data
     std::vector<size_t> dims;
     RDColX mdata;
@@ -67,7 +67,7 @@ void NetCDF_Reader::read1D(const std::string &vname, RDColX &data) {
     data = mdata;
 }
 
-void NetCDF_Reader::read2D(const std::string &vname, RDMatXX &data) {
+void NetCDF_Reader::read2D(const std::string &vname, RDMatXX &data) const {
     // read meta data
     std::vector<size_t> dims;
     RDColX mdata;
@@ -90,7 +90,7 @@ void NetCDF_Reader::read2D(const std::string &vname, RDMatXX &data) {
     }
 }
 
-void NetCDF_Reader::read3D(const std::string &vname, std::vector<RDMatXX> &data) {
+void NetCDF_Reader::read3D(const std::string &vname, std::vector<RDMatXX> &data) const {
     // read meta data
     std::vector<size_t> dims;
     RDColX mdata;

@@ -25,7 +25,8 @@ void NetCDF_Writer::close() {
     }
 }
 
-void NetCDF_Writer::writeMetaData(const std::string &vname, const RDColX &data, const std::vector<size_t> &dims) {
+void NetCDF_Writer::writeMetaData(const std::string &vname, const RDColX &data, 
+    const std::vector<size_t> &dims) const {
     // define the dimensions
     nc_redef(mFileID);
     std::vector<int> dimids;
@@ -55,13 +56,13 @@ void NetCDF_Writer::writeMetaData(const std::string &vname, const RDColX &data, 
    }
 }
 
-void NetCDF_Writer::write1D(const std::string &vname, const RDColX &data) {
+void NetCDF_Writer::write1D(const std::string &vname, const RDColX &data) const {
     std::vector<size_t> dims;
     dims.push_back(data.rows());
     writeMetaData(vname, data, dims);
 }
 
-void NetCDF_Writer::write2D(const std::string &vname, const RDMatXX &data) {
+void NetCDF_Writer::write2D(const std::string &vname, const RDMatXX &data) const {
     std::vector<size_t> dims;
     dims.push_back(data.rows());
     dims.push_back(data.cols());
@@ -75,7 +76,7 @@ void NetCDF_Writer::write2D(const std::string &vname, const RDMatXX &data) {
     writeMetaData(vname, mdata, dims);
 }
 
-void NetCDF_Writer::write3D(const std::string &vname, const std::vector<RDMatXX> &data) {
+void NetCDF_Writer::write3D(const std::string &vname, const std::vector<RDMatXX> &data) const {
     std::vector<size_t> dims;
     dims.push_back(data.size());
     dims.push_back(data[0].rows());

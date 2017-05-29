@@ -17,10 +17,10 @@ public:
     
     // write
     void writeMetaData(const std::string &vname, const RDColX &data, 
-        const std::vector<size_t> &dims);
-    void write1D(const std::string &vname, const RDColX &data);
-    void write2D(const std::string &vname, const RDMatXX &data);
-    void write3D(const std::string &vname, const std::vector<RDMatXX> &data);
+        const std::vector<size_t> &dims) const;
+    void write1D(const std::string &vname, const RDColX &data) const;
+    void write2D(const std::string &vname, const RDMatXX &data) const;
+    void write3D(const std::string &vname, const std::vector<RDMatXX> &data) const;
     
 private:    
     // error handler
