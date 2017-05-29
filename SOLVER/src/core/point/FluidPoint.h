@@ -69,6 +69,6 @@ private:
     Mass *mMass;
     
     // wisdom
-    Real mMaxDisplWisdom = 0.;
+    Real mMaxDisplWisdom = -1.;
     int mNuWisdom = 0;
 };

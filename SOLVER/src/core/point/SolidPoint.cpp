@@ -232,21 +232,20 @@ void SolidPoint::maskField(CMatX3 &field) {
 void SolidPoint::learnWisdom(Real cutoff) {
     for (int idim = 0; idim < 3; idim++) {
         // L2 norm
-        Real L2norm = mDispl.col(idim).norm();
-        Real L2norm_sq = L2norm * L2norm;
+        Real L2norm = mDispl.col(idim).squaredNorm();
         // Hilbert norm
-        Real hnorm_sq = L2norm_sq - .5 * mDispl(0, idim).real() * mDispl(0, idim).real();
-        if (hnorm_sq <= mMaxDisplWisdom(idim)) {
+        Real h2norm = L2norm - .5 * mDispl(0, idim).real() * mDispl(0, idim).real();
+        if (h2norm <= mMaxDisplWisdom(idim)) {
             continue;
         }
-        mMaxDisplWisdom(idim) = hnorm_sq;
+        mMaxDisplWisdom(idim) = h2norm;
         
         // try smaller orders
-        Real tol = hnorm_sq * cutoff * cutoff;
-        Real diff = L2norm_sq;
+        Real tol = h2norm * cutoff * cutoff;
+        Real diff = L2norm;
         for (int newNu = 0; newNu < mNu; newNu++) {
             Real norm = std::norm(mDispl(newNu, idim));
-            diff -= norm * norm;
+            diff -= norm; // in C++, norm of a complex number is squared
             if (diff <= tol) {
                 mNuWisdom(idim) = newNu;
                 return;

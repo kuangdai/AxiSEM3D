@@ -72,7 +72,7 @@ private:
     Mass *mMass;
     
     // max disp norm for wisddom learning
-    RRow3 mMaxDisplWisdom = RRow3::Zero();
+    RRow3 mMaxDisplWisdom = -RRow3::Ones();
     Eigen::Matrix<int, 1, 3> mNuWisdom = Eigen::Matrix<int, 1, 3>::Zero();
 };
 
