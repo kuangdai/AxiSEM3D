@@ -204,10 +204,8 @@ void FluidPoint::learnWisdom(Real cutoff) {
     
     // try smaller orders
     Real tol = h2norm * cutoff * cutoff;
-    Real diff = L2norm;
     for (int newNu = 0; newNu < mNu; newNu++) {
-        Real norm = mDispl.row(newNu).squaredNorm();
-        diff -= norm; 
+        Real diff = L2norm - mDispl.topRows(newNu + 1).squaredNorm();
         if (diff <= tol) {
             mNuWisdom = newNu;
             return;

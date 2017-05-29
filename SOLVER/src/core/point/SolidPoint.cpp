@@ -242,16 +242,18 @@ void SolidPoint::learnWisdom(Real cutoff) {
         
         // try smaller orders
         Real tol = h2norm * cutoff * cutoff;
-        Real diff = L2norm;
+        bool found = false;
         for (int newNu = 0; newNu < mNu; newNu++) {
-            Real norm = mDispl.col(idim).row(newNu).squaredNorm();
-            diff -= norm;
+            Real diff = L2norm - mDispl.col(idim).topRows(newNu + 1).squaredNorm();
             if (diff <= tol) {
                 mNuWisdom(idim) = newNu;
-                return;
+                found = true;
+                break;
             }
         }
-        mNuWisdom(idim) = mNu;
+        if (!found) {
+            mNuWisdom(idim) = mNu;
+        }
     }
 }
 
