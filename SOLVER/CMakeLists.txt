@@ -238,6 +238,7 @@ add_executable(
     src/preloop/utilities/MultilevelTimer.cpp
     src/preloop/utilities/netcdf/NetCDF_Reader.cpp
     src/preloop/utilities/netcdf/NetCDF_ReaderAscii.cpp
+    src/preloop/utilities/netcdf/NetCDF_Writer.cpp
 
     src/preloop/spectral/SpectralConstants.cpp
     src/preloop/spectral/mapping/Mapping.cpp
