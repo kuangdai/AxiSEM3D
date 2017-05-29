@@ -20,8 +20,8 @@ public:
     ~NuWisdom() {};
     
     void insert(double s, double z, int nu_learn, int nu_orign);
-    void writeToFile(const std::string &fname, bool binary) const;
-    void readFromFile(const std::string &fname, bool binary);
+    void writeToFile(const std::string &fname) const;
+    void readFromFile(const std::string &fname);
     int getNu(double s, double z, int numSamples) const;
     int getMaxNu() const;
     double getCompressionRatio() const;

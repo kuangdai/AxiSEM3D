@@ -4,9 +4,9 @@
 
 #include "NuWisdom.h"
 #include "Parameters.h"
-#include <boost/algorithm/string.hpp>
-#include <fstream>
 #include "XMPI.h"
+#include "NetCDF_Reader.h"
+#include "NetCDF_Writer.h"
 
 void NuWisdom::insert(double s, double z, int nu_learn, int nu_orign) {
     RTreePoint newPoint(s, z);
@@ -14,69 +14,54 @@ void NuWisdom::insert(double s, double z, int nu_learn, int nu_orign) {
     mRTree.insert(std::make_pair(newPoint, nu));
 }
 
-void NuWisdom::writeToFile(const std::string &fname, bool binary) const {
-    std::fstream::openmode mode = std::fstream::out;
-    if (binary) mode = mode | std::fstream::binary;
-    std::fstream fs(fname, mode);
-    if (binary) {
+void NuWisdom::writeToFile(const std::string &fname) const {
+    if (XMPI::root()) {
+        RDMatXX data(mRTree.size(), 4);
+        int row = 0;
         for(auto const &value: mRTree) {
-            float s = (float)value.first.get<0>();
-            float z = (float)value.first.get<1>();
-            fs.write((char *) &s, sizeof(float));
-            fs.write((char *) &z, sizeof(float));
-            fs.write((char *) &(value.second[0]), sizeof(int));
-            fs.write((char *) &(value.second[1]), sizeof(int));
+            data(row, 0) = value.first.get<0>();
+            data(row, 1) = value.first.get<1>();
+            data(row, 2) = value.second[0] * 1.;
+            data(row, 3) = value.second[1] * 1.;
+            row++;
         }
-    } else {
-        for(auto const &value: mRTree) {
-            fs << (float)value.first.get<0>() << " ";
-            fs << (float)value.first.get<1>() << " ";
-            fs << value.second[0] << " " << value.second[1] << std::endl;
-        }
+        NetCDF_Writer ncw;
+        ncw.open(fname);
+        ncw.write2D("axisem3d_wisdom", data);
+        ncw.close();
     }
-    fs.close();
 }
 
-void NuWisdom::readFromFile(const std::string &fname, bool binary) {
-    // read data
-    std::vector<float> buffer;
+void NuWisdom::readFromFile(const std::string &filename) {
+    RDMatXX data;
     if (XMPI::root()) {
-        std::fstream::openmode mode = std::fstream::in;
-        if (binary) mode = mode | std::fstream::binary;
-        std::fstream fs(fname, mode);
-        if (!fs) throw std::runtime_error("NuWisdom::readFromFile || Error opening Wisdom file: ||" + fname);
-        float s, z; int nul, nuo;
-        if (binary) {
-            while (true) {
-                fs.read((char *) &s, sizeof(float));
-                fs.read((char *) &z, sizeof(float));
-                fs.read((char *) &nul, sizeof(int));
-                fs.read((char *) &nuo, sizeof(int));
-                if (!fs) break;
-                buffer.push_back(s);
-                buffer.push_back(z);
-                buffer.push_back(nul);
-                buffer.push_back(nuo);
-            }
+        RDMatXX dataRead;
+        std::string fname = Parameters::sInputDirectory + "/" + filename;
+        NetCDF_Reader *reader = NetCDF_Reader::createOpenNetCDF_Reader(fname);
+        reader->read2D("axisem3d_wisdom", dataRead);
+        reader->close();
+        delete reader;
+        if (dataRead.cols() == 3) {
+            data = RDMatXX(dataRead.rows(), 4);
+            data.leftCols(3) = dataRead;
+            data.col(3) = data.col(2);
+        } else if (dataRead.cols() == 4) {
+            data = dataRead;
         } else {
-            while (fs >> s >> z >> nul >> nuo) {
-                buffer.push_back(s);
-                buffer.push_back(z);
-                buffer.push_back(nul);
-                buffer.push_back(nuo);
-            }
+            throw std::runtime_error("NuWisdom::readFromFile || "
+                "Inconsistent dimensions for wisdom data, must be a matrix of 3 or 4 columns "
+                "|| File = " + fname);
         }
-        fs.close();
     }
-    XMPI::bcast(buffer);
+    XMPI::bcastEigen(data);
     
     // pop rtree
     mRTree.clear();
-    for (int i = 0; i < buffer.size() / 4; i++) {
+    for (int i = 0; i < data.rows(); i++) {
         // no need to check duplicated here
-        RTreePoint newPoint(buffer[i * 4], buffer[i * 4 + 1]);
-        int nu_learn = round(buffer[i * 4 + 2]);
-        int nu_orign = round(buffer[i * 4 + 3]);
+        RTreePoint newPoint(data(i, 0), data(i, 1));
+        int nu_learn = round(data(i, 2));
+        int nu_orign = round(data(i, 3));
         std::array<int, 2> nu = {nu_learn, nu_orign};
         mRTree.insert(std::make_pair(newPoint, nu));
     }
@@ -85,14 +70,17 @@ void NuWisdom::readFromFile(const std::string &fname, bool binary) {
 int NuWisdom::getNu(double s, double z, int numSamples) const {
     RTreePoint target(s, z);
     const std::vector<RTreeValue> &nearest = queryKNN(target, numSamples);
-    if (nearest.size() == 0) 
+    if (nearest.size() == 0) {
         throw std::runtime_error("NuWisdom::getNu || Wisdom is empty.");
+    }
     
     double nuTarget = 0.;
     double distTotal = 0.;
     for (int i = 0; i < nearest.size(); i++) {
         double dist = boost::geometry::distance(target, nearest[i].first);
-        if (dist < tinyDouble) return nearest[i].second[0];
+        if (dist < tinyDouble) {
+            return nearest[i].second[0];
+        }
         distTotal += 1. / dist;
         nuTarget += nearest[i].second[0] / dist;
     }
@@ -128,10 +116,16 @@ std::vector<RTreeValue> NuWisdom::queryKNN(const RTreePoint &target, int number)
 LearnParameters::LearnParameters(const Parameters &par) {
     mInvoked = par.getValue<bool>("NU_WISDOM_LEARN");
     mCutoff = par.getValue<double>("NU_WISDOM_LEARN_EPSILON");
-    if (mCutoff > .1) mCutoff = .1;
-    if (mCutoff < 1e-5) mCutoff = 1e-5;
+    if (mCutoff > .1) {
+        mCutoff = .1;
+    }
+    if (mCutoff < 1e-5) {
+        mCutoff = 1e-5;
+    }
     mInterval = par.getValue<int>("NU_WISDOM_LEARN_INTERVAL");
-    if (mInterval <= 0) mInterval = 10;
+    if (mInterval <= 0) {
+        mInterval = 5;
+    }
     mFileName = par.getValue<std::string>("NU_WISDOM_LEARN_OUTPUT");
     mFileName = Parameters::sOutputDirectory + "/" + mFileName;
 }
