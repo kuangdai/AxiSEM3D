@@ -10,8 +10,8 @@
 void NetCDF_ReaderAscii::open(const std::string &fname) {
     close();
     mFileName = fname;
-    mFile.open(mFileName, std::fstream::in);
-    if (!mFile) {
+    mFile = new std::fstream(mFileName, std::fstream::in);
+    if (!(*mFile)) {
         throw std::runtime_error("NetCDF_ReaderAscii::open || "
             "Error opening NetCDF-alternative ascii file: || " + fname);
     }
@@ -19,23 +19,25 @@ void NetCDF_ReaderAscii::open(const std::string &fname) {
 
 void NetCDF_ReaderAscii::close() {
     if (isOpen()) {
-        mFile.close();
+        (*mFile).close();
+        delete mFile;
+        mFile = 0;
         mFileName = "";
     }
 }
 
-void NetCDF_ReaderAscii::readMetaData(const std::string &vname, RDColX &data, std::vector<size_t> &dims) {
+void NetCDF_ReaderAscii::readMetaData(const std::string &vname, RDColX &data, std::vector<size_t> &dims) const {
     // rewind
-    mFile.seekg(0, mFile.beg);
+    (*mFile).seekg(0, (*mFile).beg);
     std::string line;
-    while (getline(mFile, line)) {
+    while (getline((*mFile), line)) {
         // start
-        if (!checkVarStart(line, vname)) {
+        if (!checkVarStart(line, vname, mFileName)) {
             continue;
         }
         
         // dim
-        if (!getline(mFile, line)) {
+        if (!getline((*mFile), line)) {
             throw std::runtime_error("NetCDF_ReaderAscii::readMetaData || "
                 "No dimension line after @VAR_START line, varaible: " + vname
                 + " || NetCDF-alternative ascii file: " + mFileName);
@@ -50,7 +52,7 @@ void NetCDF_ReaderAscii::readMetaData(const std::string &vname, RDColX &data, st
         data = RDColX::Zero(total_len);
         int pos = 0;
         while (pos < total_len) {
-            if (! (mFile >> data[pos++])) {
+            if (! ((*mFile) >> data[pos++])) {
                 throw std::runtime_error("NetCDF_ReaderAscii::readMetaData || "
                     "Insufficient data or invalid number format, Variable = " + vname
                     + " || NetCDF-alternative ascii file: " + mFileName);
@@ -58,7 +60,7 @@ void NetCDF_ReaderAscii::readMetaData(const std::string &vname, RDColX &data, st
         }
         
         // end
-        if (!checkVarEnd(mFile, vname)) {
+        if (!checkVarEnd((*mFile), vname, mFileName)) {
             throw std::runtime_error("NetCDF_ReaderAscii::readMetaData || "
                 "Error detecting @VAR_END line, Variable = " + vname
                 + " || Too many data or invalid number format or missing @VAR_END"
@@ -74,7 +76,7 @@ void NetCDF_ReaderAscii::readMetaData(const std::string &vname, RDColX &data, st
         + " || NetCDF-alternative ascii file: " + mFileName);
 }
 
-void NetCDF_ReaderAscii::read1D(const std::string &vname, RDColX &data) {
+void NetCDF_ReaderAscii::read1D(const std::string &vname, RDColX &data) const {
     // read meta data
     std::vector<size_t> dims;
     RDColX mdata;
@@ -92,7 +94,7 @@ void NetCDF_ReaderAscii::read1D(const std::string &vname, RDColX &data) {
     data = mdata;
 }
 
-void NetCDF_ReaderAscii::read2D(const std::string &vname, RDMatXX &data) {
+void NetCDF_ReaderAscii::read2D(const std::string &vname, RDMatXX &data) const {
     // read meta data
     std::vector<size_t> dims;
     RDColX mdata;
@@ -116,7 +118,7 @@ void NetCDF_ReaderAscii::read2D(const std::string &vname, RDMatXX &data) {
     }
 }
 
-void NetCDF_ReaderAscii::read3D(const std::string &vname, std::vector<RDMatXX> &data) {
+void NetCDF_ReaderAscii::read3D(const std::string &vname, std::vector<RDMatXX> &data) const {
     // read meta data
     std::vector<size_t> dims;
     RDColX mdata;
@@ -158,7 +160,8 @@ bool NetCDF_ReaderAscii::isNetCDFAscii(const std::string &fname) {
     return boost::iequals(boost::trim_copy(line), "@@ netcdf ascii format @@");
 }
 
-bool NetCDF_ReaderAscii::checkVarStart(const std::string &line, const std::string &vname) {
+bool NetCDF_ReaderAscii::checkVarStart(const std::string &line, const std::string &vname, 
+    const std::string &fname) {
     std::stringstream ss(line);
     
     // find @VAR flag
@@ -181,13 +184,14 @@ bool NetCDF_ReaderAscii::checkVarStart(const std::string &line, const std::strin
     } else {
         throw std::runtime_error("NetCDF_ReaderAscii::checkVarStart || "
             "No variable name provided after " + flag_target
-            + " || NetCDF-alternative ascii file: " + mFileName);
+            + " || NetCDF-alternative ascii file: " + fname);
     }
     
     return true;
 }
 
-bool NetCDF_ReaderAscii::checkVarEnd(std::fstream &fs, const std::string &vname) {
+bool NetCDF_ReaderAscii::checkVarEnd(std::fstream &fs, const std::string &vname, 
+    const std::string &fname) {
     // find @VAR flag
     std::string flag_target = "@VAR_END";
     std::string flag;
@@ -208,7 +212,7 @@ bool NetCDF_ReaderAscii::checkVarEnd(std::fstream &fs, const std::string &vname)
     } else {
         throw std::runtime_error("NetCDF_ReaderAscii::checkVarEnd || "
             "No variable name provided after " + flag_target
-            + " || NetCDF-alternative ascii file: " + mFileName);
+            + " || NetCDF-alternative ascii file: " + fname);
     }
     
     fs.ignore(std::numeric_limits<std::streamsize>::max(), '\n');

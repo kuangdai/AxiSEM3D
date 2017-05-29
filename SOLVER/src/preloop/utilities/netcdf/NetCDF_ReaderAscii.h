@@ -14,20 +14,20 @@ public:
     void close();
     
     // read
-    void readMetaData(const std::string &vname, RDColX &data, std::vector<size_t> &dims);
-    void read1D(const std::string &vname, RDColX &data);
-    void read2D(const std::string &vname, RDMatXX &data);
-    void read3D(const std::string &vname, std::vector<RDMatXX> &data);
+    void readMetaData(const std::string &vname, RDColX &data, std::vector<size_t> &dims) const;
+    void read1D(const std::string &vname, RDColX &data) const;
+    void read2D(const std::string &vname, RDMatXX &data) const;
+    void read3D(const std::string &vname, std::vector<RDMatXX> &data) const;
     
     // check
     static bool isNetCDFAscii(const std::string &fname);
     
 private:
-    bool checkVarStart(const std::string &line, const std::string &vname);
-    bool checkVarEnd(std::fstream &fs, const std::string &vname);
-    void getVarDims(const std::string &line, std::vector<size_t> &dims);
+    static bool checkVarStart(const std::string &line, const std::string &vname, const std::string &fname);
+    static bool checkVarEnd(std::fstream &fs, const std::string &vname, const std::string &fname);
+    static void getVarDims(const std::string &line, std::vector<size_t> &dims);
     
 private:
-    std::fstream mFile;
+    std::fstream *mFile = 0;
 };
 
