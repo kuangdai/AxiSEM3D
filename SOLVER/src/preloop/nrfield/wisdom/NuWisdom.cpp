@@ -32,11 +32,10 @@ void NuWisdom::writeToFile(const std::string &fname) const {
     }
 }
 
-void NuWisdom::readFromFile(const std::string &filename) {
+void NuWisdom::readFromFile(const std::string &fname) {
     RDMatXX data;
     if (XMPI::root()) {
         RDMatXX dataRead;
-        std::string fname = Parameters::sInputDirectory + "/" + filename;
         NetCDF_Reader *reader = NetCDF_Reader::createOpenNetCDF_Reader(fname);
         reader->read2D("axisem3d_wisdom", dataRead);
         reader->close();
