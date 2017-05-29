@@ -196,7 +196,7 @@ void FluidPoint::learnWisdom(Real cutoff) {
     // L2 norm
     Real L2norm = mDispl.squaredNorm();
     // Hilbert norm
-    Real h2norm = L2norm - .5 * mDispl(0).real() * mDispl(0).real();
+    Real h2norm = L2norm - .5 * mDispl.row(0).squaredNorm();
     if (h2norm <= mMaxDisplWisdom) {
         return;
     }
@@ -206,8 +206,8 @@ void FluidPoint::learnWisdom(Real cutoff) {
     Real tol = h2norm * cutoff * cutoff;
     Real diff = L2norm;
     for (int newNu = 0; newNu < mNu; newNu++) {
-        Real norm = std::norm(mDispl(newNu));
-        diff -= norm; // in C++, norm of a complex number is squared
+        Real norm = mDispl.row(newNu).squaredNorm();
+        diff -= norm; 
         if (diff <= tol) {
             mNuWisdom = newNu;
             return;
