@@ -13,7 +13,7 @@ Point(nr, axial, crds), mMass(mass) {
     mAccel = CMatX3::Zero(mNu + 1, 3);
     mStiff = CMatX3::Zero(mNu + 1, 3);
     mMass->checkCompatibility(nr);
-    mMaxDisplWisdom.fill(mNu);
+    mNuWisdom.fill(mNu);
 }
 
 SolidPoint::~SolidPoint() {
