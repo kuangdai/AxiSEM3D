@@ -312,9 +312,11 @@ void ExodusModel::formAuxiliary() {
             continue;
         }
         double vs = mElementalVariables.at(strVs)(iQuad);
-        if (vs < tinyDouble) throw std::runtime_error("ExodusModel::finishReading || "
-            "Ocean is detected in mesh. By far, realistic ocean is not implemented in AxiSEM3D. ||"
-            "Use non-ocean models in the Mesher and add ocean load in inparam.basic.");
+        if (vs < tinyDouble) {
+            throw std::runtime_error("ExodusModel::finishReading || "
+                "Ocean is detected in mesh. By far, realistic ocean is not implemented in AxiSEM3D. ||"
+                "Use non-ocean models in the Mesher and add ocean load in inparam.basic.");
+        }
     }
     MultilevelTimer::end("Process Exodus Check Ocean", 2);
 }
@@ -433,7 +435,9 @@ void ExodusModel::buildInparam(ExodusModel *&exModel, const Parameters &par,
         Geodesy::setup(exModel->getROuter(), 0., RDColX::Zero(0), RDColX::Zero(0));
     } else {
         double inv_f = par.getValue<double>("MODEL_3D_ELLIPTICITY_INVF");
-        if (inv_f <= 0.) throw std::runtime_error("ExodusModel::buildInparam || Invalid flattening."); 
+        if (inv_f <= 0.) {
+            throw std::runtime_error("ExodusModel::buildInparam || Invalid flattening.");
+        } 
         Geodesy::setup(exModel->getROuter(), 1. / inv_f, exModel->mEllipKnots, exModel->mEllipCoeffs);
     }
 }
