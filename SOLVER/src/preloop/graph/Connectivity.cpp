@@ -84,7 +84,9 @@ void Connectivity::formElemToGLL(int &ngll, std::vector<IMatPP> &elemToGLL, std:
         // compute number of new global points in this element and label them
         for (int ipol = 0; ipol <= nPol; ipol++) {
             for (int jpol = 0; jpol <= nPol; jpol++) {
-                if (mask(ipol, jpol)) elemToGLL[ielem](ipol, jpol) = ngll++;
+                if (mask(ipol, jpol)) {
+                    elemToGLL[ielem](ipol, jpol) = ngll++;
+                }
             }
         }        
     }
