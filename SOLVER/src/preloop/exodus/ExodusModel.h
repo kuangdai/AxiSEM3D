@@ -8,9 +8,9 @@
 #pragma once
 
 #include <string>
-#include <array>
 #include <vector>
 #include <map>
+#include "eigenp.h"
 
 class Parameters;
 class AttParameters;
@@ -23,28 +23,32 @@ public:
     
     // general
     bool isIsotropic() const {return mElementalVariables.find("VP_0") != mElementalVariables.end();};
-    int getNumQuads() const {return mNumQuads;};
-    int getNumNodes() const {return mNumNodes;};
+    int getNumQuads() const {return mConnectivity.rows();};
+    int getNumNodes() const {return mNodalS.rows();};
+    double getROuter() const {return mGlobalVariables.at("radius");};
+    bool isCartesian() const {return mGlobalRecords.at("crdsys") != "spherical";};
     double getDistTolerance() const {return mDistTolerance;};
-    double getROuter() const {return mROuter;};
-    bool isCartesian() const {return mCartesian;};
-    const std::vector<std::array<int, 4>> &getConnectivity() const {return mConnectivity;};
-    const std::map<std::string, std::vector<double>> &getElementalVariables() const {return mElementalVariables;};
     
     // Node-wise
-    double getNodalS(int nodeTag) const {return mNodalS[nodeTag];};
-    double getNodalZ(int nodeTag) const {return mNodalZ[nodeTag];};
-    double getAveGLLSpacing(int nodeTag) const {return mAveGLLSpacing[nodeTag];};
+    double getNodalS(int nodeTag) const {return mNodalS(nodeTag);};
+    double getNodalZ(int nodeTag) const {return mNodalZ(nodeTag);};
+    double getAveGLLSpacing(int nodeTag) const {return mAveGLLSpacing(nodeTag);};
     
     // Quad-wise
-    int getSideAxis(int quadTag) const {return mSideSets.at(mSSNameAxis)[quadTag];};
-    int getSideSurface(int quadTag) const {return mSideSets.at(mSSNameSurface)[quadTag];};
+    double getElementalVariables(const std::string &varName, int quadTag) const {
+        return mElementalVariables.at(varName)(quadTag);
+    };
+    int getSideAxis(int quadTag) const {return mSideSets.at(mSSNameAxis)(quadTag);};
+    int getSideSurface(int quadTag) const {return mSideSets.at(mSSNameSurface)(quadTag);};
     int getSideSolidFluid(int quadTag) const {
-        if (mSideSets.find("solid_fluid_boundary") != mSideSets.end())
-            return mSideSets.at("solid_fluid_boundary")[quadTag];
+        if (mSideSets.find("solid_fluid_boundary") != mSideSets.end()) {
+            return mSideSets.at("solid_fluid_boundary")(quadTag);
+        }
         return -1;
     };
-    const std::array<int, 4> &getVicinalAxis(int quadTag) const {return mVicinalAxis[quadTag];};
+    const IMatX4 &getConnectivity() const {return mConnectivity;};
+    IRow4 getConnectivity(int quadTag) const {return mConnectivity.row(quadTag);};
+    IRow4 getVicinalAxis(int quadTag) const {return mVicinalAxis.row(quadTag);};
     
     std::string verbose() const;
     
@@ -56,87 +60,55 @@ private:
     void readRawData();
     void bcastRawData();
     void formStructured();
-    void finishReading();
+    void formAuxiliary();
     
     // file name
     std::string mExodusFileName;
 
     // file properties
     std::string mExodusTitle;
-    float mExodusVersion;
-    
-    // numbers 
-    int mNumNodes;
-    int mNumQuads;
     
     ///////////////////////////////////// raw data /////////////////////////////////////
-    // global variables
-    int mRawNumGlbVar;
-    int mRawLenGlbVarName;
-    char *mRawGlbVarName = 0;
-    double *mRawGlbVarVals = 0;
+    // global variables and records
+    std::vector<std::string> mGlobalVariableNames;
+    RDColX mGlobalVariableValues;
+    std::vector<std::string> mGlobalRecordsRaw;
     
-    // global records
-    int mRawNumGlbRec;
-    int mRawLenGlbRec;
-    char *mRawGlbRec = 0;
+    // connectivity and coords
+    IMatX4 mConnectivity;
+    RDColX mNodalS, mNodalZ;
     
-    // connectivity
-    int *mRawConnect = 0;
-    
-    // coords
-    double *mRawNodalS = 0;
-    double *mRawNodalZ = 0;
-    
-    // elemental
-    int mRawNumEleVar;
-    int mRawLenEleVarName;
-    char *mRawEleVarName = 0;
-    double **mRawEleVarVals = 0;
+    // elemental variables
+    std::vector<std::string> mElementalVariableNames;
+    RDMatXX mElementalVariableValues;
     
     // side sets
-    int mRawNumSS;
-    int mRawLenSSName;
-    int mRawMaxPair;
-    char *mRawNameSS = 0;
-    int *mRawNumPairsSS = 0;
-    int **mRawElemSS = 0;
-    int **mRawSideSS = 0;
+    std::vector<std::string> mSideSetNames;
+    IMatXX mSideSetValues;
     
     // ellipticity
-    int mRawEllipCol;
-    double *mRawEllipData = 0;
+    RDColX mEllipKnots;
+    RDColX mEllipCoeffs;
     
     ///////////////////////////////////// structured /////////////////////////////////////
-    // global variables (dt)
+    // global variables and records
     std::map<std::string, double> mGlobalVariables;
     std::map<std::string, std::string> mGlobalRecords;
     
-    // connectivity
-    std::vector<std::array<int, 4>> mConnectivity;
-    std::vector<double> mNodalS;
-    std::vector<double> mNodalZ;
-    
     // elemental variables
-    std::map<std::string, std::vector<double>> mElementalVariables;
+    std::map<std::string, RDColX> mElementalVariables;
     
     // side sets
-    std::map<std::string, std::vector<int>> mSideSets;
+    std::map<std::string, IColX> mSideSets;
     
-    // others
-    double mDistTolerance;
-    double mROuter;
-    
-    // for Nr map
-    std::vector<double> mAveGLLSpacing;
-    std::vector<std::array<int, 4>> mVicinalAxis; 
-    
-    bool mCartesian = false;
     std::string mSSNameAxis = "t0";
     std::string mSSNameSurface = "r1";
     
-    std::vector<double> mEllipKnots;
-    std::vector<double> mEllipCoeffs;
+    ///////////////////////////////////// auxiliary /////////////////////////////////////
+    // for Nr map
+    RDColX mAveGLLSpacing;
+    IMatX4 mVicinalAxis; 
+    double mDistTolerance;
 };
 
 
