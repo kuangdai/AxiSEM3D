@@ -94,7 +94,9 @@ void NetCDF_Writer::write3D(const std::string &vname, const std::vector<RDMatXX>
 }
 
 void NetCDF_Writer::netcdfError(const int retval, const std::string &func_name) const {
-    if (retval != NC_NOERR) throw std::runtime_error("NetCDF_Writer::netcdfError || "
-        "Error in NetCDF function: " + func_name + " || NetCDF file: " + mFileName);
+    if (retval != NC_NOERR) {
+        throw std::runtime_error("NetCDF_Writer::netcdfError || "
+            "Error in NetCDF function: " + func_name + " || NetCDF file: " + mFileName);
+    }
 }
 

@@ -229,8 +229,10 @@ bool NetCDF_Reader::isNetCDF(const std::string &fname) {
 }
 
 void NetCDF_Reader::netcdfError(const int retval, const std::string &func_name) const {
-    if (retval != NC_NOERR) throw std::runtime_error("NetCDF_Reader::netcdfError || "
-        "Error in NetCDF function: " + func_name + " || NetCDF file: " + mFileName);
+    if (retval != NC_NOERR) {
+        throw std::runtime_error("NetCDF_Reader::netcdfError || "
+            "Error in NetCDF function: " + func_name + " || NetCDF file: " + mFileName);
+    }
 }
 
 #include "NetCDF_ReaderAscii.h"
