@@ -14,7 +14,7 @@ std::array<std::vector<IRow2>, 4> Connectivity::sNodeIJPol;
 std::array<std::vector<IRow2>, 4> Connectivity::sEdgeIJPol;
 
 Connectivity::Connectivity(const IMatX4 &excon): mConnectivity(excon) {
-    int nelem = excon.size();
+    int nelem = excon.rows();
     mGlobalQuadID = IColX(nelem);
     for (int i = 0; i < nelem; i++) {
         mGlobalQuadID(i) = i;
