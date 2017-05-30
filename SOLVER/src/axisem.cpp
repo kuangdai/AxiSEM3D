@@ -171,7 +171,7 @@ int axisem_main(int argc, char *argv[]) {
             
         //////// GoGoGo
         XMPI::barrier();
-        sv.mNewmark->solve();
+        sv.mNewmark->solve(verbose);
         
         //////// finalize solver
         // solver 

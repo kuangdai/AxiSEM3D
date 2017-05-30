@@ -10,7 +10,7 @@ class Newmark {
 public:
     Newmark(Domain *&domain, int reportInterval, int checkStabInterval);
     
-    void solve() const;
+    void solve(int verbose) const;
     
     // void testStability(int maxStep) const;
     

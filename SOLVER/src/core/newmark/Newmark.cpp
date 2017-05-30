@@ -16,11 +16,13 @@ mCheckStabInterval(checkStabInterval) {
     if (mCheckStabInterval <= 0) mCheckStabInterval = mReportInterval;
 }
 
-void Newmark::solve() const {
-    XMPI::cout << XMPI::endl;
-    XMPI::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << XMPI::endl;
-    XMPI::cout << "TTTTTTTTTT  NEWMARK TIME LOOP STARTS  TTTTTTTTTT" << XMPI::endl;
-    XMPI::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << XMPI::endl << XMPI::endl;
+void Newmark::solve(int verbose) const {
+    if (verbose) {
+        XMPI::cout << XMPI::endl;
+        XMPI::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << XMPI::endl;
+        XMPI::cout << "TTTTTTTTTT  NEWMARK TIME LOOP STARTS  TTTTTTTTTT" << XMPI::endl;
+        XMPI::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << XMPI::endl << XMPI::endl;
+    }
     
     Real t = zero - mDomain->getSTF().getShift();
     Real dt = mDomain->getSTF().getDeltaT();
@@ -58,7 +60,7 @@ void Newmark::solve() const {
         }
         
         // screen info    
-        if (tstep % mReportInterval == 0) {
+        if (tstep % mReportInterval == 0 && verbose) {
             double elapsed = timer.elapsed() * sec2h;
             double speed = (elapsed - elapsed_last) / mReportInterval;
             double total = speed * maxStep;
@@ -83,13 +85,15 @@ void Newmark::solve() const {
     mDomain->dumpLeft();
     mDomain->dumpWisdom();
     double elapsed = timer.elapsed() * sec2h;
-    XMPI::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << XMPI::endl;
-    XMPI::cout << "TTTTTTTTT  NEWMARK TIME LOOP FINISHES  TTTTTTTTT" << XMPI::endl;
-    XMPI::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << XMPI::endl << XMPI::endl;
-    XMPI::cout << "SIMULATION TIME / sec   =   " << t << XMPI::endl;
-    XMPI::cout << "TOTAL STEPS DONE        =   " << maxStep << " / " <<  maxStep << XMPI::endl;
-    XMPI::cout << "WALLTIME ELAPSED / h    =   " << elapsed << XMPI::endl << XMPI::endl;
-    XMPI::cout << mDomain->reportCost();
+    if (verbose) {
+        XMPI::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << XMPI::endl;
+        XMPI::cout << "TTTTTTTTT  NEWMARK TIME LOOP FINISHES  TTTTTTTTT" << XMPI::endl;
+        XMPI::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << XMPI::endl << XMPI::endl;
+        XMPI::cout << "SIMULATION TIME / sec   =   " << t << XMPI::endl;
+        XMPI::cout << "TOTAL STEPS DONE        =   " << maxStep << " / " <<  maxStep << XMPI::endl;
+        XMPI::cout << "WALLTIME ELAPSED / h    =   " << elapsed << XMPI::endl << XMPI::endl;
+        XMPI::cout << mDomain->reportCost();
+    }
 }
 
 
