@@ -23,7 +23,7 @@ SET(CMAKE_Fortran_COMPILER     mpif90)
 # SET(FFTW_ROOT             edit_here)
 # SET(BOOST_ROOT            edit_here)
 # SET(METIS_ROOT            edit_here)
-# SET(HDF5_ROOT             edit_here)
+# SET(NETCDF_ROOT           edit_here)
 
 # polynomial order of spectral elements (from 1 to 8)
 SET(NPOL 4)
@@ -81,17 +81,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 # metis
 find_package(METIS REQUIRED)
 include_directories(${METIS_INCLUDE_DIR})
-# hdf5
-if (HDF5_ROOT)
-    set(ENV{HDF5_ROOT} ${HDF5_ROOT})
-endif ()
-find_package(HDF5 COMPONENTS C REQUIRED)
-include_directories(${HDF5_INCLUDE_DIRS})
-
-# NETCDF
-if (NETCDF_ROOT)
-    set(ENV{NETCDF_ROOT} ${NETCDF_ROOT})
-endif ()
+# netcdf
 find_package(NETCDF REQUIRED)
 include_directories(${NETCDF_INCLUDE_DIRS})
 
@@ -247,7 +237,6 @@ add_executable(
     src/preloop/spectral/mapping/SemiSphericalMapping.cpp
 
     src/preloop/exodus/ExodusModel.cpp
-    src/preloop/exodus/H5Reader.cpp
     src/preloop/graph/DualGraph.cpp
     src/preloop/graph/Connectivity.cpp
     src/preloop/mesh/GLLPoint.cpp
@@ -306,6 +295,5 @@ target_link_libraries(
     ${MPI_LIBRARIES}
     ${FFTW_LIBRARIES}
     ${METIS_LIBRARIES}
-    ${HDF5_LIBRARIES}
     ${NETCDF_LIBRARIES}
 )

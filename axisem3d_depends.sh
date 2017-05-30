@@ -27,9 +27,9 @@ export MY_FFTW_DIR=""
 # Metis (make sure it is built with 32-bit)
 export MY_METIS_READY=false
 export MY_METIS_DIR=""
-# HDF5
-export MY_HDF5_READY=false
-export MY_HDF5_DIR=""
+# NetCDF
+export MY_NETCDF4_READY=false
+export MY_NETCDF4_DIR=""
 
 # where you would like to download boost and eigen3
 export BOOST_INSTALL_DIR=$HOME/axisem3d_depends/boost 
@@ -72,11 +72,11 @@ if [ $MY_METIS_READY == false ]; then
     export MY_METIS_READY=true
 fi
 
-##### HDF5 #####
-if [ $MY_HDF5_READY == false ]; then
-    conda install -c conda-forge hdf5=1.8.17
-    export MY_HDF5_DIR=$MY_CONDA_INSTALL_DIR
-    export MY_HDF5_READY=true
+##### NetCDF #####
+if [ $MY_NETCDF4_READY == false ]; then
+    conda install -c anaconda netcdf4=1.2.4
+    export MY_NETCDF4_DIR=$MY_CONDA_INSTALL_DIR
+    export MY_NETCDF4_READY=true
 fi
 
 ############### add ROOTs for cmake of AxiSEM3D ###############
@@ -88,7 +88,7 @@ echo "export BOOST_ROOT=$MY_BOOST_DIR" >> $MY_AXISEM_ROOTS
 echo "export EIGEN3_ROOT=$MY_EIGEN3_DIR" >> $MY_AXISEM_ROOTS
 echo "export FFTW_ROOT=$MY_FFTW_DIR" >> $MY_AXISEM_ROOTS
 echo "export METIS_ROOT=$MY_METIS_DIR" >> $MY_AXISEM_ROOTS
-echo "export HDF5_ROOT=$MY_HDF5_DIR" >> $MY_AXISEM_ROOTS
+echo "export NETCDF4_ROOT=$MY_NETCDF4_DIR" >> $MY_AXISEM_ROOTS
 if ! grep -Fxq ". $MY_AXISEM_ROOTS" $MY_BASH_PROFILE 
 then
     echo ". $MY_AXISEM_ROOTS" >> $MY_BASH_PROFILE
