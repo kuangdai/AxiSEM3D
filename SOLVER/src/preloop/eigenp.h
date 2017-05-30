@@ -49,5 +49,6 @@ typedef Eigen::Matrix<ComplexD, Eigen::Dynamic, Eigen::Dynamic> CDMatXX;
 // connectivity
 typedef Eigen::Matrix<int, 1, 4> IRow4;
 typedef Eigen::Matrix<int, 1, 2> IRow2; // ipol, jpol
+typedef Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic> IMatXX;
 
 
