@@ -174,16 +174,12 @@ double Geodesy::backAzimuth(double srclat, double srclon, double srcdep,
 }
 
 void Geodesy::setup(double router, double flattening, 
-                     const std::vector<double> &ellip_knots, 
-                     const std::vector<double> &ellip_coeffs) {
+                     const RDColX &ellip_knots, 
+                     const RDColX &ellip_coeffs) {
     sROuter = router;
     sFlattening = flattening;
-    int nknots = ellip_knots.size();
-    sEllipKnots = sEllipCoeffs = RDColX(nknots);
-    for (int i = 0; i < nknots; i++) {
-        sEllipKnots(i) = ellip_knots[i];
-        sEllipCoeffs(i) = ellip_coeffs[i];
-    }
+    sEllipKnots = ellip_knots;
+    sEllipCoeffs = ellip_coeffs;
 }
 
 double Geodesy::getFlattening(double r) {

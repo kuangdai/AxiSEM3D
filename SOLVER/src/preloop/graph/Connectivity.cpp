@@ -13,23 +13,20 @@
 std::array<std::vector<IRow2>, 4> Connectivity::sNodeIJPol;
 std::array<std::vector<IRow2>, 4> Connectivity::sEdgeIJPol;
 
-Connectivity::Connectivity(const std::vector<std::array<int, 4>> &excon) {
+Connectivity::Connectivity(const IMatX4 &excon): mConnectivity(excon) {
     int nelem = excon.size();
     mGlobalQuadID = IColX(nelem);
-    mConnectivity = IMatX4(nelem, 4);
     for (int i = 0; i < nelem; i++) {
         mGlobalQuadID(i) = i;
-        mConnectivity(i, 0) = excon[i][0];
-        mConnectivity(i, 1) = excon[i][1];
-        mConnectivity(i, 2) = excon[i][2];
-        mConnectivity(i, 3) = excon[i][3];
     }
 }
 
 Connectivity::Connectivity(const Connectivity &super, const IColX &mask) {
     int nsup = super.size();
     int nsub = 0;
-    for (int i = 0; i < nsup; i++) nsub += (mask(i) ? 1 : 0);
+    for (int i = 0; i < nsup; i++) {
+        nsub += (mask(i) ? 1 : 0);
+    }
     mGlobalQuadID = IColX(nsub);
     mConnectivity = IMatX4(nsub, 4);
     int pos = 0;
@@ -44,7 +41,9 @@ Connectivity::Connectivity(const Connectivity &super, const IColX &mask) {
 
 void Connectivity::formElemToGLL(int &ngll, std::vector<IMatPP> &elemToGLL, std::vector<IColX> &neighbours) const {
     // form static
-    if (sNodeIJPol[0].size() == 0) formNodeEdge();
+    if (sNodeIJPol[0].size() == 0) {
+        formNodeEdge();
+    }
     
     // get neighbours from metis
     DualGraph::formNeighbourhood(mConnectivity, 1, neighbours);
@@ -64,11 +63,14 @@ void Connectivity::formElemToGLL(int &ngll, std::vector<IMatPP> &elemToGLL, std:
         // loop over all neighbouring elements with smaller element id
         for (int in = 0; in < neighbours[ielem].rows(); in++) {
             int ineighbour = neighbours[ielem](in);
-            if (ineighbour >= ielem) continue;
+            if (ineighbour >= ielem) {
+                continue;
+            }
             
             // get ipol and jpol of shared points in both elements
             std::vector<IRow2> map1, map2;
-            get_shared_DOF_quad(mConnectivity.row(ineighbour), mConnectivity.row(ielem), map1, map2, ielem);
+            get_shared_DOF_quad(mConnectivity.row(ineighbour), mConnectivity.row(ielem), 
+                map1, map2, ielem);
             
             // for global points that already have a number, get the global
             // number from the other element
@@ -116,11 +118,15 @@ void Connectivity::decompose(const DecomposeOption &option,
     // value: map<global_gll, array_of_3(elem_id, ipol, jpol)>
     std::map<int, std::map<int, std::array<int, 3>>> gllCommGlb;
     for (int ielem = 0; ielem < nElemGlobal; ielem++) {
-        if (elemToProc(ielem) != XMPI::rank()) continue;
+        if (elemToProc(ielem) != XMPI::rank()) {
+            continue;
+        }
         for (int in = 0; in < neighbours[ielem].rows(); in++) {
             int ineighbour = neighbours[ielem](in);
             // within the same proc
-            if (elemToProc(ineighbour) == XMPI::rank()) continue;
+            if (elemToProc(ineighbour) == XMPI::rank()) {
+                continue;
+            }
             // add proc 
             int rankOther = elemToProc(ineighbour);
             gllCommGlb.insert(std::pair<int, std::map<int, std::array<int, 3>>>
@@ -128,14 +134,21 @@ void Connectivity::decompose(const DecomposeOption &option,
                 
             // create temp vector of neighbour gll's for fast search
             std::vector<int> gllOther;
-            for (int ipol = 0; ipol <= nPol; ipol++) 
-                for (int jpol = 0; jpol <= nPol; jpol++) 
-                    if (onEdge(ipol, jpol)) gllOther.push_back(elemToGllGlobal[ineighbour](ipol, jpol));
+            for (int ipol = 0; ipol <= nPol; ipol++) {
+                for (int jpol = 0; jpol <= nPol; jpol++) {
+                    if (onEdge(ipol, jpol)) {
+                        gllOther.push_back(elemToGllGlobal[ineighbour](ipol, jpol));
+                    }
+                }
+            }
+                
             // find common gll
             int nfound = 0;
             for (int ipol = 0; ipol <= nPol; ipol++) {
                 for (int jpol = 0; jpol <= nPol; jpol++) {
-                    if (!onEdge(ipol, jpol)) continue;
+                    if (!onEdge(ipol, jpol)) {
+                        continue;
+                    }
                     int targetGll = elemToGllGlobal[ielem](ipol, jpol);
                     if (std::find(gllOther.begin(), gllOther.end(), targetGll) != gllOther.end()) {
                         std::array<int, 3> ielem_ipol_jpol;
@@ -152,8 +165,9 @@ void Connectivity::decompose(const DecomposeOption &option,
                 }
             }
             // either a common edge or a common point
-            if (nfound != nPntEdge && nfound != 1) 
+            if (nfound != nPntEdge && nfound != 1) {
                 throw std::runtime_error("Connectivity::decompose || Domain decomposition failed.");
+            }
         }
     }
     MultilevelTimer::end("to-be-communicated global", 3);
@@ -242,8 +256,12 @@ void Connectivity::common_nodes(const IRow4 &a, const IRow4 &b,
     } else if (ncommon == 2) {
         aindex = ac.minCoeff();
         bindex = bc.minCoeff();
-        if (aindex == 0 && ac.maxCoeff() == 3) aindex = 3;
-        if (bindex == 0 && bc.maxCoeff() == 3) bindex = 3;
+        if (aindex == 0 && ac.maxCoeff() == 3) {
+            aindex = 3;
+        }
+        if (bindex == 0 && bc.maxCoeff() == 3) {
+            bindex = 3;
+        }
     } else {
         throw std::runtime_error("Connectivity::common_nodes || Error topology in mesh.");
     }
@@ -288,7 +306,9 @@ void Connectivity::formNodeEdge() {
 }
 
 bool Connectivity::onEdge(int ipol, int jpol) {
-    if (ipol > 0 && ipol < nPol && jpol > 0 && jpol < nPol) return false;
+    if (ipol > 0 && ipol < nPol && jpol > 0 && jpol < nPol) {
+        return false;
+    }
     return true;
 }
 

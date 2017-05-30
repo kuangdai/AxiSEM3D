@@ -38,8 +38,9 @@ Quad::Quad(const ExodusModel &exModel, int quadTag, const NrField &nrf):
 mQuadTag(quadTag) {
     
     // connectivity and coords
+    const IMatX4 &connect = exModel.getConnectivity();
     for (int i = 0; i < 4; i++) {
-        int nodeTag = exModel.getConnectivity()[mQuadTag][i];
+        int nodeTag = connect(mQuadTag, i);
         mNodalCoords(0, i) = exModel.getNodalS(nodeTag);
         mNodalCoords(1, i) = exModel.getNodalZ(nodeTag);
         mGlobalNodeTags(i) = nodeTag;
@@ -47,7 +48,7 @@ mQuadTag(quadTag) {
     
     // geometric mapping
     double distTol = exModel.getDistTolerance();
-    double etype = exModel.getElementalVariables().at("element_type")[mQuadTag];
+    double etype = exModel.getElementalVariables("element_type", mQuadTag);
     if (etype < .5) {
         // etype = 0.0, spherical
         mMapping = new SphericalMapping();
@@ -87,7 +88,7 @@ mQuadTag(quadTag) {
     }
     
     // solid fluid
-    mIsFluid = exModel.getElementalVariables().at("fluid")[mQuadTag] > .5;
+    mIsFluid = exModel.getElementalVariables("fluid", mQuadTag) > .5;
     
     // axial boundary
     mIsAxial = false;
@@ -161,7 +162,7 @@ mQuadTag(quadTag) {
     mRelabelling = new Relabelling(this);
     
     // dt 
-    mDeltaTRef = exModel.getElementalVariables().at("dt")[mQuadTag];
+    mDeltaTRef = exModel.getElementalVariables("dt", mQuadTag);
     
     // init ocean depth
     for (int ipol = 0; ipol <= nPol; ipol++) {

@@ -31,23 +31,23 @@ Material::Material(const Quad *myQuad, const ExodusModel &exModel): mMyQuad(myQu
     int quadTag = mMyQuad->getQuadTag();
     if (exModel.isIsotropic()) {
         for (int i = 0; i < 4; i++) {
-            mVpv1D(i) = mVph1D(i) = exModel.getElementalVariables().at("VP_" + std::to_string(i))[quadTag];
-            mVsv1D(i) = mVsh1D(i) = exModel.getElementalVariables().at("VS_" + std::to_string(i))[quadTag];
+            mVpv1D(i) = mVph1D(i) = exModel.getElementalVariables("VP_" + std::to_string(i), quadTag);
+            mVsv1D(i) = mVsh1D(i) = exModel.getElementalVariables("VS_" + std::to_string(i), quadTag);
             mEta1D(i) = 1.;
         }
     } else {
         for (int i = 0; i < 4; i++) {
-            mVpv1D(i) = exModel.getElementalVariables().at("VPV_" + std::to_string(i))[quadTag];
-            mVph1D(i) = exModel.getElementalVariables().at("VPH_" + std::to_string(i))[quadTag];
-            mVsv1D(i) = exModel.getElementalVariables().at("VSV_" + std::to_string(i))[quadTag];
-            mVsh1D(i) = exModel.getElementalVariables().at("VSH_" + std::to_string(i))[quadTag];
-            mEta1D(i) = exModel.getElementalVariables().at("ETA_" + std::to_string(i))[quadTag];
+            mVpv1D(i) = exModel.getElementalVariables("VPV_" + std::to_string(i), quadTag);
+            mVph1D(i) = exModel.getElementalVariables("VPH_" + std::to_string(i), quadTag);
+            mVsv1D(i) = exModel.getElementalVariables("VSV_" + std::to_string(i), quadTag);
+            mVsh1D(i) = exModel.getElementalVariables("VSH_" + std::to_string(i), quadTag);
+            mEta1D(i) = exModel.getElementalVariables("ETA_" + std::to_string(i), quadTag);
         }
     }
     for (int i = 0; i < 4; i++) {
-        mRho1D(i) = exModel.getElementalVariables().at("RHO_" + std::to_string(i))[quadTag];
-        mQkp1D(i) = exModel.getElementalVariables().at("QKAPPA_" + std::to_string(i))[quadTag];
-        mQmu1D(i) = exModel.getElementalVariables().at("QMU_" + std::to_string(i))[quadTag];
+        mRho1D(i) = exModel.getElementalVariables("RHO_" + std::to_string(i), quadTag);
+        mQkp1D(i) = exModel.getElementalVariables("QKAPPA_" + std::to_string(i), quadTag);
+        mQmu1D(i) = exModel.getElementalVariables("QMU_" + std::to_string(i), quadTag);
     }
     
     // initialize 3D properties with 1D reference

@@ -13,7 +13,7 @@ class Connectivity {
     
 public:    
     // constructor using exodus connectivity 
-    Connectivity(const std::vector<std::array<int, 4>> &excon);
+    Connectivity(const IMatX4 &excon);
     
     // constructor of a subset
     Connectivity(const Connectivity &super, const IColX &mask);

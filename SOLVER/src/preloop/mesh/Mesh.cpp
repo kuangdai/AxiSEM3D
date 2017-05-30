@@ -67,11 +67,8 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
         }
         fs.close();
         // element connectivity
-        const std::vector<std::array<int, 4>> &con = exModel->getConnectivity();
         fs.open(Parameters::sOutputDirectory + "/plots/mesh_connectivity.txt", std::fstream::out);
-        for (int i = 0; i < exModel->getNumQuads(); i++) {
-            fs << con[i][0] << " " << con[i][1] << " " << con[i][2] << " " << con[i][3] << std::endl;
-        }
+        fs << exModel->getConnectivity() << std::endl;
         fs.close();
     }
 }
@@ -81,7 +78,7 @@ void Mesh::buildUnweighted() {
     // balance solid and fluid separately
     DecomposeOption option(nElemGlobal, true, 0., 1, mDDPar->mNPartMetis, false);
     for (int iquad = 0; iquad < nElemGlobal; iquad++) {
-        if (mExModel->getElementalVariables().at("fluid")[iquad] > .5) {
+        if (mExModel->getElementalVariables("fluid", iquad) > .5) {
             option.mElemWeights2[iquad] = 1.; // fluid
         } else {
             option.mElemWeights1[iquad] = 1.; // solid

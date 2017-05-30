@@ -48,8 +48,8 @@ public:
     
     // setup
     static void setup(double router, double flattening, 
-        const std::vector<double> &ellip_knots, 
-        const std::vector<double> &ellip_coeffs);
+        const RDColX &ellip_knots, 
+        const RDColX &ellip_coeffs);
         
     // compute flattening at a radius
     static double getFlattening(double r);
