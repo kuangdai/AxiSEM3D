@@ -20,6 +20,9 @@ public:
     virtual void read2D(const std::string &vname, RDMatXX &data) const;
     virtual void read3D(const std::string &vname, std::vector<RDMatXX> &data) const;
     
+    // string
+    void readString(const std::string &vname, std::vector<std::string> &data) const;
+    
     // check
     static bool isNetCDF(const std::string &fname);
     
