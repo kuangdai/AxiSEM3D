@@ -98,7 +98,7 @@ void Connectivity::decompose(const DecomposeOption &option,
     // domain decomposition
     MultilevelTimer::begin("Metis Part", 3);
     IColX elemToProc;
-    DualGraph::decompose(mConnectivity, option, XMPI::nproc(), elemToProc);
+    DualGraph::decompose(mConnectivity, option, elemToProc);
     MultilevelTimer::end("Metis Part", 3);
     
     // global element-gll mapping
