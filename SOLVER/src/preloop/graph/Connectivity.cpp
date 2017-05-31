@@ -39,14 +39,15 @@ Connectivity::Connectivity(const Connectivity &super, const IColX &mask) {
     }
 }
 
-void Connectivity::formElemToGLL(int &ngll, std::vector<IMatPP> &elemToGLL, std::vector<IColX> &neighbours) const {
+void Connectivity::formElemToGLL(int &ngll, std::vector<IMatPP> &elemToGLL, 
+    std::vector<IColX> &neighbours, int ncommon) const {
     // form static
     if (sNodeIJPol[0].size() == 0) {
         formNodeEdge();
     }
     
     // get neighbours from metis
-    DualGraph::formNeighbourhood(mConnectivity, 1, neighbours);
+    DualGraph::formNeighbourhood(mConnectivity, ncommon, neighbours);
 
     // build local to global mapping
     ngll = 0;
@@ -98,8 +99,7 @@ void Connectivity::decompose(const DecomposeOption &option,
     // domain decomposition
     MultilevelTimer::begin("Metis Partition", 3);
     IColX elemToProc;
-    std::vector<IColX> neighboursNComm2;
-    DualGraph::decompose(mConnectivity, option, elemToProc, neighboursNComm2);
+    DualGraph::decompose(mConnectivity, option, elemToProc);
     MultilevelTimer::end("Metis Partition", 3);
     
     // global element-gll mapping
@@ -112,7 +112,7 @@ void Connectivity::decompose(const DecomposeOption &option,
     int nGllGlobal = 0;
     std::vector<IMatPP> elemToGllGlobal;
     std::vector<IColX> neighboursGlobal;
-    formElemToGLL(nGllGlobal, elemToGllGlobal, neighboursGlobal);
+    formElemToGLL(nGllGlobal, elemToGllGlobal, neighboursGlobal, 1);
     MultilevelTimer::end("Global Element-Gll", 3);
     
     // map of to-be-communicated global gll points 
@@ -191,7 +191,7 @@ void Connectivity::decompose(const DecomposeOption &option,
     // local element-gll mapping
     MultilevelTimer::begin("Local Element-Gll", 3);
     std::vector<IColX> neighboursLocal;
-    Connectivity(*this, procMask).formElemToGLL(nGllLocal, elemToGllLocal, neighboursLocal);
+    Connectivity(*this, procMask).formElemToGLL(nGllLocal, elemToGllLocal, neighboursLocal, 1);
     MultilevelTimer::end("Local Element-Gll", 3);
     
     // form local messaging
@@ -224,21 +224,26 @@ void Connectivity::decompose(const DecomposeOption &option,
     edgeInfo.mTotalEdges = 0;
     edgeInfo.mStartIndexOfEdgeWeights = IColX::Zero(nElemGlobal);
     edgeInfo.mPointsOnEdges_IPOL_JPOL.clear();
+    // graph with ncommon = 2
+    int nGllGlobalNC2 = 0;
+    std::vector<IMatPP> elemToGllGlobalNC2;
+    std::vector<IColX> neighboursGlobalNC2;
+    formElemToGLL(nGllGlobalNC2, elemToGllGlobalNC2, neighboursGlobalNC2, 2);
     for (int ielem = 0; ielem < nElemGlobal; ielem++) {
-        int numEdges = neighboursNComm2[ielem].rows();
+        int numEdges = neighboursGlobalNC2[ielem].rows();
         // global indexing
         edgeInfo.mStartIndexOfEdgeWeights[ielem] = edgeInfo.mTotalEdges;
         edgeInfo.mTotalEdges += numEdges;
         // points on edges
         std::vector<std::vector<std::array<int, 2>>> pointsOnEdges;
         for (int iedge = 0; iedge < numEdges; iedge++) {
-            int ineighbour = neighboursNComm2[ielem](iedge);
+            int ineighbour = neighboursGlobalNC2[ielem](iedge);
             // create temp vector of neighbour gll's for fast search
             std::vector<int> gllOther;
             for (int ipol = 0; ipol <= nPol; ipol++) {
                 for (int jpol = 0; jpol <= nPol; jpol++) {
                     if (onEdge(ipol, jpol)) {
-                        gllOther.push_back(elemToGllGlobal[ineighbour](ipol, jpol));
+                        gllOther.push_back(elemToGllGlobalNC2[ineighbour](ipol, jpol));
                     }
                 }
             }
@@ -249,7 +254,7 @@ void Connectivity::decompose(const DecomposeOption &option,
                     if (!onEdge(ipol, jpol)) {
                         continue;
                     }
-                    int targetGll = elemToGllGlobal[ielem](ipol, jpol);
+                    int targetGll = elemToGllGlobalNC2[ielem](ipol, jpol);
                     if (std::find(gllOther.begin(), gllOther.end(), targetGll) != gllOther.end()) {
                         pointsOnThisEdge.push_back(std::array<int, 2>({ipol, jpol}));
                     }
