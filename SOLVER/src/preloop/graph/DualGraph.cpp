@@ -22,7 +22,9 @@ void DualGraph::formNeighbourhood(const IMatX4 &connectivity, int ncommon,
     for (int i = 0; i < nelem; i++) {
         int nNeighb = xadj[i + 1] - xadj[i];
         IColX neighb(nNeighb);
-        for (int j = 0; j < nNeighb; j++) neighb(j) = adjncy[xadj[i] + j];
+        for (int j = 0; j < nNeighb; j++) {
+            neighb(j) = adjncy[xadj[i] + j];
+        }
         neighbours.push_back(neighb);
     }
 
@@ -30,70 +32,76 @@ void DualGraph::formNeighbourhood(const IMatX4 &connectivity, int ncommon,
     freeAdjacency(xadj, adjncy);
 }
 
-void DualGraph::decompose(const IMatX4 &connectivity, const DecomposeOption &option, int nproc, 
-    IColX &elemToProc) {
+void DualGraph::decompose(const IMatX4 &connectivity, const DecomposeOption &option, IColX &elemToProc) {
+    // size
     int nelem = connectivity.rows();    
     elemToProc = IColX::Zero(nelem);
-    if (nproc == 1) return;
-    
-    if (XMPI::root()) {    
-        // form graph
-        int *xadj, *adjncy;
-        formAdjacency(connectivity, 2, xadj, adjncy);
-        
-        // weights
-        double imax = std::numeric_limits<int>::max() * .9;
-        int ncon = 0;
-        std::vector<int> vweight;
-        float ubvec[2] = {1.f, 1.f};
-        std::vector<int> vsize = option.mElemCommSize;
-        if (option.mDoubleConstrants) {
-            ncon = 2;
-            vweight.reserve(nelem * 2);
-            double sum1 = std::accumulate(option.mElemWeights1.begin(), option.mElemWeights1.end(), 0.);
-            double sum2 = std::accumulate(option.mElemWeights2.begin(), option.mElemWeights2.end(), 0.);
-            for (int i = 0; i < nelem; i++) {
-                vweight.push_back((int)round(option.mElemWeights1[i] / sum1 * imax));
-                vweight.push_back((int)round(option.mElemWeights2[i] / sum2 * imax));
-            }
-            ubvec[0] = {1.f + option.mImbalance1};
-            ubvec[1] = {1.f + option.mImbalance2};
-        } else {
-            ncon = 1;
-            vweight.reserve(nelem);
-            double sum1 = std::accumulate(option.mElemWeights1.begin(), option.mElemWeights1.end(), 0.);
-            for (int i = 0; i < nelem; i++) {
-                vweight.push_back((int)round(option.mElemWeights1[i] / sum1 * imax));
-            }
-            ubvec[0] = {1.f + option.mImbalance1};
-        }
-        
-        // metis options
-        int metis_option[METIS_NOPTIONS];
-        metisError(METIS_SetDefaultOptions(metis_option), "METIS_SetDefaultOptions");
-        metis_option[METIS_OPTION_NCUTS] = option.mNPartition;
-        metis_option[METIS_OPTION_UFACTOR] = round(option.mImbalance1 * 1000);
-        if (option.mCommVol) {
-            metis_option[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;
-            metis_option[METIS_OPTION_CONTIG] = 1;
-        }
-        
-        int objval;
-        if (option.mCommVol) {
-            metisError(METIS_PartGraphKway(&nelem, &ncon, xadj, adjncy, 
-                vweight.data(), vsize.data(), NULL, &nproc, NULL, ubvec, 
-                metis_option, &objval, elemToProc.data()), "METIS_PartGraphKway");
-        } else {
-            metisError(METIS_PartGraphRecursive(&nelem, &ncon, xadj, adjncy, 
-                vweight.data(), vsize.data(), NULL, &nproc, NULL, ubvec, 
-                metis_option, &objval, elemToProc.data()), "METIS_PartGraphRecursive");
-        }
-         
-        // free memory 
-        freeAdjacency(xadj, adjncy);
+    int nproc = XMPI::nproc();
+    if (nproc == 1) {
+        return;
     }
     
-    XMPI::bcastEigen(elemToProc);
+    // form graph
+    int *xadj, *adjncy;
+    formAdjacency(connectivity, 2, xadj, adjncy);
+    
+    // check size of weights
+    bool welem = option.mElemWeights.size() > 0;
+    bool wedge = option.mEdgeWeights.size() > 0;
+    if (welem && option.mElemWeights.size() != nelem) {
+        throw std::runtime_error("DualGraph::decompose || "
+            "Incompatible size of element weights.");
+    }
+    if (wedge && option.mEdgeWeights.size() != xadj[nelem]) {
+        throw std::runtime_error("DualGraph::decompose || "
+            "Incompatible size of edge weights.");
+    }
+    
+    // metis options
+    int metis_option[METIS_NOPTIONS];
+    metisError(METIS_SetDefaultOptions(metis_option), "METIS_SetDefaultOptions");
+    metis_option[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;
+    metis_option[METIS_OPTION_CONTIG] = 1;
+    metis_option[METIS_OPTION_SEED] = XMPI::rank(); // generate different partitions
+    
+    // prepare input
+    int ncon = 1;
+    float ubvec = (float)(1. + option.mImbalance);
+    int objval = -1;
+    int *vwgt = NULL;
+    int *adjwgt = NULL;
+    IColX elemWeightsInt, edgeWeightsInt;
+    double imax = std::numeric_limits<int>::max() * .9;
+    double sum = 0.;
+    if (welem) {
+        sum += option.mElemWeights.sum();
+    }
+    if (wedge) {
+        sum += option.mEdgeWeights.sum();
+    }
+    if (welem) {
+        elemWeightsInt = (option.mElemWeights / sum * imax).array().round().matrix().cast<int>();
+        vwgt = elemWeightsInt.data();
+    }
+    if (wedge) {
+        edgeWeightsInt = (option.mEdgeWeights / sum * imax).array().round().matrix().cast<int>();
+        adjwgt = edgeWeightsInt.data();
+    }
+    
+    // run
+    metisError(METIS_PartGraphKway(&nelem, &ncon, xadj, adjncy, 
+        vwgt, NULL, adjwgt, &nproc, NULL, &ubvec, 
+        metis_option, &objval, elemToProc.data()), 
+        "METIS_PartGraphKway");
+     
+    // free memory 
+    freeAdjacency(xadj, adjncy);
+    
+    // find best result
+    std::vector<int> objall;
+    XMPI::gather(objval, objall, true);
+    int proc_min = std::min_element(objall.begin(), objall.end()) - objall.begin();
+    XMPI::bcastEigen(elemToProc, proc_min);
 }
 
 void DualGraph::formAdjacency(const IMatX4 &connectivity, int ncommon, int *&xadj, int *&adjncy) {
@@ -108,7 +116,9 @@ void DualGraph::formAdjacency(const IMatX4 &connectivity, int ncommon, int *&xad
     
     // convert connectivity to CSR format
     IColX eptr = IColX(nelem + 1);
-    for (int i = 0; i < nelem + 1; i++) eptr(i) = i * 4;
+    for (int i = 0; i < nelem + 1; i++) {
+        eptr(i) = i * 4;
+    }
     IColX eind = IColX(nelem * 4);
     for (int i = 0; i < nelem; i++) {
         for (int j = 0; j < 4; j++) {
@@ -130,13 +140,16 @@ void DualGraph::freeAdjacency(int *&xadj, int *&adjncy) {
 }
 
 void DualGraph::metisError(const int retval, const std::string &func_name) {
-    if (retval != METIS_OK) throw std::runtime_error("DualGraph::metisError || "
-        "Error in metis function: " + func_name);
+    if (retval != METIS_OK) {
+        throw std::runtime_error("DualGraph::metisError || "
+            "Error in metis function: " + func_name);
+    }
 }
 
 void DualGraph::check_idx_t() {
-    if (IDXTYPEWIDTH != 32)
+    if (IDXTYPEWIDTH != 32 || REALTYPEWIDTH != 32) {
         throw std::runtime_error("DualGraph::check_idx_t || Incompatible METIS build ||"
             "Please re-install METIS with 32-bit configuration. ||"
-            "Or edit METIS_ROOT in CMakeLists.txt to locate the 32-bit build.");
+            "Or edit METIS_ROOT in CMakeLists.txt to locate a 32-bit build.");    
+    }
 }
