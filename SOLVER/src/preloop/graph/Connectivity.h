@@ -12,7 +12,7 @@ struct EdgeInfoGlobal {
     int mTotalEdges;
     IColX mStartIndexOfEdgeWeights;
     // TODO: this looks insane
-    std::vector<std::vector<std::vector<std::array<int, 2>>>> mPointsOnEdges_IPOL_JPOL;
+    std::vector<std::vector<std::vector<std::array<int, 4>>>> mPointsOnEdges_IPOL_JPOL;
 };
 
 class Connectivity {

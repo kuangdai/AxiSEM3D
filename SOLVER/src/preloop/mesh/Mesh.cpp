@@ -525,7 +525,8 @@ void Mesh::measure(DecomposeOption &measured) {
                 for (int ip = 0; ip < numPointOnEdge; ip++) {
                     int ipol = mEdgeInfo->mPointsOnEdges_IPOL_JPOL[quadTag][iedge][ip][0];
                     int jpol = mEdgeInfo->mPointsOnEdges_IPOL_JPOL[quadTag][iedge][ip][1];
-                    measured.mEdgeWeights(posDest) += pWgt(mLocalElemToGLL[iloc](ipol, jpol));
+                    int rcnt = mEdgeInfo->mPointsOnEdges_IPOL_JPOL[quadTag][iedge][ip][2];
+                    measured.mEdgeWeights(posDest) += pWgt(mLocalElemToGLL[iloc](ipol, jpol)) / rcnt;
                 }
             }
         }

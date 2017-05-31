@@ -229,13 +229,14 @@ void Connectivity::decompose(const DecomposeOption &option,
     std::vector<IMatPP> elemToGllGlobalNC2;
     std::vector<IColX> neighboursGlobalNC2;
     formElemToGLL(nGllGlobalNC2, elemToGllGlobalNC2, neighboursGlobalNC2, 2);
+    std::map<int, int> gllCommGlbNC2;
     for (int ielem = 0; ielem < nElemGlobal; ielem++) {
         int numEdges = neighboursGlobalNC2[ielem].rows();
         // global indexing
         edgeInfo.mStartIndexOfEdgeWeights[ielem] = edgeInfo.mTotalEdges;
         edgeInfo.mTotalEdges += numEdges;
         // points on edges
-        std::vector<std::vector<std::array<int, 2>>> pointsOnEdges;
+        std::vector<std::vector<std::array<int, 4>>> pointsOnEdges;
         for (int iedge = 0; iedge < numEdges; iedge++) {
             int ineighbour = neighboursGlobalNC2[ielem](iedge);
             // create temp vector of neighbour gll's for fast search
@@ -248,7 +249,7 @@ void Connectivity::decompose(const DecomposeOption &option,
                 }
             }
             // find common gll
-            std::vector<std::array<int, 2>> pointsOnThisEdge;
+            std::vector<std::array<int, 4>> pointsOnThisEdge;
             for (int ipol = 0; ipol <= nPol; ipol++) {
                 for (int jpol = 0; jpol <= nPol; jpol++) {
                     if (!onEdge(ipol, jpol)) {
@@ -256,7 +257,10 @@ void Connectivity::decompose(const DecomposeOption &option,
                     }
                     int targetGll = elemToGllGlobalNC2[ielem](ipol, jpol);
                     if (std::find(gllOther.begin(), gllOther.end(), targetGll) != gllOther.end()) {
-                        pointsOnThisEdge.push_back(std::array<int, 2>({ipol, jpol}));
+                        // add count
+                        gllCommGlbNC2.insert(std::pair<int, int>(targetGll, 0));
+                        gllCommGlbNC2.at(targetGll)++;
+                        pointsOnThisEdge.push_back(std::array<int, 4>({ipol, jpol, 0, targetGll}));
                     }
                 }
             }
@@ -264,6 +268,18 @@ void Connectivity::decompose(const DecomposeOption &option,
         }
         edgeInfo.mPointsOnEdges_IPOL_JPOL.push_back(pointsOnEdges);
     }
+    // generate count
+    for (int ielem = 0; ielem < nElemGlobal; ielem++) {
+        int numEdges = edgeInfo.mPointsOnEdges_IPOL_JPOL[ielem].size();
+        for (int iedge = 0; iedge < numEdges; iedge++) {
+            int numPoints = edgeInfo.mPointsOnEdges_IPOL_JPOL[ielem][iedge].size();
+            for (int ip = 0; ip < numPoints; ip++) {
+                int targetGll = edgeInfo.mPointsOnEdges_IPOL_JPOL[ielem][iedge][ip][3];
+                edgeInfo.mPointsOnEdges_IPOL_JPOL[ielem][iedge][ip][2] = gllCommGlbNC2.at(targetGll) / 2;
+            }
+        }
+    }
+    
     MultilevelTimer::end("Global Edge Info", 3);
 }
 
