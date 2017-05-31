@@ -68,69 +68,54 @@ public:
     
     ////////////////////////////// broadcast //////////////////////////////
     // raw array
-    static void bcast(int *buffer, int size);
-    static void bcast(double *buffer, int size);
-    static void bcast(float *buffer, int size);
-    static void bcast(std::complex<float> *buffer, int size);
-    static void bcast(std::complex<double> *buffer, int size);
-    static void bcast(char *buffer, int size);
-    
-    // broadcast with allocation
-    template<typename Type>
-    static void bcast_alloc(Type *&buffer, int size) {
-        #ifndef _SERIAL_BUILD
-            bcast(size);
-            if (!root()) {
-                if (buffer != 0) {
-                    delete [] buffer;
-                }
-                buffer = new Type[size];
-            }
-            bcast(buffer, size);
-        #endif
-    };
+    static void bcast(int *buffer, int size, int src = 0);
+    static void bcast(double *buffer, int size, int src = 0);
+    static void bcast(float *buffer, int size, int src = 0);
+    static void bcast(std::complex<float> *buffer, int size, int src = 0);
+    static void bcast(std::complex<double> *buffer, int size, int src = 0);
+    static void bcast(char *buffer, int size, int src = 0);
     
     // single
-    static void bcast(int &buffer);
-    static void bcast(double &buffer);
-    static void bcast(float &buffer);
-    static void bcast(std::string &str);
+    static void bcast(int &buffer, int src = 0);
+    static void bcast(double &buffer, int src = 0);
+    static void bcast(float &buffer, int src = 0);
+    static void bcast(std::string &str, int src = 0);
     
     // Eigen::Matrix
     template<typename Type>
-    static void bcastEigen(Type &buffer) {
+    static void bcastEigen(Type &buffer, int src = 0) {
         #ifndef _SERIAL_BUILD
             int dim[2];
-            if (root()) {
+            if (rank() == src) {
                 dim[0] = buffer.rows(); 
                 dim[1] = buffer.cols();
             }
-            bcast(dim, 2);
-            if (!root()) {
+            bcast(dim, 2, src);
+            if (rank() != src) {
                 buffer = Type::Zero(dim[0], dim[1]);
             }
-            bcast(buffer.data(), buffer.size());
+            bcast(buffer.data(), buffer.size(), src);
         #endif
     };
     
     // std::vector
     template<typename Type>
-    static void bcast(std::vector<Type> &buffer) {
+    static void bcast(std::vector<Type> &buffer, int src = 0) {
         #ifndef _SERIAL_BUILD
             int size = 0;
-            if (root()) {
+            if (rank() == src) {
                 size = buffer.size();
             }
-            bcast(size);
-            if (!root()) {
+            bcast(size, src);
+            if (rank() != src) {
                 buffer.resize(size);
             }
-            bcast(buffer.data(), size);
+            bcast(buffer.data(), size, src);
         #endif
     }
     
     // special case
-    static void bcast(std::vector<std::string> &buffer);
+    static void bcast(std::vector<std::string> &buffer, int src = 0);
     
     ////////////////////////////// isend/irecv ////////////////////////////// 
     // isend, only for Eigen::Matrix

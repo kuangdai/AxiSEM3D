@@ -74,76 +74,76 @@ void XMPI::printException(const std::exception &e) {
     XMPI::cout << XMPI::endl << XMPI::endl;
 }
 
-void XMPI::bcast(int *buffer, int size) {
+void XMPI::bcast(int *buffer, int size, int src) {
     #ifndef _SERIAL_BUILD
-        MPI_Bcast(buffer, size, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(buffer, size, MPI_INT, src, MPI_COMM_WORLD);
     #endif
 }
 
-void XMPI::bcast(double *buffer, int size) {
+void XMPI::bcast(double *buffer, int size, int src) {
     #ifndef _SERIAL_BUILD
-        MPI_Bcast(buffer, size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(buffer, size, MPI_DOUBLE, src, MPI_COMM_WORLD);
     #endif
 }
 
-void XMPI::bcast(float *buffer, int size) {
+void XMPI::bcast(float *buffer, int size, int src) {
     #ifndef _SERIAL_BUILD
-        MPI_Bcast(buffer, size, MPI_FLOAT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(buffer, size, MPI_FLOAT, src, MPI_COMM_WORLD);
     #endif
 }
 
-void XMPI::bcast(std::complex<double> *buffer, int size) {
+void XMPI::bcast(std::complex<double> *buffer, int size, int src) {
     #ifndef _SERIAL_BUILD
-        MPI_Bcast(buffer, size, MPI_C_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
+        MPI_Bcast(buffer, size, MPI_C_DOUBLE_COMPLEX, src, MPI_COMM_WORLD);
     #endif
 }
 
-void XMPI::bcast(std::complex<float> *buffer, int size) {
+void XMPI::bcast(std::complex<float> *buffer, int size, int src) {
     #ifndef _SERIAL_BUILD
-        MPI_Bcast(buffer, size, MPI_C_FLOAT_COMPLEX, 0, MPI_COMM_WORLD);
+        MPI_Bcast(buffer, size, MPI_C_FLOAT_COMPLEX, src, MPI_COMM_WORLD);
     #endif
 }
 
-void XMPI::bcast(char *buffer, int size) {
+void XMPI::bcast(char *buffer, int size, int src) {
     #ifndef _SERIAL_BUILD
-        MPI_Bcast(buffer, size, MPI_CHAR, 0, MPI_COMM_WORLD);
+        MPI_Bcast(buffer, size, MPI_CHAR, src, MPI_COMM_WORLD);
     #endif
 }
 
-void XMPI::bcast(int &buffer) {
+void XMPI::bcast(int &buffer, int src) {
     #ifndef _SERIAL_BUILD
-        MPI_Bcast(&buffer, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&buffer, 1, MPI_INT, src, MPI_COMM_WORLD);
     #endif
 }
 
-void XMPI::bcast(double &buffer) {
+void XMPI::bcast(double &buffer, int src) {
     #ifndef _SERIAL_BUILD
-        MPI_Bcast(&buffer, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&buffer, 1, MPI_DOUBLE, src, MPI_COMM_WORLD);
     #endif
 }
 
-void XMPI::bcast(float &buffer) {
+void XMPI::bcast(float &buffer, int src) {
     #ifndef _SERIAL_BUILD
-        MPI_Bcast(&buffer, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&buffer, 1, MPI_FLOAT, src, MPI_COMM_WORLD);
     #endif
 }
 
-void XMPI::bcast(std::string &str) {
+void XMPI::bcast(std::string &str, int src) {
     #ifndef _SERIAL_BUILD
         int size = 0;
-        if (root()) {
+        if (rank() == src) {
             size = str.size();
         }
-        bcast(size);
+        bcast(size, src);
         char *cstr = new char[size + 1];
-        if (root()) {
+        if (rank() == src) {
             const char *ostr = str.c_str();
             for (int i = 0; i < size; i++) {
                 cstr[i] = ostr[i];
             }
         } 
-        bcast(cstr, size);
-        if (!root()) {
+        bcast(cstr, size, src);
+        if (rank() != src) {
             cstr[size] = 0;
             str = std::string(cstr);
         }
@@ -151,37 +151,37 @@ void XMPI::bcast(std::string &str) {
     #endif
 }
 
-void XMPI::bcast(std::vector<std::string> &buffer) {
+void XMPI::bcast(std::vector<std::string> &buffer, int src) {
     #ifndef _SERIAL_BUILD
         // length
         int num = 0;
         int maxLen = -1;
-        if (root()) {
+        if (rank() == src) {
             num = buffer.size();
             for (int i = 0; i < num; i++) {
                 maxLen = std::max(maxLen, (int)buffer[i].size());
             }
             maxLen += 1;
         }
-        bcast(num);
-        bcast(maxLen);
+        bcast(num, src);
+        bcast(maxLen, src);
         
         // bcast data
         char *all_str = new char[num * maxLen];
         for (int i = 0; i < num * maxLen; i++) {
             all_str[i] = 0;
         }
-        if (root()) {
+        if (rank() == src) {
             for (int i = 0; i < num; i++) {
                 for (int j = 0; j < buffer[i].size(); j++) {
                     all_str[i * maxLen + j] = buffer[i][j];
                 }
             }
         }
-        bcast(all_str, num * maxLen);
+        bcast(all_str, num * maxLen, src);
         
         // cast back to array
-        if (!root()) {
+        if (rank() != src) {
             buffer.clear();
             for (int i = 0; i < num; i++) {
                 std::string var(&all_str[i * maxLen]);
