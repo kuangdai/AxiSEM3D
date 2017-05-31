@@ -29,20 +29,10 @@ ATTENUATION_QKAPPA                          false
 
 
 # ============================= domain decomposition =============================
-# WHAT: whether to balance elemental and point-wise operations individually
+# WHAT: whether to balance weights on edges
 # TYPE: bool
 # NOTE: users are less likely to change this
-DD_BALANCE_ELEMENT_POINT                    true
-
-# WHAT: number of candidate partitionings that METIS will compute
-# TYPE: integer
-# NOTE: users are less likely to change this
-DD_NPART_METIS                              50
-
-# WHAT: horoning communication volume or not
-# TYPE: bool
-# NOTE: users are less likely to change this
-DD_COMM_VOL_METIS                           false
+DD_BALANCE_EDGE                             false
 
 
 
