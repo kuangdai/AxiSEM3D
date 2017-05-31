@@ -22,7 +22,7 @@ public:
     
     // domain decomposition
     static void decompose(const IMatX4 &connectivity, const DecomposeOption &option, 
-        IColX &elemToProc, std::vector<IColX> &neighboursNComm2);
+        IColX &elemToProc);
     
 private:
     static void formAdjacency(const IMatX4 &connectivity, int ncommon, int *&xadj, int *&adjncy);

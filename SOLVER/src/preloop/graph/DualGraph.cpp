@@ -33,7 +33,7 @@ void DualGraph::formNeighbourhood(const IMatX4 &connectivity, int ncommon,
 }
 
 void DualGraph::decompose(const IMatX4 &connectivity, const DecomposeOption &option, 
-    IColX &elemToProc, std::vector<IColX> &neighboursNComm2) {
+    IColX &elemToProc) {
     // size
     int nelem = connectivity.rows();    
     elemToProc = IColX::Zero(nelem);
@@ -45,16 +45,6 @@ void DualGraph::decompose(const IMatX4 &connectivity, const DecomposeOption &opt
     // form graph
     int *xadj, *adjncy;
     formAdjacency(connectivity, 2, xadj, adjncy);
-    neighboursNComm2.clear();
-    neighboursNComm2.reserve(nelem);
-    for (int i = 0; i < nelem; i++) {
-        int nNeighb = xadj[i + 1] - xadj[i];
-        IColX neighb(nNeighb);
-        for (int j = 0; j < nNeighb; j++) {
-            neighb(j) = adjncy[xadj[i] + j];
-        }
-        neighboursNComm2.push_back(neighb);
-    }
     
     // check size of weights
     bool welem = option.mElemWeights.size() > 0;
