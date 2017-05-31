@@ -94,11 +94,12 @@ void Connectivity::formElemToGLL(int &ngll, std::vector<IMatPP> &elemToGLL, std:
 
 void Connectivity::decompose(const DecomposeOption &option, 
     int &nGllLocal, std::vector<IMatPP> &elemToGllLocal, 
-    MessagingInfo &msg, IColX &procMask) const {
+    MessagingInfo &msgInfo, EdgeInfoGlobal &edgeInfo, IColX &procMask) const {
     // domain decomposition
     MultilevelTimer::begin("Metis Part", 3);
     IColX elemToProc;
-    DualGraph::decompose(mConnectivity, option, elemToProc);
+    std::vector<IColX> neighboursNComm2;
+    DualGraph::decompose(mConnectivity, option, elemToProc, neighboursNComm2);
     MultilevelTimer::end("Metis Part", 3);
     
     // global element-gll mapping
@@ -110,8 +111,8 @@ void Connectivity::decompose(const DecomposeOption &option,
     int nElemGlobal = size();
     int nGllGlobal = 0;
     std::vector<IMatPP> elemToGllGlobal;
-    std::vector<IColX> neighbours;
-    formElemToGLL(nGllGlobal, elemToGllGlobal, neighbours);
+    std::vector<IColX> neighboursGlobal;
+    formElemToGLL(nGllGlobal, elemToGllGlobal, neighboursGlobal);
     MultilevelTimer::end("global element-gll", 3);
     
     // map of to-be-communicated global gll points 
@@ -123,8 +124,8 @@ void Connectivity::decompose(const DecomposeOption &option,
         if (elemToProc(ielem) != XMPI::rank()) {
             continue;
         }
-        for (int in = 0; in < neighbours[ielem].rows(); in++) {
-            int ineighbour = neighbours[ielem](in);
+        for (int in = 0; in < neighboursGlobal[ielem].rows(); in++) {
+            int ineighbour = neighboursGlobal[ielem](in);
             // within the same proc
             if (elemToProc(ineighbour) == XMPI::rank()) {
                 continue;
@@ -189,16 +190,17 @@ void Connectivity::decompose(const DecomposeOption &option,
     
     // local element-gll mapping
     MultilevelTimer::begin("local element-gll", 3);
-    Connectivity(*this, procMask).formElemToGLL(nGllLocal, elemToGllLocal, neighbours);
+    std::vector<IColX> neighboursLocal;
+    Connectivity(*this, procMask).formElemToGLL(nGllLocal, elemToGllLocal, neighboursLocal);
     MultilevelTimer::end("local element-gll", 3);
     
     // form local messaging
     MultilevelTimer::begin("local messaging", 3);
-    msg.mIProcComm.clear();
-    msg.mNLocalPoints.clear();
-    msg.mILocalPoints.clear();
+    msgInfo.mIProcComm.clear();
+    msgInfo.mNLocalPoints.clear();
+    msgInfo.mILocalPoints.clear();
     for (auto it_proc = gllCommGlb.begin(); it_proc != gllCommGlb.end(); it_proc++) {
-        msg.mIProcComm.push_back(it_proc->first);
+        msgInfo.mIProcComm.push_back(it_proc->first);
         std::vector<int> gll_loc;
         for (auto it_gll = it_proc->second.begin(); it_gll != it_proc->second.end(); it_gll++) {
             std::array<int, 3> ielem_ipol_jpol = it_gll->second;
@@ -208,14 +210,56 @@ void Connectivity::decompose(const DecomposeOption &option,
             int ielem_loc = elemGlbToLoc(ielem_glb);
             gll_loc.push_back(elemToGllLocal[ielem_loc](ipol, jpol));
         }
-        msg.mNLocalPoints.push_back(gll_loc.size());
-        msg.mILocalPoints.push_back(gll_loc);
+        msgInfo.mNLocalPoints.push_back(gll_loc.size());
+        msgInfo.mILocalPoints.push_back(gll_loc);
     }
-    msg.mNProcComm = msg.mIProcComm.size();
+    msgInfo.mNProcComm = msgInfo.mIProcComm.size();
     MPI_Request req;
-    msg.mReqSend = std::vector<MPI_Request>(msg.mNProcComm, req);
-    msg.mReqRecv = std::vector<MPI_Request>(msg.mNProcComm, req);
+    msgInfo.mReqSend = std::vector<MPI_Request>(msgInfo.mNProcComm, req);
+    msgInfo.mReqRecv = std::vector<MPI_Request>(msgInfo.mNProcComm, req);
     MultilevelTimer::end("local messaging", 3);
+    
+    // edge info
+    MultilevelTimer::begin("global edge info", 3);
+    edgeInfo.mTotalEdges = 0;
+    edgeInfo.mStartIndexOfEdgeWeights = IColX::Zero(nElemGlobal);
+    edgeInfo.mPointsOnEdges_IPOL_JPOL.clear();
+    for (int ielem = 0; ielem < nElemGlobal; ielem++) {
+        int numEdges = neighboursNComm2[ielem].rows();
+        // global indexing
+        edgeInfo.mStartIndexOfEdgeWeights[ielem] = edgeInfo.mTotalEdges;
+        edgeInfo.mTotalEdges += numEdges;
+        // points on edges
+        std::vector<std::vector<std::array<int, 2>>> pointsOnEdges;
+        for (int iedge = 0; iedge < numEdges; iedge++) {
+            int ineighbour = neighboursNComm2[ielem](iedge);
+            // create temp vector of neighbour gll's for fast search
+            std::vector<int> gllOther;
+            for (int ipol = 0; ipol <= nPol; ipol++) {
+                for (int jpol = 0; jpol <= nPol; jpol++) {
+                    if (onEdge(ipol, jpol)) {
+                        gllOther.push_back(elemToGllGlobal[ineighbour](ipol, jpol));
+                    }
+                }
+            }
+            // find common gll
+            std::vector<std::array<int, 2>> pointsOnThisEdge;
+            for (int ipol = 0; ipol <= nPol; ipol++) {
+                for (int jpol = 0; jpol <= nPol; jpol++) {
+                    if (!onEdge(ipol, jpol)) {
+                        continue;
+                    }
+                    int targetGll = elemToGllGlobal[ielem](ipol, jpol);
+                    if (std::find(gllOther.begin(), gllOther.end(), targetGll) != gllOther.end()) {
+                        pointsOnThisEdge.push_back(std::array<int, 2>({ipol, jpol}));
+                    }
+                }
+            }
+            pointsOnEdges.push_back(pointsOnThisEdge);    
+        }
+        edgeInfo.mPointsOnEdges_IPOL_JPOL.push_back(pointsOnEdges);
+    }
+    MultilevelTimer::end("global edge info", 3);
 }
 
 void Connectivity::get_shared_DOF_quad(const IRow4 &connectivity1, const IRow4 &connectivity2, 

@@ -21,7 +21,8 @@ public:
         std::vector<IColX> &neighbours);
     
     // domain decomposition
-    static void decompose(const IMatX4 &connectivity, const DecomposeOption &option, IColX &elemToProc);
+    static void decompose(const IMatX4 &connectivity, const DecomposeOption &option, 
+        IColX &elemToProc, std::vector<IColX> &neighboursNComm2);
     
 private:
     static void formAdjacency(const IMatX4 &connectivity, int ncommon, int *&xadj, int *&adjncy);

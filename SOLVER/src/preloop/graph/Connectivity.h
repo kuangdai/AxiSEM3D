@@ -8,6 +8,12 @@
 
 struct DecomposeOption;
 struct MessagingInfo; 
+struct EdgeInfoGlobal {
+    int mTotalEdges;
+    IColX mStartIndexOfEdgeWeights;
+    // TODO: this looks insane
+    std::vector<std::vector<std::vector<std::array<int, 2>>>> mPointsOnEdges_IPOL_JPOL;
+};
 
 class Connectivity {
     
@@ -24,7 +30,7 @@ public:
     // domain decomposition
     void decompose(const DecomposeOption &option, 
         int &nlocalGLL, std::vector<IMatPP> &localElemToGLL, 
-        MessagingInfo &msg, IColX &procMask) const;
+        MessagingInfo &msgInfo, EdgeInfoGlobal &edgeInfo, IColX &procMask) const;
     
 private:
     IColX mGlobalQuadID;

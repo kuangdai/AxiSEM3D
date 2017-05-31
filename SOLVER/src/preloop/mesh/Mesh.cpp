@@ -38,6 +38,7 @@ Mesh::Mesh(const ExodusModel *exModel, const NrField *nrf,
 mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
     mAttBuilder = 0;
     mMsgInfo = 0;
+    mEdgeInfo = 0;
     mOceanLoad3D = 0;
     mDDPar = new DDParameters(par);
     mLearnPar = new LearnParameters(par);
@@ -76,14 +77,7 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
 void Mesh::buildUnweighted() {
     int nElemGlobal = mExModel->getNumQuads(); 
     // balance solid and fluid separately
-    DecomposeOption option(nElemGlobal, true, 0., 1, mDDPar->mNPartMetis, false);
-    for (int iquad = 0; iquad < nElemGlobal; iquad++) {
-        if (mExModel->getElementalVariables("fluid", iquad) > .5) {
-            option.mElemWeights2[iquad] = 1.; // fluid
-        } else {
-            option.mElemWeights1[iquad] = 1.; // solid
-        }
-    }
+    DecomposeOption option;
     MultilevelTimer::begin("Build Local", 1);
     buildLocal(option);
     MultilevelTimer::end("Build Local", 1);
@@ -223,8 +217,9 @@ void Mesh::buildLocal(const DecomposeOption &option) {
     int nGllLocal;
     IColX procMask;
     mMsgInfo = new MessagingInfo();
+    mEdgeInfo = new EdgeInfoGlobal();
     Connectivity con_global(mExModel->getConnectivity());
-    con_global.decompose(option, nGllLocal, mLocalElemToGLL, *mMsgInfo, procMask);
+    con_global.decompose(option, nGllLocal, mLocalElemToGLL, *mMsgInfo, *mEdgeInfo, procMask);
     MultilevelTimer::end("Domain Decomposition", 2);
     
     // form empty points 
@@ -341,6 +336,11 @@ void Mesh::destroy() {
         delete mMsgInfo;
         mMsgInfo = 0;
     }
+    // edge info
+    if (mEdgeInfo) {
+        delete mEdgeInfo;
+        mEdgeInfo = 0;
+    }
 }
 
 void Mesh::measure(DecomposeOption &measured) {
@@ -361,7 +361,6 @@ void Mesh::measure(DecomposeOption &measured) {
     // initialize with zero weights
     int nElemGlobal = mExModel->getNumQuads();
     RDColX eWgtEle = RDColX::Zero(nElemGlobal);
-    IColX eCommSize = IColX::Zero(nElemGlobal);
     // create library
     std::map<std::string, double> elemCostLibrary;
     for (int iloc = 0; iloc < getNumQuads(); iloc++) {
@@ -417,9 +416,9 @@ void Mesh::measure(DecomposeOption &measured) {
         // assign to element
         int quadTag = mQuads[iloc]->getQuadTag();
         eWgtEle(quadTag) = measure;
-        // commnunication size    
-        eCommSize(quadTag) = 5; //elem->sizeComm();
     }
+    // sum up
+    XMPI::sumEigenDouble(eWgtEle);
     MultilevelTimer::end("Bcast Element Costs", 2);
     
 
@@ -474,47 +473,12 @@ void Mesh::measure(DecomposeOption &measured) {
     // read library
     for (int ip = 0; ip < ngll; ip++) {
         Point *point = domain.getPoint(ip);
-        // read library
-        double measure = pointCostLibraryGlobal.at(point->costSignature());
-        // assign to point
-        pWgt(ip) = measure / mGLLPoints[ip]->getReferenceCount();
+        pWgt(ip) = pointCostLibraryGlobal.at(point->costSignature());
     }
     MultilevelTimer::end("Bcast Point Costs", 2);
     
-    MultilevelTimer::begin("Finish Measurement", 2);    
-    // add point weights to elements
-    RDColX eWgtPnt = RDColX::Zero(nElemGlobal);
-    for (int iloc = 0; iloc < getNumQuads(); iloc++) {
-        int quadTag = mQuads[iloc]->getQuadTag();
-        for (int ipol = 0; ipol <= nPol; ipol++) {
-            for (int jpol = 0; jpol <= nPol; jpol++) {
-                eWgtPnt(quadTag) += pWgt(mLocalElemToGLL[iloc](ipol, jpol));
-            }
-        }
-    }
-    
-    // sum up
-    XMPI::sumEigenDouble(eWgtEle);
-    XMPI::sumEigenDouble(eWgtPnt);
-    XMPI::sumEigenInt(eCommSize);
-    
-    // create option 
-    if (mDDPar->mBalanceEP) {
-        measured = DecomposeOption(nElemGlobal, true, 0., 0, mDDPar->mNPartMetis, mDDPar->mCommVolMetis);
-        for (int i = 0; i < nElemGlobal; i++) {
-            measured.mElemWeights1[i] = eWgtEle(i);
-            measured.mElemWeights2[i] = eWgtPnt(i);
-            measured.mElemCommSize[i] = eCommSize(i);
-        }
-    } else {
-        measured = DecomposeOption(nElemGlobal, false, 0., 0, mDDPar->mNPartMetis, mDDPar->mCommVolMetis);
-        for (int i = 0; i < nElemGlobal; i++) {
-            measured.mElemWeights1[i] = eWgtEle(i) + eWgtPnt(i);
-            measured.mElemCommSize[i] = eCommSize(i);
-        }
-    }
-    
     // report
+    MultilevelTimer::begin("Report Measurements", 2);
     if (XMPI::root() && mDDPar->mReportMeasure) {
         std::string fname = Parameters::sOutputDirectory + "/develop/measured_costs.txt";
         std::fstream fs(fname, std::fstream::out);
@@ -528,16 +492,71 @@ void Mesh::measure(DecomposeOption &measured) {
         }
         fs.close();    
     }
+    MultilevelTimer::end("Report Measurements", 2);
+    
+    // create option 
+    MultilevelTimer::begin("Create Weights", 2);    
+    if (mDDPar->mBalanceEdge) {
+        // recast point weights element-wise, only for exclusive points
+        RDColX eWgtPnt = RDColX::Zero(nElemGlobal);
+        for (int iloc = 0; iloc < getNumQuads(); iloc++) {
+            int quadTag = mQuads[iloc]->getQuadTag();
+            for (int ipol = 0; ipol <= nPol; ipol++) {
+                for (int jpol = 0; jpol <= nPol; jpol++) {
+                    int ip = mLocalElemToGLL[iloc](ipol, jpol);
+                    if (mGLLPoints[ip]->getReferenceCount() == 1) {
+                        eWgtPnt(quadTag) += pWgt(ip);
+                    }
+                }
+            }
+        }
+        XMPI::sumEigenDouble(eWgtPnt);
+        // sum up element and point weights
+        measured.mElemWeights = eWgtEle + eWgtPnt;
+        
+        // compute edge weights
+        measured.mEdgeWeights = RDColX::Zero(mEdgeInfo->mTotalEdges);
+        for (int iloc = 0; iloc < getNumQuads(); iloc++) {
+            int quadTag = mQuads[iloc]->getQuadTag();
+            int numEdges = mEdgeInfo->mPointsOnEdges_IPOL_JPOL[quadTag].size();
+            for (int iedge = 0; iedge < numEdges; iedge++) {
+                int posDest = mEdgeInfo->mStartIndexOfEdgeWeights[quadTag] + iedge;
+                int numPointOnEdge = mEdgeInfo->mPointsOnEdges_IPOL_JPOL[quadTag][iedge].size();
+                for (int ip = 0; ip < numPointOnEdge; ip++) {
+                    int ipol = mEdgeInfo->mPointsOnEdges_IPOL_JPOL[quadTag][iedge][ip][0];
+                    int jpol = mEdgeInfo->mPointsOnEdges_IPOL_JPOL[quadTag][iedge][ip][1];
+                    measured.mEdgeWeights(posDest) += pWgt(mLocalElemToGLL[iloc](ipol, jpol));
+                }
+            }
+        }
+        XMPI::sumEigenDouble(measured.mEdgeWeights);
+    } else {
+        // recast point weights element-wise, considering reference count on edges
+        RDColX eWgtPnt = RDColX::Zero(nElemGlobal);
+        for (int iloc = 0; iloc < getNumQuads(); iloc++) {
+            int quadTag = mQuads[iloc]->getQuadTag();
+            for (int ipol = 0; ipol <= nPol; ipol++) {
+                for (int jpol = 0; jpol <= nPol; jpol++) {
+                    int ip = mLocalElemToGLL[iloc](ipol, jpol);
+                    eWgtPnt(quadTag) += pWgt(ip) / mGLLPoints[ip]->getReferenceCount();
+                }
+            }
+        }
+        XMPI::sumEigenDouble(eWgtPnt);
+        // sum up element and point weights
+        measured.mElemWeights = eWgtEle + eWgtPnt;
+        // zero size of mEdgeWeights
+        measured.mEdgeWeights = RDColX::Zero(0);
+    }
+    MultilevelTimer::end("Create Weights", 2);    
     
     // plot 
     MultilevelTimer::begin("Plot during Cost Measurements", 2);
     for (const auto &sp: mSlicePlots) {
         sp->plotEleType(domain);
-        sp->plotMeasured(eWgtEle + eWgtPnt);
+        sp->plotMeasured(measured.mElemWeights);
     }
-    MultilevelTimer::end("Plot during Cost Measurements", 2);
-    
-    MultilevelTimer::end("Finish Measurement", 2);    
+    MultilevelTimer::end("Plot during Cost Measurements", 2);    
 }
 
 void Mesh::test() {
@@ -548,13 +567,8 @@ void Mesh::test() {
 }
 
 Mesh::DDParameters::DDParameters(const Parameters &par) {
-    mBalanceEP = par.getValue<bool>("DD_BALANCE_ELEMENT_POINT");
-    mNPartMetis = par.getValue<int>("DD_NPART_METIS");
-    mCommVolMetis = par.getValue<bool>("DD_COMM_VOL_METIS");
+    mBalanceEdge = par.getValue<bool>("DD_BALANCE_EDGE");
     mReportMeasure = par.getValue<bool>("DEVELOP_MEASURED_COSTS");
-    if (mNPartMetis <= 0) {
-        mNPartMetis = 10;
-    }
 }
 
 int Mesh::getMaxNr() const {
