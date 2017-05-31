@@ -34,30 +34,30 @@ int axisem_main(int argc, char *argv[]) {
         }
         
         //////// exodus model and attenuation parameters 
-        MultilevelTimer::begin("Exodus", 0);
+        MultilevelTimer::begin("Build Exodus", 0);
         ExodusModel::buildInparam(pl.mExodusModel, *(pl.mParameters), pl.mAttParameters, verbose);
-        MultilevelTimer::end("Exodus", 0);
+        MultilevelTimer::end("Build Exodus", 0);
         
         //////// fourier field 
-        MultilevelTimer::begin("NrField", 0);
+        MultilevelTimer::begin("Build NrField", 0);
         NrField::buildInparam(pl.mNrField, *(pl.mParameters), verbose);
-        MultilevelTimer::end("NrField", 0);
+        MultilevelTimer::end("Build NrField", 0);
         
         //////// source
-        MultilevelTimer::begin("Source", 0);
+        MultilevelTimer::begin("Build Source", 0);
         Source::buildInparam(pl.mSource, *(pl.mParameters), verbose);
         double srcLat = pl.mSource->getLatitude();
         double srcLon = pl.mSource->getLongitude();
         double srcDep = pl.mSource->getDepth();
-        MultilevelTimer::end("Source", 0);
+        MultilevelTimer::end("Build Source", 0);
         
         //////// 3D models 
-        MultilevelTimer::begin("3D Models", 0);
+        MultilevelTimer::begin("Build 3D Models", 0);
         Volumetric3D::buildInparam(pl.mVolumetric3D, *(pl.mParameters), pl.mExodusModel, 
             srcLat, srcLon, srcDep, verbose);
         Geometric3D::buildInparam(pl.mGeometric3D, *(pl.mParameters), verbose);
         OceanLoad3D::buildInparam(pl.mOceanLoad3D, *(pl.mParameters), verbose);
-        MultilevelTimer::end("3D Models", 0);
+        MultilevelTimer::end("Build 3D Models", 0);
         
         //////// mesh, phase 1
         // define mesh
@@ -69,9 +69,9 @@ int axisem_main(int argc, char *argv[]) {
         MultilevelTimer::end("Mesh Definition", 0);
         
         // build unweighted local mesh 
-        MultilevelTimer::begin("Unweighted Mesh", 0);
+        MultilevelTimer::begin("Build Unweighted Mesh", 0);
         pl.mMesh->buildUnweighted();
-        MultilevelTimer::end("Unweighted Mesh", 0);
+        MultilevelTimer::end("Build Unweighted Mesh", 0);
         
         //////// static variables in solver, mainly FFTW
         MultilevelTimer::begin("Initialize FFTW", 0);
@@ -79,7 +79,7 @@ int axisem_main(int argc, char *argv[]) {
         MultilevelTimer::end("Initialize FFTW", 0);
         
         //////// dt
-        MultilevelTimer::begin("DT", 0);
+        MultilevelTimer::begin("Compute DT", 0);
         double dt = pl.mParameters->getValue<double>("TIME_DELTA_T");
         if (dt < tinyDouble) {
             dt = pl.mMesh->getDeltaT();
@@ -89,18 +89,18 @@ int axisem_main(int argc, char *argv[]) {
             dt_fact = 1.0;
         }
         dt *= dt_fact;
-        MultilevelTimer::end("DT", 0);
+        MultilevelTimer::end("Compute DT", 0);
         
         //////// attenuation
-        MultilevelTimer::begin("Attenuation", 0);
+        MultilevelTimer::begin("Build Attenuation", 0);
         AttBuilder::buildInparam(pl.mAttBuilder, *(pl.mParameters), *(pl.mAttParameters), dt, verbose);
-        MultilevelTimer::end("Attenuation", 0);
+        MultilevelTimer::end("Build Attenuation", 0);
         
         //////// mesh, phase 2
-        MultilevelTimer::begin("Weighted Mesh", 0);
+        MultilevelTimer::begin("Build Weighted Mesh", 0);
         pl.mMesh->setAttBuilder(pl.mAttBuilder);
         pl.mMesh->buildWeighted();
-        MultilevelTimer::end("Weighted Mesh", 0);
+        MultilevelTimer::end("Build Weighted Mesh", 0);
         
         //////// mesh test 
         // test positive-definiteness and self-adjointness of stiffness and mass matrices
@@ -110,15 +110,15 @@ int axisem_main(int argc, char *argv[]) {
         // exit(0);
         
         //////// source time function 
-        MultilevelTimer::begin("Source Time Function", 0);
+        MultilevelTimer::begin("Build Source Time Function", 0);
         STF::buildInparam(pl.mSTF, *(pl.mParameters), dt, verbose);
-        MultilevelTimer::end("Source Time Function", 0);
+        MultilevelTimer::end("Build Source Time Function", 0);
         
         //////// receivers
-        MultilevelTimer::begin("Receivers", 0);
+        MultilevelTimer::begin("Build Receivers", 0);
         ReceiverCollection::buildInparam(pl.mReceivers, 
             *(pl.mParameters), srcLat, srcLon, srcDep, verbose);
-        MultilevelTimer::end("Receivers", 0);    
+        MultilevelTimer::end("Build Receivers", 0);    
         
         //////// computational domain
         MultilevelTimer::begin("Computationalion Domain", 0);

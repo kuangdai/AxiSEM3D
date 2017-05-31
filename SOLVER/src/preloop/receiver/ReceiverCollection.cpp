@@ -12,6 +12,7 @@
 #include <boost/lexical_cast.hpp>
 #include "Parameters.h"
 #include "Domain.h"
+#include "MultilevelTimer.h"
 
 ReceiverCollection::ReceiverCollection(const std::string &fileRec, bool geographic, 
     double srcLat, double srcLon, double srcDep):
@@ -68,10 +69,14 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     std::vector<int> recRank(mReceivers.size(), XMPI::nproc());
     std::vector<int> recETag(mReceivers.size(), -1);
     std::vector<RDMatPP> recInterpFact(mReceivers.size(), RDMatPP::Zero());
+    MultilevelTimer::begin("Locate Receivers", 2);
     for (int irec = 0; irec < mReceivers.size(); irec++) {
         bool found = mReceivers[irec]->locate(mesh, recETag[irec], recInterpFact[irec]);
         if (found) recRank[irec] = XMPI::rank();
     }
+    MultilevelTimer::end("Locate Receivers", 2);
+    
+    MultilevelTimer::begin("Release to Domain", 2);
     for (int irec = 0; irec < mReceivers.size(); irec++) {
         int recRankMin = XMPI::min(recRank[irec]);
         if (recRankMin == XMPI::nproc()) {
@@ -84,6 +89,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
                 recETag[irec], recInterpFact[irec]);
         }
     }
+    MultilevelTimer::begin("Release to Domain", 2);
 }
 
 std::string ReceiverCollection::verbose() const {
