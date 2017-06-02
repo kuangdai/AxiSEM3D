@@ -14,11 +14,13 @@ AT_VAR_END VAR_NAME
 
 Notes:
 a) VAR_NAME specifies the name of variable;
-b) VAR_DIMS specify the dimensions of the variable, which must be placed 
-   within a single line, right after the @VAR_START line;
-c) VAR_DATA specify the values of the variable, which can be placed freely;
-d) VAR_DATA must be ordered row-major or C-like;
-e) VAR_DATA will be read as double-precision numbers.
+b) VAR_DIMS specify the dimensions of the variable; 
+            must be written in a single line right after the line of @VAR_START;
+c) VAR_DATA specify the values of the variable; 
+            has a length equal to the product fo VAR_DIMS;
+            must be followed by the line of @VAR_END;
+            must be ordered row-major or C-like; 
+            can be separated by spaces, tabs and line-breaks;
 
 
 ###########################################
@@ -39,12 +41,14 @@ An example of 2D varaibles, named var2d
 21 22 23
 @VAR_END var2d
 
-It is unnecessary to write the data part as a matrix, 
+It is unnecessary to write the data as a matrix, 
 e.g., the following definition is equivalent:
 
 @VAR_START var2d_eq
 2 3
-11 12 13 21 22 23
+11 
+12 13 21 
+22 23
 @VAR_END var2d_eq
 
 
