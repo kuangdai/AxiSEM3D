@@ -21,6 +21,7 @@ c) VAR_DATA specify the values of the variable;
             must be followed by the line of @VAR_END;
             must be ordered row-major or C-like; 
             can be separated by spaces, tabs and line-breaks;
+            has a type (int/float/double) depending on the code to read it.
 
 
 ###########################################
