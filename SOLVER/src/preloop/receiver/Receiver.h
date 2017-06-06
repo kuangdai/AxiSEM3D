@@ -9,6 +9,7 @@
 
 class Domain;
 class Mesh;
+class PointwiseRecorder;
 
 class Receiver {
 public:
@@ -16,18 +17,15 @@ public:
         double theta_lat, double phi_lon, bool geographic, 
         double depth, double srcLat, double srcLon, double srcDep);
     
-    // void release(Domain &domain, const Mesh &mesh, 
-    //     int recordInterval, int component,
-    //     const std::string &path, bool binary, bool append, int bufferSize); 
-        
-    void release(Domain &domain, const Mesh &mesh, 
-        int recordInterval, int component,
-        const std::string &path, bool binary, bool append, int bufferSize,
+    void release(PointwiseRecorder &recorderPW, const Domain &domain, 
         int elemTag, const RDMatPP &interpFact);     
     
     bool locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const;
     
     std::string verbose(bool geographic, int wname, int wnet) const;
+    
+    const std::string &getName() const {return mName;};
+    const std::string &getNetwork() const {return mNetwork;};
     
 private:
     std::string mName;

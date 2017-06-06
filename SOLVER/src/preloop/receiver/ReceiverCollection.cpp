@@ -13,6 +13,8 @@
 #include "Parameters.h"
 #include "Domain.h"
 #include "MultilevelTimer.h"
+#include "PointwiseRecorder.h"
+#include "PointwiseIOAscii.h"
 
 ReceiverCollection::ReceiverCollection(const std::string &fileRec, bool geographic, 
     double srcLat, double srcLon, double srcDep):
@@ -23,7 +25,7 @@ mInputFile(fileRec), mGeographic(geographic) {
         std::fstream fs(mInputFile, std::fstream::in);
         if (!fs) {
             throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
-                "Error opening receiver data file " + mInputFile + ".");
+                "Error opening station data file " + mInputFile + ".");
         }
         std::string line;
         while (getline(fs, line)) {
@@ -53,42 +55,73 @@ mInputFile(fileRec), mGeographic(geographic) {
     // create receivers
     mWidthName = -1;
     mWidthNetwork = -1;
+    std::vector<std::string> recKeys;
     for (int i = 0; i < name.size(); i++) {
         mReceivers.push_back(new Receiver(name[i], network[i], 
             theta[i], phi[i], geographic, depth[i], srcLat, srcLon, srcDep));
         mWidthName = std::max(mWidthName, (int)name[i].length());
         mWidthNetwork = std::max(mWidthNetwork, (int)network[i].length());
+        // check duplicated
+        std::string key = network[i] + "_" + name[i];
+        if (std::find(recKeys.begin(), recKeys.end(), key) != recKeys.end()) {
+            throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
+                "Duplicated station keys (network_name) found in station data file " + mInputFile + " || "
+                "Name = " + name[i] + "; Network = " + network[i]);
+        }
+        recKeys.push_back(key);
     }
 }
 
 ReceiverCollection::~ReceiverCollection() {
-    for (const auto &rec: mReceivers)  delete rec;
+    for (const auto &rec: mReceivers) {
+        delete rec;
+    }
 }
 
 void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
+    // locate receivers
+    MultilevelTimer::begin("Locate Receivers", 2);
     std::vector<int> recRank(mReceivers.size(), XMPI::nproc());
     std::vector<int> recETag(mReceivers.size(), -1);
     std::vector<RDMatPP> recInterpFact(mReceivers.size(), RDMatPP::Zero());
-    MultilevelTimer::begin("Locate Receivers", 2);
     for (int irec = 0; irec < mReceivers.size(); irec++) {
         bool found = mReceivers[irec]->locate(mesh, recETag[irec], recInterpFact[irec]);
-        if (found) recRank[irec] = XMPI::rank();
+        if (found) {
+            recRank[irec] = XMPI::rank();
+        }
     }
     MultilevelTimer::end("Locate Receivers", 2);
     
+    // release to domain
     MultilevelTimer::begin("Release to Domain", 2);
+    PointwiseRecorder *recorderPW = new PointwiseRecorder(
+        mTotalStepsSTF, mRecordInterval, mBufferSize, mENZ);
     for (int irec = 0; irec < mReceivers.size(); irec++) {
         int recRankMin = XMPI::min(recRank[irec]);
         if (recRankMin == XMPI::nproc()) {
-            throw std::runtime_error("ReceiverCollection::release || Error locating receiver " + 
-                boost::lexical_cast<std::string>(irec));
+            throw std::runtime_error("ReceiverCollection::release || Error locating receiver || " 
+                "Name = " + mReceivers[irec]->getName() + "; "
+                "Network = " + mReceivers[irec]->getNetwork());
         }
         if (recRankMin == XMPI::rank()) {
-            mReceivers[irec]->release(domain, mesh, mRecordInterval, mComponent, 
-                mOutputDir + "/stations", mBinary, mAppend, mBufferSize, 
-                recETag[irec], recInterpFact[irec]);
+            mReceivers[irec]->release(*recorderPW, 
+                domain, recETag[irec], recInterpFact[irec]);
         }
     }
+    
+    // IO
+    if (mAscii) {
+        recorderPW->addIO(new PointwiseIOAscii());
+    }
+    if (mNetCDF) {
+        throw std::runtime_error("ReceiverCollection::release || NetCDF not implemented.");
+    }
+    if (mASDF) {
+        throw std::runtime_error("ReceiverCollection::release || ASDF not implemented.");
+    }
+    
+    // add recorder to domain
+    domain.setPointwiseRecorder(recorderPW);
     MultilevelTimer::begin("Release to Domain", 2);
 }
 
@@ -109,12 +142,15 @@ std::string ReceiverCollection::verbose() const {
     return ss.str();
 }
 
-void ReceiverCollection::buildInparam(ReceiverCollection *&rec, 
-    const Parameters &par, double srcLat, double srcLon, double srcDep, int verbose) {
-    if (rec) delete rec;
+void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters &par, 
+    double srcLat, double srcLon, double srcDep, int totalStepsSTF, int verbose) {
+    if (rec) {
+        delete rec;
+    }
     
     // create from file
-    std::string recFile = Parameters::sInputDirectory + "/" + par.getValue<std::string>("OUT_STATIONS_FILE");
+    std::string recFile = Parameters::sInputDirectory + "/" 
+        + par.getValue<std::string>("OUT_STATIONS_FILE");
     std::string recSys = par.getValue<std::string>("OUT_STATIONS_SYSTEM");
     bool geographic;
     if (boost::iequals(recSys, "source_centered")) {
@@ -122,36 +158,45 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec,
     } else if (boost::iequals(recSys, "geographic")) {
         geographic = true;
     } else {
-        throw std::runtime_error("ReceiverCollection::buildInparam || Invalid parameter, keyword = OUT_STATIONS_SYSTEM.");
+        throw std::runtime_error("ReceiverCollection::buildInparam || "
+            "Invalid parameter, keyword = OUT_STATIONS_SYSTEM.");
     }
     rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep); 
     
     // options 
+    rec->mTotalStepsSTF = totalStepsSTF;
     rec->mRecordInterval = par.getValue<int>("OUT_STATIONS_RECORD_INTERVAL");
-    if (rec->mRecordInterval <= 0) rec->mRecordInterval = 1;
-    std::string strcomp = par.getValue<std::string>("OUT_STATIONS_COMPONENTS");
-    if (boost::iequals(strcomp, "RTZ")) {
-        rec->mComponent = 0;
-    } else if (boost::iequals(strcomp, "ENZ")) {
-        rec->mComponent = 1;
-    } else if (boost::iequals(strcomp, "SPZ")) {
-        rec->mComponent = 2;
-    } else {
-        throw std::runtime_error("ReceiverCollection::buildInparam || Invalid parameter, keyword = OUT_STATIONS_COMPONENTS.");
+    if (rec->mRecordInterval <= 0) {
+        rec->mRecordInterval = 1;
     }
-    rec->mOutputDir = Parameters::sOutputDirectory; 
-    std::string strfmt = par.getValue<std::string>("OUT_STATIONS_FORMAT"); 
-    if (boost::iequals(strfmt, "ascii")) {
-        rec->mBinary = false;
-    } else if (boost::iequals(strfmt, "binary")) {
-        rec->mBinary = true;
-    } else {
-        throw std::runtime_error("ReceiverCollection::buildInparam || Invalid parameter, keyword = OUT_STATIONS_FORMAT.");
-    }
-    rec->mAppend = false;
     rec->mBufferSize = par.getValue<int>("OUT_STATIONS_DUMP_INTERVAL");
     if (rec->mBufferSize <= 0) {
-        rec->mBufferSize = 100;
+        rec->mBufferSize = 1000;
+    }
+    std::string strcomp = par.getValue<std::string>("OUT_STATIONS_COMPONENTS");
+    if (boost::iequals(strcomp, "RTZ")) {
+        rec->mENZ = false;
+    } else if (boost::iequals(strcomp, "ENZ")) {
+        rec->mENZ = true;
+    } else {
+        throw std::runtime_error("ReceiverCollection::buildInparam || "
+            "Invalid parameter, keyword = OUT_STATIONS_COMPONENTS.");
+    }
+    
+    // IO
+    int numFmt = par.getSize("OUT_STATIONS_FORMAT");
+    for (int i = 0; i < numFmt; i++) {
+        std::string strfmt = par.getValue<std::string>("OUT_STATIONS_FORMAT", i); 
+        if (boost::iequals(strfmt, "ascii")) {
+            rec->mAscii = true;
+        } else if (boost::iequals(strfmt, "netcdf")) {
+            rec->mNetCDF = true;
+        } else if (boost::iequals(strfmt, "asdf")) {
+            rec->mASDF = true;
+        } else {
+            throw std::runtime_error("ReceiverCollection::buildInparam || "
+                "Invalid parameter, keyword = OUT_STATIONS_FORMAT.");
+        }
     }
     
     if (verbose) {

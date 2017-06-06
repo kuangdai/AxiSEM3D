@@ -23,7 +23,7 @@ public:
     std::string verbose() const;
     
     static void buildInparam(ReceiverCollection *&rec, const Parameters &par, 
-        double srcLat, double srcLon, double srcDep, int verbose);
+        double srcLat, double srcLon, double srcDep, int totalStepsSTF, int verbose);
         
 private:
     
@@ -35,12 +35,15 @@ private:
     bool mGeographic;
     
     // options
+    int mTotalStepsSTF = 0;
     int mRecordInterval = 1;
-    int mComponent = 0;
-    std::string mOutputDir = "./";
-    bool mBinary = false;
-    bool mAppend = false;
-    int mBufferSize = 100;
+    int mBufferSize = 1000;
+    bool mENZ = false;
+    
+    // IO
+    bool mAscii = false;
+    bool mNetCDF = false;
+    bool mASDF = false;
     
     // for verbose
     int mWidthName;

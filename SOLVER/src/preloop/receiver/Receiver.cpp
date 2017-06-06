@@ -5,16 +5,12 @@
 #include "Receiver.h"
 #include "XMath.h"
 #include "Geodesy.h"
-#include "SeismometerRTZ.h"
-#include "SeismometerENZ.h"
-#include "RecorderAscii.h"
-#include "RecorderBinary.h"
-#include "Station.h"
 #include "Domain.h"
 #include "Mesh.h"
 #include "Quad.h"
 #include "Element.h"
 #include "SpectralConstants.h"
+#include "PointwiseRecorder.h"
 
 #include <sstream>
 #include <iomanip>
@@ -46,34 +42,10 @@ mName(name), mNetwork(network), mDepth(depth) {
     // XMPI::cout << mLat << " " << mLon << " " << " 0.0 " << mDepth << XMPI::endl;
 }
 
-void Receiver::release(Domain &domain, const Mesh &mesh, 
-    int recordInterval, int component,
-    const std::string &path, bool binary, bool append, int bufferSize,
+void Receiver::release(PointwiseRecorder &recorderPW, const Domain &domain, 
     int elemTag, const RDMatPP &interpFact) {
-                    
     Element *myElem = domain.getElement(elemTag);
-                    
-    // seismometer
-    Seismometer *seis;
-    if (component == 0) {
-        seis = new SeismometerRTZ(mPhi, interpFact.cast<Real>(), myElem, mTheta);
-    } else if (component == 1) {
-        seis = new SeismometerENZ(mPhi, interpFact.cast<Real>(), myElem, mTheta, mBackAzimuth * degree);
-    } else {
-        seis = new Seismometer(mPhi, interpFact.cast<Real>(), myElem);
-    }
-                
-    // recorder
-    Recorder *rec;
-    std::string fname = path + "/" + mNetwork + "_" + mName;
-    if (binary) {
-        rec = new RecorderBinary(bufferSize, fname, append);
-    } else {
-        rec = new RecorderAscii(bufferSize, fname, append);
-    }
-    
-    // station    
-    domain.addStation(new Station(recordInterval, seis, rec));
+    recorderPW.addReceiver(mName, mNetwork, mPhi, interpFact, myElem, mTheta, mBackAzimuth);
 }
 
 bool Receiver::locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const {
