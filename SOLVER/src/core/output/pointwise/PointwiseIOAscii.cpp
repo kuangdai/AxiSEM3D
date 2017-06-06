@@ -37,6 +37,10 @@ void PointwiseIOAscii::finalize() {
 }
 
 void PointwiseIOAscii::dumpToFile(const RMatXX &bufferDisp, const RColX &bufferTime, int bufferLine) {
+    if (bufferLine == 0) {
+        return;
+    }
+    
     #ifndef NDEBUG
         Eigen::internal::set_is_malloc_allowed(true);
     #endif
