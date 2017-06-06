@@ -20,6 +20,8 @@ public:
     virtual std::string verbose() const = 0;
 
     static void buildInparam(STF *&stf, const Parameters &par, double dt, int verbose);
+    
+    int getSize() const {return mSTF.size();};
 
 protected:
     double mDeltaT;

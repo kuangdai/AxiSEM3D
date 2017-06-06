@@ -116,8 +116,8 @@ int axisem_main(int argc, char *argv[]) {
         
         //////// receivers
         MultilevelTimer::begin("Build Receivers", 0);
-        ReceiverCollection::buildInparam(pl.mReceivers, 
-            *(pl.mParameters), srcLat, srcLon, srcDep, verbose);
+        ReceiverCollection::buildInparam(pl.mReceivers, *(pl.mParameters), 
+            srcLat, srcLon, srcDep, pl.mSTF->getSize(), verbose);
         MultilevelTimer::end("Build Receivers", 0);    
         
         //////// computational domain

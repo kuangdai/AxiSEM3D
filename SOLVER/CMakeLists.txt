@@ -111,9 +111,7 @@ include_directories(
     src/core/element/material/acoustic
 
     src/core/source
-    src/core/receiver
-    src/core/receiver/seismometer
-    src/core/receiver/recorder
+    src/core/output/pointwise
     src/core/domain
     src/core/newmark
 
@@ -209,12 +207,8 @@ add_executable(
 
     src/core/source/SourceTerm.cpp
     src/core/source/SourceTimeFunction.cpp
-    src/core/receiver/seismometer/Seismometer.cpp
-    src/core/receiver/seismometer/SeismometerRTZ.cpp
-    src/core/receiver/seismometer/SeismometerENZ.cpp
-    src/core/receiver/recorder/RecorderAscii.cpp
-    src/core/receiver/recorder/RecorderBinary.cpp
-    src/core/receiver/Station.cpp
+    src/core/output/pointwise/PointwiseRecorder.cpp
+    src/core/output/pointwise/PointwiseIOAscii.cpp
     src/core/domain/Domain.cpp
     src/core/newmark/Newmark.cpp
 

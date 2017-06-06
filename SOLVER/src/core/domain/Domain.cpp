@@ -8,7 +8,7 @@
 #include "SolidFluidPoint.h"
 #include "SourceTerm.h"
 #include "SourceTimeFunction.h"
-#include "Station.h"
+#include "PointwiseRecorder.h"
 #include "XMPI.h"
 #include "NuWisdom.h"
 #include "MultilevelTimer.h"
@@ -27,7 +27,7 @@ Domain::~Domain() {
     for (const auto &e: mPoints) {delete e;}
     for (const auto &e: mElements) {delete e;}
     for (const auto &e: mSourceTerms) {delete e;}
-    for (const auto &e: mStations) {delete e;}
+    if (mPointwiseRecorder) {delete mPointwiseRecorder;};
     if (mSTF) {delete mSTF;}
     if (mMsgInfo) {delete mMsgInfo;}
     if (mMsgBuffer) {delete mMsgBuffer;}
@@ -179,14 +179,20 @@ void Domain::coupleSolidFluid() const {
     #endif
 }
 
+void Domain::initializeRecorders() const {
+    mPointwiseRecorder->initialize();
+}
+
+void Domain::finalizeRecorders() const {
+    mPointwiseRecorder->finalize();
+}
+
 void Domain::record(int tstep, Real t) const {
     #ifdef _MEASURE_TIMELOOP
         mTimerOthers->resume();
     #endif
     
-    for (const auto &station: mStations) {
-        station->record(tstep, t);
-    }
+    mPointwiseRecorder->record(tstep, t);
     
     #ifdef _MEASURE_TIMELOOP
         mTimerOthers->stop();
@@ -198,9 +204,7 @@ void Domain::dumpLeft() const {
         mTimerOthers->resume();
     #endif
     
-    for (const auto &station: mStations) {
-        station->dumpLeft();
-    }
+    mPointwiseRecorder->dumpToFile();
     
     #ifdef _MEASURE_TIMELOOP
         mTimerOthers->stop();

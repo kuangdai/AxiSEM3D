@@ -28,6 +28,7 @@ void Newmark::solve(int verbose) const {
     Real dt = mDomain->getSTF().getDeltaT();
     int maxStep = mDomain->getSTF().getSize();
     mDomain->initDisplTinyRandom();
+    mDomain->initializeRecorders();
     const double sec2h = 1. / 3600.;
     double elapsed_last = 0.;
     MyBoostTimer timer;
@@ -83,6 +84,7 @@ void Newmark::solve(int verbose) const {
     }
     ////////////////////////// loop //////////////////////////
     mDomain->dumpLeft();
+    mDomain->finalizeRecorders();
     mDomain->dumpWisdom();
     double elapsed = timer.elapsed() * sec2h;
     if (verbose) {

@@ -15,7 +15,7 @@ class Element;
 class SolidFluidPoint;
 class SourceTerm;
 class SourceTimeFunction;
-class Station;
+class PointwiseRecorder;
 struct MessagingInfo;
 struct MessagingBuffer;
 struct LearnParameters;
@@ -31,7 +31,7 @@ public:
     int addElement(Element *elem);
     void addSourceTerm(SourceTerm *source) {mSourceTerms.push_back(source);};
     void setSTF(SourceTimeFunction *stf) {mSTF = stf;};
-    void addStation(Station *station) {mStations.push_back(station);};
+    void setPointwiseRecorder(PointwiseRecorder *recorderPW) {mPointwiseRecorder = recorderPW;};
     void setMessaging(MessagingInfo *msgInfo, MessagingBuffer *msgBuffer) 
         {mMsgInfo = msgInfo; mMsgBuffer = msgBuffer;};
     void addSFPoint(SolidFluidPoint *SFPoint) {mSFPoints.push_back(SFPoint);};
@@ -41,8 +41,6 @@ public:
     const SourceTimeFunction &getSTF() const {return *mSTF;};
     int getNumPoints() const {return mPoints.size();};
     int getNumElements() const {return mElements.size();};
-    int getNumStations() const {return mStations.size();};
-    int getNumSources() const {return mSourceTerms.size();};
     
     // get pointer components
     Point *getPoint(int index) const {return mPoints[index];};
@@ -65,7 +63,9 @@ public:
     void updateNewmark(Real dt) const;
     void coupleSolidFluid() const;
     
-    // station
+    // point-wise stations
+    void initializeRecorders() const;
+    void finalizeRecorders() const;
     void record(int tstep, Real t) const;
     void dumpLeft() const;
     
@@ -95,8 +95,8 @@ private:
     std::vector<SourceTerm *> mSourceTerms;
     // source time function
     SourceTimeFunction *mSTF = 0;
-    // stations
-    std::vector<Station *> mStations;
+    // point-wise stations
+    PointwiseRecorder *mPointwiseRecorder = 0;
     // massaging 
     MessagingInfo *mMsgInfo = 0;
     MessagingBuffer *mMsgBuffer = 0;
