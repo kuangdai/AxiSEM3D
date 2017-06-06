@@ -164,14 +164,20 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
     rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep); 
     
     // options 
-    rec->mTotalStepsSTF = totalStepsSTF;
     rec->mRecordInterval = par.getValue<int>("OUT_STATIONS_RECORD_INTERVAL");
     if (rec->mRecordInterval <= 0) {
         rec->mRecordInterval = 1;
     }
+    rec->mTotalRecordSteps = totalStepsSTF / rec->mRecordInterval;
+    if (totalStepsSTF % rec->mRecordInterval > 0) {
+        rec->mTotalRecordSteps += 1;
+    }
     rec->mBufferSize = par.getValue<int>("OUT_STATIONS_DUMP_INTERVAL");
     if (rec->mBufferSize <= 0) {
         rec->mBufferSize = 1000;
+    }
+    if (rec->mBufferSize > rec->mTotalRecordSteps) {
+        rec->mBufferSize = rec->mTotalRecordSteps;
     }
     std::string strcomp = par.getValue<std::string>("OUT_STATIONS_COMPONENTS");
     if (boost::iequals(strcomp, "RTZ")) {

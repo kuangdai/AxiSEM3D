@@ -11,7 +11,7 @@ class PointwiseIO;
 
 class PointwiseRecorder {
 public:
-    PointwiseRecorder(int totalStepsSTF, int recordInterval, 
+    PointwiseRecorder(int totalRecordSteps, int recordInterval, 
         int bufferSize, bool ENZ);
     ~PointwiseRecorder();
     

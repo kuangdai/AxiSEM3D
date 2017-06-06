@@ -6,13 +6,9 @@
 #include "Element.h"
 #include "PointwiseIO.h"
 
-PointwiseRecorder::PointwiseRecorder(int totalStepsSTF, int recordInterval, 
-    int bufferSize, bool ENZ):
+PointwiseRecorder::PointwiseRecorder(int totalRecordSteps, int recordInterval, 
+    int bufferSize, bool ENZ): mTotalRecordSteps(totalRecordSteps),
 mRecordInterval(recordInterval), mBufferSize(bufferSize), mENZ(ENZ) {
-    mTotalRecordSteps = totalStepsSTF / recordInterval;
-    if (totalStepsSTF % recordInterval > 0) {
-        mTotalRecordSteps += 1;
-    }
     mBufferLine = 0;
 }
 
