@@ -95,7 +95,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     // release to domain
     MultilevelTimer::begin("Release to Domain", 2);
     PointwiseRecorder *recorderPW = new PointwiseRecorder(
-        mTotalStepsSTF, mRecordInterval, mBufferSize, mENZ);
+        mTotalRecordSteps, mRecordInterval, mBufferSize, mENZ);
     for (int irec = 0; irec < mReceivers.size(); irec++) {
         int recRankMin = XMPI::min(recRank[irec]);
         if (recRankMin == XMPI::nproc()) {
