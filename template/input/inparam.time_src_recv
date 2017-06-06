@@ -61,15 +61,14 @@ OUT_STATIONS_FILE                           STATIONS
 OUT_STATIONS_SYSTEM                         geographic
 
 # WHAT: seismogram format
-# TYPE: ascii / binary
-# NOTE: a more decent format is on our TODO list
+# TYPE: ascii / netcdf / ASDF (to be implemented)
+# NOTE: can be one or more of the above options
 OUT_STATIONS_FORMAT                         ascii
 
 # WHAT: seismogram components
-# TYPE: RTZ / ENZ / SPZ
+# TYPE: RTZ / ENZ
 # NOTE: RTZ -- radial, transverse, vertical (source-centered)
 #       ENZ -- east, north, vertical (geographic)
-#       SPZ -- s, phi, z (solver inherent)
 OUT_STATIONS_COMPONENTS                     RTZ
 
 # WHAT: interval for seismogram sampling
