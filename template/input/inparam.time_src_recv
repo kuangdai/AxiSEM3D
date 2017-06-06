@@ -61,7 +61,7 @@ OUT_STATIONS_FILE                           STATIONS
 OUT_STATIONS_SYSTEM                         geographic
 
 # WHAT: seismogram format
-# TYPE: ascii / netcdf / ASDF (to be implemented)
+# TYPE: ascii / NetCDF / ASDF (to be implemented)
 # NOTE: can be one or more of the above options
 OUT_STATIONS_FORMAT                         ascii
 
