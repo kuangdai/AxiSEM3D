@@ -142,6 +142,7 @@ int axisem_main(int argc, char *argv[]) {
         // release receivers
         MultilevelTimer::begin("Release Receivers", 1);
         pl.mReceivers->release(*(sv.mDomain), *(pl.mMesh));
+        sv.mDomain->initializeRecorders();
         MultilevelTimer::end("Release Receivers", 1);
         
         // verbose domain 
@@ -175,6 +176,7 @@ int axisem_main(int argc, char *argv[]) {
         
         //////// finalize solver
         // solver 
+        sv.mDomain->finalizeRecorders();
         sv.finalize();
         // static variables in solver
         finalizeSolverStatic();
