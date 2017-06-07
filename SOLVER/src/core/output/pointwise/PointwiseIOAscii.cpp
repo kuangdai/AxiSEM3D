@@ -3,7 +3,6 @@
 // ascii IO for point-wise receivers
 
 #include "PointwiseIOAscii.h"
-#include "XMPI.h"
 #include "Parameters.h"
 
 void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
@@ -47,7 +46,8 @@ void PointwiseIOAscii::dumpToFile(const RMatXX &bufferDisp, const RColX &bufferT
     
     int numRec = mFileNames.size();
     for (int irec = 0; irec < numRec; irec++) {
-        mBuffer << bufferTime, bufferDisp.block(0, irec * 3, mBuffer.rows(), 3);
+        mBuffer.topRows(bufferLine) << bufferTime.topRows(bufferLine), 
+                                       bufferDisp.block(0, irec * 3, bufferLine, 3);
         mFiles[irec] << mBuffer.topRows(bufferLine).format(EIGEN_FMT) << std::endl;   
         mFiles[irec].flush();
     }
