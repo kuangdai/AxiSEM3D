@@ -8,6 +8,7 @@
 #include "NetCDF_Reader.h"
 #include "XMPI.h"
 #include <sstream>
+#include <cstdio>
 
 void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
     const std::vector<std::string> &names,
@@ -113,7 +114,7 @@ void PointwiseIONetCDF::finalize() {
     
     // delete local files
     if (numRec > 0) {
-        // ::rm(locFile);
+        std::remove(locFile.c_str());
     }
     
     #ifndef NDEBUG
