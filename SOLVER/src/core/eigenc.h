@@ -18,6 +18,7 @@ typedef std::array<CMatX3, nPntElem> arPP_CMatX3; // source
 typedef Eigen::Matrix<Real, 1, 3> RRow3;         // receiver
 typedef Eigen::Matrix<Complex, Eigen::Dynamic, Eigen::Dynamic> CMatXX; // mpi buffer
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> RMatXX;
+typedef Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RMatXX_RM;
 
 // elemental fields - flat 
 typedef Eigen::Matrix<Complex, Eigen::Dynamic, nPntElem * 1> CMatXN;

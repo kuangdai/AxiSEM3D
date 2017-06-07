@@ -66,7 +66,8 @@ private:
     // buffer
     int mBufferSize;
     int mBufferLine;
-    RMatXX mBufferDisp;
+    // need row-major to be consistent with netcdf
+    RMatXX_RM mBufferDisp;
     RColX mBufferTime;
     
     // components

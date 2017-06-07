@@ -15,6 +15,7 @@
 #include "MultilevelTimer.h"
 #include "PointwiseRecorder.h"
 #include "PointwiseIOAscii.h"
+#include "PointwiseIONetCDF.h"
 
 ReceiverCollection::ReceiverCollection(const std::string &fileRec, bool geographic, 
     double srcLat, double srcLon, double srcDep):
@@ -114,7 +115,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
         recorderPW->addIO(new PointwiseIOAscii());
     }
     if (mNetCDF) {
-        throw std::runtime_error("ReceiverCollection::release || NetCDF not implemented.");
+        recorderPW->addIO(new PointwiseIONetCDF());
     }
     if (mASDF) {
         throw std::runtime_error("ReceiverCollection::release || ASDF not implemented.");

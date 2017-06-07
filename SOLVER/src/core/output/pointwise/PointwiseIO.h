@@ -20,6 +20,6 @@ public:
     virtual void finalize() = 0;
     
     // dump to user-specified format
-    virtual void dumpToFile(const RMatXX &bufferDisp, const RColX &bufferTime, int bufferLine) = 0;
+    virtual void dumpToFile(const RMatXX_RM &bufferDisp, const RColX &bufferTime, int bufferLine) = 0;
 };
 

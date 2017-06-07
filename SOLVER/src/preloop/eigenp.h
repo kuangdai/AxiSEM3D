@@ -44,6 +44,7 @@ typedef Eigen::Matrix<int, Eigen::Dynamic, 4> IMatX4;
 typedef Eigen::Matrix<double, nPntEdge, 1> RDColP; // spectral constants
 typedef Eigen::Matrix<double, Eigen::Dynamic, nPntElem * 4> RDMatXN4;
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> RDMatXX;
+typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RDMatXX_RM;
 typedef Eigen::Matrix<ComplexD, Eigen::Dynamic, Eigen::Dynamic> CDMatXX;
 
 // connectivity

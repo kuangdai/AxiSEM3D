@@ -16,7 +16,7 @@ void NuWisdom::insert(double s, double z, int nu_learn, int nu_orign) {
 
 void NuWisdom::writeToFile(const std::string &fname) const {
     if (XMPI::root()) {
-        RDMatXX data(mRTree.size(), 4);
+        RDMatXX_RM data(mRTree.size(), 4);
         int row = 0;
         for(auto const &value: mRTree) {
             data(row, 0) = value.first.get<0>();
@@ -27,7 +27,11 @@ void NuWisdom::writeToFile(const std::string &fname) const {
         }
         NetCDF_Writer ncw;
         ncw.open(fname, true);
-        ncw.write2D("axisem3d_wisdom", data);
+        std::vector<size_t> dims;
+        dims.push_back(mRTree.size());
+        dims.push_back(4);
+        ncw.defineVariable("axisem3d_wisdom", dims, (double)0.);
+        ncw.writeVariableWhole("axisem3d_wisdom", data);
         ncw.close();
     }
 }

@@ -25,7 +25,7 @@ void PointwiseRecorder::addReceiver(const std::string &name, const std::string &
 
 void PointwiseRecorder::initialize() {
     int numRec = mPointwiseInfo.size();
-    mBufferDisp = RMatXX::Zero(mBufferSize, numRec * 3);
+    mBufferDisp = RMatXX_RM::Zero(mBufferSize, numRec * 3);
     mBufferTime = RColX::Zero(mBufferSize);
     std::vector<std::string> names;
     std::vector<std::string> networks;

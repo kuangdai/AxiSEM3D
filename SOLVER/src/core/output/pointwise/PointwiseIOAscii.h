@@ -18,7 +18,7 @@ public:
     void finalize();
     
     // dump to user-specified format
-    void dumpToFile(const RMatXX &bufferDisp, const RColX &bufferTime, int bufferLine);
+    void dumpToFile(const RMatXX_RM &bufferDisp, const RColX &bufferTime, int bufferLine);
     
 private:
     // file names

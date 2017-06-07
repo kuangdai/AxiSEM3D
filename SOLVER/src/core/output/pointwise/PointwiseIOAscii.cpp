@@ -35,7 +35,7 @@ void PointwiseIOAscii::finalize() {
     }
 }
 
-void PointwiseIOAscii::dumpToFile(const RMatXX &bufferDisp, const RColX &bufferTime, int bufferLine) {
+void PointwiseIOAscii::dumpToFile(const RMatXX_RM &bufferDisp, const RColX &bufferTime, int bufferLine) {
     if (bufferLine == 0) {
         return;
     }
