@@ -5,12 +5,12 @@
 
 #pragma once
 
-#include <string>
 #include <netcdf.h>
+#include <vector>
+#include <string>
+#include <sstream>
 #include <memory>
 #include <typeinfo>
-#include <vector>
-#include <sstream>
 
 class NetCDF_Writer {
 public:    
