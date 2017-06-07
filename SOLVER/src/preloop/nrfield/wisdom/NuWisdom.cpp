@@ -7,6 +7,7 @@
 #include "XMPI.h"
 #include "NetCDF_Reader.h"
 #include "NetCDF_Writer.h"
+#include "eigenp.h"
 
 void NuWisdom::insert(double s, double z, int nu_learn, int nu_orign) {
     RTreePoint newPoint(s, z);
@@ -47,7 +48,7 @@ void NuWisdom::readFromFile(const std::string &fname) {
     if (XMPI::root()) {
         RDMatXX dataRead;
         NetCDF_Reader *reader = NetCDF_Reader::createOpenNetCDF_Reader(fname);
-        reader->read2D("axisem3d_wisdom", dataRead);
+        reader->read2D("axisem3d_wisdom", dataRead, 0.);
         reader->close();
         delete reader;
         if (dataRead.cols() == 3) {

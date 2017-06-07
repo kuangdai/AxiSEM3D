@@ -16,7 +16,7 @@ void Geometric3D_EMC::initialize() {
         NetCDF_Reader *reader = NetCDF_Reader::createOpenNetCDF_Reader(fname);
         reader->read1D("lantidue", mGridLat);
         reader->read1D("longitude", mGridLon);
-        reader->read2D(mVarName, mGridData);
+        reader->read2D(mVarName, mGridData, 0.);
         reader->close();
         delete reader;
         if (mGridData.rows() != mGridLat.size() || mGridData.cols() != mGridLon.size()) {

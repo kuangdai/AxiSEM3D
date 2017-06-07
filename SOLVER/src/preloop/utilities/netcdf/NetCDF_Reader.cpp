@@ -23,150 +23,16 @@ void NetCDF_Reader::close() {
     }
 }
 
-void NetCDF_Reader::readMetaData(const std::string &vname, RDColX &data, std::vector<size_t> &dims) const {
-    // access variable
-    int var_id;
-    if (nc_inq_varid(mFileID, vname.c_str(), &var_id) != NC_NOERR) {
-        throw std::runtime_error("NetCDF_Reader::readMetaData || "
-            "Error finding variable: " + vname + " || NetCDF file: " + mFileName);
-    }
-    
-    // get ndims
-    int var_ndims;
-    netcdfError(nc_inq_varndims(mFileID, var_id, &var_ndims), "nc_inq_varndims");
-    
-    // get dim length
-    std::vector<int> var_dimids(var_ndims, 0);
-    dims.resize(var_ndims);
-    netcdfError(nc_inq_vardimid(mFileID, var_id, var_dimids.data()), "nc_inq_vardimid");
-    size_t total_len = 1;
-    for (int i = 0; i < var_ndims; i++) {
-        netcdfError(nc_inq_dimlen(mFileID, var_dimids[i], &dims[i]), "nc_inq_dimlen");
-        total_len *= dims[i];
-    }
-    
-    // get data
-    data = RDColX::Zero(total_len);
-    netcdfError(nc_get_var_double(mFileID, var_id, data.data()), "nc_get_var_double");
-}
-
-void NetCDF_Reader::read1D(const std::string &vname, RDColX &data) const {
-    // read meta data
-    std::vector<size_t> dims;
-    RDColX mdata;
-    readMetaData(vname, mdata, dims);
-    
-    // check ndims
-    int var_ndims = dims.size();
-    if (var_ndims != 1) {
-        throw std::runtime_error("NetCDF_Reader::read1D || "
-            "Variable is not 1D, Variable = " + vname + " || NetCDF file: " + mFileName);
-    }
-    
-    // get data
-    data = mdata;
-}
-
-void NetCDF_Reader::read2D(const std::string &vname, RDMatXX &data) const {
-    // read meta data
-    std::vector<size_t> dims;
-    RDColX mdata;
-    readMetaData(vname, mdata, dims);
-    
-    // check ndims
-    int var_ndims = dims.size();
-    if (var_ndims != 2) {
-        throw std::runtime_error("NetCDF_Reader::read2D || "
-            "Variable is not 2D, Variable = " + vname + " || NetCDF file: " + mFileName);
-    }
-    
-    // get data
-    int pos = 0;
-    data = RDMatXX::Zero(dims[0], dims[1]);
-    for (int j = 0; j < dims[0]; j++) {
-        for (int k = 0; k < dims[1]; k++) {
-            data(j, k) = mdata(pos++);
-        }
-    }
-}
-
-void NetCDF_Reader::readMetaData(const std::string &vname, IColX &data, std::vector<size_t> &dims) const {
-    // access variable
-    int var_id;
-    if (nc_inq_varid(mFileID, vname.c_str(), &var_id) != NC_NOERR) {
-        throw std::runtime_error("NetCDF_Reader::readMetaData || "
-            "Error finding variable: " + vname + " || NetCDF file: " + mFileName);
-    }
-    
-    // get ndims
-    int var_ndims;
-    netcdfError(nc_inq_varndims(mFileID, var_id, &var_ndims), "nc_inq_varndims");
-    
-    // get dim length
-    std::vector<int> var_dimids(var_ndims, 0);
-    dims.resize(var_ndims);
-    netcdfError(nc_inq_vardimid(mFileID, var_id, var_dimids.data()), "nc_inq_vardimid");
-    size_t total_len = 1;
-    for (int i = 0; i < var_ndims; i++) {
-        netcdfError(nc_inq_dimlen(mFileID, var_dimids[i], &dims[i]), "nc_inq_dimlen");
-        total_len *= dims[i];
-    }
-    
-    // get data
-    data = IColX::Zero(total_len);
-    netcdfError(nc_get_var_int(mFileID, var_id, data.data()), "nc_get_var_int");
-}
-
-void NetCDF_Reader::read1D(const std::string &vname, IColX &data) const {
-    // read meta data
-    std::vector<size_t> dims;
-    IColX mdata;
-    readMetaData(vname, mdata, dims);
-    
-    // check ndims
-    int var_ndims = dims.size();
-    if (var_ndims != 1) {
-        throw std::runtime_error("NetCDF_Reader::read1D || "
-            "Variable is not 1D, Variable = " + vname + " || NetCDF file: " + mFileName);
-    }
-    
-    // get data
-    data = mdata;
-}
-
-void NetCDF_Reader::read2D(const std::string &vname, IMatXX &data) const {
-    // read meta data
-    std::vector<size_t> dims;
-    IColX mdata;
-    readMetaData(vname, mdata, dims);
-    
-    // check ndims
-    int var_ndims = dims.size();
-    if (var_ndims != 2) {
-        throw std::runtime_error("NetCDF_Reader::read2D || "
-            "Variable is not 2D, Variable = " + vname + " || NetCDF file: " + mFileName);
-    }
-    
-    // get data
-    int pos = 0;
-    data = IMatXX::Zero(dims[0], dims[1]);
-    for (int j = 0; j < dims[0]; j++) {
-        for (int k = 0; k < dims[1]; k++) {
-            data(j, k) = mdata(pos++);
-        }
-    }
-}
-
 void NetCDF_Reader::readString(const std::string &vname, std::vector<std::string> &data) const {
     // access variable
-    int var_id;
+    int var_id = -1;
     if (nc_inq_varid(mFileID, vname.c_str(), &var_id) != NC_NOERR) {
         throw std::runtime_error("NetCDF_Reader::readString || "
             "Error finding variable: " + vname + " || NetCDF file: " + mFileName);
     }
     
     // get ndims
-    int var_ndims;
+    int var_ndims = -1;
     netcdfError(nc_inq_varndims(mFileID, var_id, &var_ndims), "nc_inq_varndims");
     if (var_ndims != 2) {
         throw std::runtime_error("NetCDF_Reader::readString || "
@@ -174,7 +40,7 @@ void NetCDF_Reader::readString(const std::string &vname, std::vector<std::string
     }
     
     // get dim length
-    std::vector<int> var_dimids(var_ndims, 0);
+    std::vector<int> var_dimids(var_ndims, -1);
     std::vector<size_t> dims = std::vector<size_t>(var_ndims, 0);
     netcdfError(nc_inq_vardimid(mFileID, var_id, var_dimids.data()), "nc_inq_vardimid");
     for (int i = 0; i < var_ndims; i++) {
