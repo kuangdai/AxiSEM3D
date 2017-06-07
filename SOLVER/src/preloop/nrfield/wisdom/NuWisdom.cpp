@@ -16,7 +16,13 @@ void NuWisdom::insert(double s, double z, int nu_learn, int nu_orign) {
 
 void NuWisdom::writeToFile(const std::string &fname) const {
     if (XMPI::root()) {
+        #ifndef NDEBUG
+            Eigen::internal::set_is_malloc_allowed(true);
+        #endif
         RDMatXX_RM data(mRTree.size(), 4);
+        #ifndef NDEBUG
+            Eigen::internal::set_is_malloc_allowed(false);
+        #endif
         int row = 0;
         for(auto const &value: mRTree) {
             data(row, 0) = value.first.get<0>();
