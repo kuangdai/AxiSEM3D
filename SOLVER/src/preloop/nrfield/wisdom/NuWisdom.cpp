@@ -26,7 +26,7 @@ void NuWisdom::writeToFile(const std::string &fname) const {
             row++;
         }
         NetCDF_Writer ncw;
-        ncw.open(fname);
+        ncw.open(fname, true);
         ncw.write2D("axisem3d_wisdom", data);
         ncw.close();
     }
