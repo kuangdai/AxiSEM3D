@@ -5,6 +5,7 @@
 #include "PointwiseIONetCDF.h"
 #include "Parameters.h"
 #include "NetCDF_Writer.h"
+#include "NetCDF_Reader.h"
 #include "XMPI.h"
 #include <sstream>
 
@@ -51,30 +52,73 @@ void PointwiseIONetCDF::finalize() {
         delete mNetCDF;
     }
     
-    // // merge
-    // int fileDefined = 0;
-    // for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
-    //     if (iproc == XMPI::rank() && numRec > 0) {
-    //         // reader
-    //         std::stringstream fname;
-    //         fname << Parameters::sOutputDirectory + "/stations/synthetics.nc.rank" << XMPI::rank();
-    //         NetCDF_Reader nr;
-    //         nr.open(fname);
-    //         if (!fileDefined) {
-    //             // create file
-    //             NetCDF_Writer nw;
-    //             nw.open(Parameters::sOutputDirectory + "/stations/synthetics.nc", true);
-    //             // define and write time
-    //             std::vector<size_t> dims;
-    //             dims.push_back(mTotalRecordSteps);
-    //             nw.defineVariable("time_points", dims, zero);
-    //             // read time
-    //             
-    //         }
-    //     }
-    //     XMPI::bcast(fileDefined);
-    //     XMPI::barrier();
-    // } 
+    // file name
+    std::string oneFile = Parameters::sOutputDirectory + "/stations/synthetics.nc";
+    std::stringstream fname;
+    fname << Parameters::sOutputDirectory + "/stations/synthetics.nc.rank" << XMPI::rank();
+    std::string locFile = fname.str();
+    
+    // merge
+    #ifndef NDEBUG
+        Eigen::internal::set_is_malloc_allowed(true);
+    #endif
+    
+    int fileDefined = 0;
+    for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
+        if (iproc == XMPI::rank() && numRec > 0) {
+            // reader
+            NetCDF_Reader nr;
+            nr.open(locFile);
+            
+            // init file
+            if (!fileDefined) {
+                // read time
+                RColX times;
+                nr.read1D("time_points", times);
+                // create file
+                NetCDF_Writer nw;
+                nw.open(oneFile, true);
+                // write time
+                std::vector<size_t> dims;
+                dims.push_back(times.rows());
+                nw.defineVariable("time_points", dims, (Real)-1.2345);
+                nw.writeVariableWhole("time_points", times);
+                nw.close();
+                // file defined
+                fileDefined = true;
+            }
+            
+            // read and write seismograms
+            NetCDF_Writer nw;
+            nw.open(oneFile, false);
+            for (int irec = 0; irec < numRec; irec++) {
+                // read seis
+                RMatXX_RM seis;
+                nr.read2D(mVarNames[irec], seis, (Real)0.);
+                // write seis
+                std::vector<size_t> dims;
+                dims.push_back(seis.rows());
+                dims.push_back(seis.cols());
+                nw.defineVariable(mVarNames[irec], dims, (Real)-1.2345);
+                nw.writeVariableWhole(mVarNames[irec], seis);
+            }
+            nw.close();
+            
+            // close reader
+            nr.close();
+        }
+        XMPI::bcast(fileDefined);
+        XMPI::barrier();
+    } 
+    
+    // delete local files
+    if (numRec > 0) {
+        // ::rm(locFile);
+    }
+    
+    #ifndef NDEBUG
+        Eigen::internal::set_is_malloc_allowed(false);
+    #endif
 }
 
 void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp, 
