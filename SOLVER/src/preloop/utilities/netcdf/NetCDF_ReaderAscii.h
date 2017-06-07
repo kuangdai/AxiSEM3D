@@ -17,7 +17,6 @@ public:
     void readMetaData(const std::string &vname, RDColX &data, std::vector<size_t> &dims) const;
     void read1D(const std::string &vname, RDColX &data) const;
     void read2D(const std::string &vname, RDMatXX &data) const;
-    void read3D(const std::string &vname, std::vector<RDMatXX> &data) const;
     
     // check
     static bool isNetCDFAscii(const std::string &fname);

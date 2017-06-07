@@ -90,33 +90,6 @@ void NetCDF_Reader::read2D(const std::string &vname, RDMatXX &data) const {
     }
 }
 
-void NetCDF_Reader::read3D(const std::string &vname, std::vector<RDMatXX> &data) const {
-    // read meta data
-    std::vector<size_t> dims;
-    RDColX mdata;
-    readMetaData(vname, mdata, dims);
-    
-    // check ndims
-    int var_ndims = dims.size();
-    if (var_ndims != 3) {
-        throw std::runtime_error("NetCDF_Reader::read3D || "
-            "Variable is not 3D, Variable = " + vname + " || NetCDF file: " + mFileName);
-    }
-    
-    // structured
-    data.clear();
-    int pos = 0;
-    for (int i = 0; i < dims[0]; i++) {
-        RDMatXX mat(dims[1], dims[2]);
-        for (int j = 0; j < dims[1]; j++) {
-            for (int k = 0; k < dims[2]; k++) {
-                mat(j, k) = mdata(pos++);
-            }
-        }
-        data.push_back(mat);
-    }
-}
-
 void NetCDF_Reader::readMetaData(const std::string &vname, IColX &data, std::vector<size_t> &dims) const {
     // access variable
     int var_id;
