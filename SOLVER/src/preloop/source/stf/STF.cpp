@@ -24,30 +24,7 @@ void STF::buildInparam(STF *&stf, const Parameters &par, double dt, int verbose)
     }
     // read half duration
     std::string cmtfile = Parameters::sInputDirectory + "/" + par.getValue<std::string>("SOURCE_FILE");
-    double hdur;
-    if (XMPI::root()) {
-        std::fstream fs(cmtfile, std::fstream::in);
-        if (!fs) {
-            throw std::runtime_error("STF::buildInparam || "
-                "Error opening source data file: ||" + cmtfile);
-        }
-        std::string line;
-        while (getline(fs, line)) {
-            try {
-                std::vector<std::string> strs = Parameters::splitString(line, "\t ");
-                if (boost::iequals(strs[0], "half")) {
-                    hdur = boost::lexical_cast<double>(strs[strs.size() - 1]);
-                    break;
-                }
-            } catch(std::exception) {
-                throw std::runtime_error("STF::buildInparam || "
-                    "Error reading half duration in source data file: ||" + cmtfile);
-            }
-        }
-        fs.close();
-    }
-    XMPI::bcast(hdur);
-
+    double hdur = par.getValue<double>("SOURCE_STF_HALF_DURATION");
     if (hdur < 5. * dt) {
         hdur = 5. * dt;
     }
