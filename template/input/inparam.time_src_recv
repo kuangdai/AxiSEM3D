@@ -62,7 +62,9 @@ OUT_STATIONS_SYSTEM                         geographic
 
 # WHAT: seismogram format
 # TYPE: ascii / NetCDF / ASDF (to be implemented)
-# NOTE: can be one or more of the above options
+# NOTE: may contain one or more of the above options
+#       Do not use ascii if the number of stations exceeds/approximates 
+#       the open-files limit (find it with "ulimit -n")
 OUT_STATIONS_FORMAT                         ascii
 
 # WHAT: seismogram components
