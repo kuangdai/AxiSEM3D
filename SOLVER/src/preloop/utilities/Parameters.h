@@ -25,7 +25,7 @@ public:
     parType getValue(const std::string &key, int index = 0) const {
         try {
             // special care of bool
-            std::string val = mKeyValues.at(key)[index];
+            std::string val = mKeyValues.at(key).at(index);
             if (typeid(parType) == typeid(bool)) {
                 boost::to_upper<std::string>(val);
                 if (val == "TRUE" || val == "YES" || val == "ON") val = "1";
