@@ -7,6 +7,7 @@
 #include <netcdf.h>
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 class NetCDF_Reader {
 public:    

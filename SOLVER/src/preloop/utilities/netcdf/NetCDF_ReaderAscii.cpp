@@ -3,7 +3,6 @@
 // ascii alternative for NetCDF
 
 #include "NetCDF_ReaderAscii.h"
-#include <stdexcept>
 #include <limits>
 #include <boost/algorithm/string.hpp>
 

@@ -3,7 +3,6 @@
 // NetCDF Reader
 
 #include "NetCDF_Reader.h"
-#include <stdexcept>
 #include <netcdf.h>
 
 void NetCDF_Reader::open(const std::string &fname) {
