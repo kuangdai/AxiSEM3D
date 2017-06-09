@@ -83,7 +83,7 @@ find_package(METIS REQUIRED)
 include_directories(${METIS_INCLUDE_DIR})
 # netcdf
 find_package(NETCDF REQUIRED)
-include_directories(${NETCDF_INCLUDE_DIRS})
+include_directories(${NETCDF_INCLUDE_DIR})
 
 ############# local includes #############
 include_directories(
