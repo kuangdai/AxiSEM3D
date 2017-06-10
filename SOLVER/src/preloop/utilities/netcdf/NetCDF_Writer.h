@@ -50,7 +50,7 @@ public:
                 // if not found, create it
                 if (nc_def_dim(mFileID, dimName.str().c_str(), dims[i], &dimid) != NC_NOERR) {
                     throw std::runtime_error("NetCDF_Writer::defineVariable || "
-                        "Error defining dimension, dimension: " + dimName + " || NetCDF file: " + mFileName);
+                        "Error defining dimension, dimension: " + dimName.str() + " || NetCDF file: " + mFileName);
                 }
             }
             dimids.push_back(dimid);
