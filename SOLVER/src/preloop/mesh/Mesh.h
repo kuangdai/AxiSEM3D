@@ -22,7 +22,6 @@ struct DecomposeOption;
 struct MessagingInfo;
 struct LearnParameters;
 class SlicePlot;
-struct EdgeInfoGlobal;
 
 class Mesh {
     friend class SlicePlot;
@@ -118,9 +117,6 @@ private:
     // message info
     MessagingInfo *mMsgInfo;
     
-    // edge info
-    EdgeInfoGlobal *mEdgeInfo;
-    
     // spatial ranges
     double mSMax;
     double mSMin;
@@ -130,7 +126,6 @@ private:
     ////////////////// domain decomposition //////////////////
     struct DDParameters {
         DDParameters(const Parameters &par);
-        bool mBalanceEdge;
         bool mReportMeasure;
     } *mDDPar;
     

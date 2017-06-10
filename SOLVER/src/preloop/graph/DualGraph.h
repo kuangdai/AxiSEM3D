@@ -9,7 +9,6 @@
 // domain decomposition option
 struct DecomposeOption {
     RDColX mElemWeights = RDColX::Zero(0);
-    RDColX mEdgeWeights = RDColX::Zero(0);
     double mImbalance = 0.01;
 };
 

@@ -48,14 +48,9 @@ void DualGraph::decompose(const IMatX4 &connectivity, const DecomposeOption &opt
     
     // check size of weights
     bool welem = option.mElemWeights.size() > 0;
-    bool wedge = option.mEdgeWeights.size() > 0;
     if (welem && option.mElemWeights.size() != nelem) {
         throw std::runtime_error("DualGraph::decompose || "
             "Incompatible size of element weights.");
-    }
-    if (wedge && option.mEdgeWeights.size() != xadj[nelem]) {
-        throw std::runtime_error("DualGraph::decompose || "
-            "Incompatible size of edge weights.");
     }
     
     // metis options
@@ -71,22 +66,13 @@ void DualGraph::decompose(const IMatX4 &connectivity, const DecomposeOption &opt
     int objval = -1;
     int *vwgt = NULL;
     int *adjwgt = NULL;
-    IColX elemWeightsInt, edgeWeightsInt;
+    IColX elemWeightsInt;
     double imax = std::numeric_limits<int>::max() * .9;
     double sum = 0.;
     if (welem) {
         sum += option.mElemWeights.sum();
-    }
-    if (wedge) {
-        sum += option.mEdgeWeights.sum();
-    }
-    if (welem) {
         elemWeightsInt = (option.mElemWeights / sum * imax).array().round().matrix().cast<int>();
         vwgt = elemWeightsInt.data();
-    }
-    if (wedge) {
-        edgeWeightsInt = (option.mEdgeWeights / sum * imax).array().round().matrix().cast<int>();
-        adjwgt = edgeWeightsInt.data();
     }
     
     // run

@@ -28,14 +28,6 @@ ATTENUATION_QKAPPA                          false
 
 
 
-# ============================= domain decomposition =============================
-# WHAT: whether to balance weights on edges
-# TYPE: bool
-# NOTE: users are less likely to change this
-DD_BALANCE_EDGE                             false
-
-
-
 # ============================== simulation options ==============================
 # WHAT: verbose level of the solver
 # TYPE: none / essential / detailed
