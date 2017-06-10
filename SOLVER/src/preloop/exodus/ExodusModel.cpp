@@ -162,7 +162,7 @@ void ExodusModel::formStructured() {
     //       curvature should be ignorable, or the problem itself is ill-defined
     //       as a local problem.
     if (isCartesian()) {
-        double R_EARTH = mGlobalVariables.at("radius");
+        double R_EARTH = getROuter();
         double maxz = mNodalZ.maxCoeff();
         mNodalZ.array() += R_EARTH - maxz; 
     }
