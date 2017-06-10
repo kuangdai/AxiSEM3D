@@ -38,7 +38,7 @@ mName(name), mNetwork(network), mDepth(depth) {
     mLon = Geodesy::phi2Lon(rtpG(2));
     mBackAzimuth = Geodesy::backAzimuth(srcLat, srcLon, srcDep, mLat, mLon, mDepth);
     // // test
-    // XMPI::cout << "6371_" << round(mTheta / degree) << "_" << round(mPhi / degree) << " TEST "; 
+    // XMPI::cout << name << " " << network << " "; 
     // XMPI::cout << mLat << " " << mLon << " " << " 0.0 " << mDepth << XMPI::endl;
 }
 
