@@ -95,7 +95,7 @@ void PointwiseIONetCDF::finalize() {
             for (int irec = 0; irec < numRec; irec++) {
                 // read seis
                 RMatXX_RM seis;
-                nr.read2D(mVarNames[irec], seis, (Real)0.);
+                nr.read2D(mVarNames[irec], seis);
                 // write seis
                 std::vector<size_t> dims;
                 dims.push_back(seis.rows());

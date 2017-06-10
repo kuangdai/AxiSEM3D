@@ -6,6 +6,7 @@
 #include "Parameters.h"
 #include "XMPI.h"
 #include "NetCDF_Reader.h"
+#include "NetCDF_ReaderAscii.h"
 #include "NetCDF_Writer.h"
 #include "eigenp.h"
 
@@ -47,10 +48,17 @@ void NuWisdom::readFromFile(const std::string &fname) {
     RDMatXX data;
     if (XMPI::root()) {
         RDMatXX dataRead;
-        NetCDF_Reader *reader = NetCDF_Reader::createOpenNetCDF_Reader(fname);
-        reader->read2D("axisem3d_wisdom", dataRead, 0.);
-        reader->close();
-        delete reader;
+        if (NetCDF_Reader::checkNetCDF_isAscii(fname)) {
+            NetCDF_ReaderAscii reader;
+            reader.open(fname);
+            reader.read2D("axisem3d_wisdom", dataRead);
+            reader.close();
+        } else {
+            NetCDF_Reader reader;
+            reader.open(fname);
+            reader.read2D("axisem3d_wisdom", dataRead);
+            reader.close();
+        }
         if (dataRead.cols() == 3) {
             data = RDMatXX(dataRead.rows(), 4);
             data.leftCols(3) = dataRead;

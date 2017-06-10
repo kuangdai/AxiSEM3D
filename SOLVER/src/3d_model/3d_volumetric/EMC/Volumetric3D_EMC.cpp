@@ -9,6 +9,7 @@
 #include "Geodesy.h"
 #include "Parameters.h"
 #include "NetCDF_Reader.h"
+#include "NetCDF_ReaderAscii.h"
 
 void Volumetric3D_EMC::initialize() {
     // meta data
@@ -16,13 +17,23 @@ void Volumetric3D_EMC::initialize() {
     RDColX data;
     if (XMPI::root()) {
         std::string fname = Parameters::sInputDirectory + "/" + mFileName;
-        NetCDF_Reader *reader = NetCDF_Reader::createOpenNetCDF_Reader(fname);
-        reader->read1D("depth", mGridDep);
-        reader->read1D("lantidue", mGridLat);
-        reader->read1D("longitude", mGridLon);
-        reader->readMetaData(mVarName, data, dims);
-        reader->close();
-        delete reader;
+        if (NetCDF_Reader::checkNetCDF_isAscii(fname)) {
+            NetCDF_ReaderAscii reader;
+            reader.open(fname);
+            reader.read1D("depth", mGridDep);
+            reader.read1D("lantidue", mGridLat);
+            reader.read1D("longitude", mGridLon);
+            reader.readMetaData(mVarName, data, dims);
+            reader.close();
+        } else {
+            NetCDF_Reader reader;
+            reader.open(fname);
+            reader.read1D("depth", mGridDep);
+            reader.read1D("lantidue", mGridLat);
+            reader.read1D("longitude", mGridLon);
+            reader.readMetaData(mVarName, data, dims);
+            reader.close();
+        }
         if (dims.size() != 3) {
             throw std::runtime_error("Geometric3D_EMC::initialize || Inconsistent data dimensions || "
             "File = " + fname);

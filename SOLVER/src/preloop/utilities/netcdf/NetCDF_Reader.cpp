@@ -74,19 +74,15 @@ void NetCDF_Reader::netcdfError(const int retval, const std::string &func_name) 
 }
 
 #include "NetCDF_ReaderAscii.h"
-NetCDF_Reader *NetCDF_Reader::createOpenNetCDF_Reader(const std::string &fname) {
+bool NetCDF_Reader::checkNetCDF_isAscii(const std::string &fname) {
     if (isNetCDF(fname)) {
-        NetCDF_Reader *reader = new NetCDF_Reader();
-        reader->open(fname);
-        return reader; 
+        return false; 
     }
     
     if (NetCDF_ReaderAscii::isNetCDFAscii(fname)) {
-        NetCDF_Reader *reader = new NetCDF_ReaderAscii();
-        reader->open(fname);
-        return reader; 
+        return true;
     }
     
-    throw std::runtime_error("NetCDF_ReaderAscii::createOpenNetCDF_Reader || "
-        "Error opening NetCDF or NetCDF-alternative ascii file: || " + fname);
+    throw std::runtime_error("NetCDF_ReaderAscii::checkNetCDFAscii || "
+        "Error identifying NetCDF or NetCDF-alternative ascii file: || " + fname);
 }

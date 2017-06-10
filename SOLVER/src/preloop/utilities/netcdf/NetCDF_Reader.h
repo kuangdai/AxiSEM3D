@@ -12,8 +12,8 @@
 class NetCDF_Reader {
 public:    
     // file
-    virtual void open(const std::string &fname);
-    virtual void close();
+    void open(const std::string &fname);
+    void close();
     bool isOpen() const {return mFileName != "";};
     
     // double
@@ -59,11 +59,11 @@ public:
         }
     };
     
-    template<class Container, class base_type>
-    void read2D(const std::string &vname, Container &data, base_type scalar) const {
+    template<class Container>
+    void read2D(const std::string &vname, Container &data) const {
         // read meta data
         std::vector<size_t> dims;
-        std::vector<base_type> mdata;
+        std::vector<typename Container::Scalar> mdata;
         readMetaData(vname, mdata, dims);
         
         // check ndims
@@ -84,13 +84,13 @@ public:
     };
     
     // string
-    virtual void readString(const std::string &vname, std::vector<std::string> &data) const;
+    void readString(const std::string &vname, std::vector<std::string> &data) const;
     
     // check
     static bool isNetCDF(const std::string &fname);
     
     // determine netcdf or ascii
-    static NetCDF_Reader *createOpenNetCDF_Reader(const std::string &fname);
+    static bool checkNetCDF_isAscii(const std::string &fname);
     
 private:    
     // error handler
@@ -98,8 +98,6 @@ private:
     
 private:
     int mFileID = -1;
-    
-protected:
     std::string mFileName = "";
 };
 

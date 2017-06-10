@@ -6,13 +6,16 @@
 
 #include <fstream>
 #include <sstream>
-#include "NetCDF_Reader.h"
+#include <vector>
+#include <string>
+#include <stdexcept>
 
-class NetCDF_ReaderAscii: public NetCDF_Reader {
+class NetCDF_ReaderAscii {
 public:
     // io
     void open(const std::string &fname);
     void close();
+    bool isOpen() const {return mFileName != "";};
     
     // read
     template<class Container>
@@ -80,11 +83,11 @@ public:
         }
     };
     
-    template<class Container, class base_type>
-    void read2D(const std::string &vname, Container &data, base_type scalar) const {
+    template<class Container>
+    void read2D(const std::string &vname, Container &data) const {
         // read meta data
         std::vector<size_t> dims;
-        std::vector<base_type> mdata;
+        std::vector<typename Container::Scalar> mdata;
         readMetaData(vname, mdata, dims);
         
         // check ndims
@@ -99,7 +102,7 @@ public:
         data = Container::Zero(dims[0], dims[1]);
         for (int j = 0; j < dims[0]; j++) {
             for (int k = 0; k < dims[1]; k++) {
-                data(j, k) = mdata(pos++);
+                data(j, k) = mdata[pos++];
             }
         }
     };
@@ -119,5 +122,6 @@ private:
     
 private:
     std::fstream *mFile = 0;
+    std::string mFileName = "";
 };
 

@@ -58,7 +58,7 @@ void ExodusModel::readRawData() {
     reader.readString("info_records", mGlobalRecordsRaw);
     
     // connectivity and coords
-    reader.read2D("connect1", mConnectivity, 0);
+    reader.read2D("connect1", mConnectivity);
     mConnectivity.array() -= 1;
     reader.read1D("coordx", mNodalS);
     reader.read1D("coordy", mNodalZ);
@@ -69,7 +69,7 @@ void ExodusModel::readRawData() {
     for (int i = 0; i < mElementalVariableNames.size(); i++) {
         std::stringstream ss;
         ss << "vals_elem_var" << i + 1 << "eb1";
-        reader.read2D(ss.str(), dbuffer, 0.);
+        reader.read2D(ss.str(), dbuffer);
         mElementalVariableValues.col(i) = dbuffer.transpose();
     }    
     
@@ -94,7 +94,7 @@ void ExodusModel::readRawData() {
     }
     
     // ellipticity
-    reader.read2D("ellipticity", dbuffer, 0.);
+    reader.read2D("ellipticity", dbuffer);
     mEllipKnots = dbuffer.row(0).transpose();
     mEllipCoeffs = dbuffer.row(1).transpose();
     

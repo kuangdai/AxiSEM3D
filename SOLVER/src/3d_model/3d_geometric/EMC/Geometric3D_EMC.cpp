@@ -9,16 +9,26 @@
 #include "Geodesy.h"
 #include "Parameters.h"
 #include "NetCDF_Reader.h"
+#include "NetCDF_ReaderAscii.h"
 
 void Geometric3D_EMC::initialize() {
     if (XMPI::root()) {
         std::string fname = Parameters::sInputDirectory + "/" + mFileName;
-        NetCDF_Reader *reader = NetCDF_Reader::createOpenNetCDF_Reader(fname);
-        reader->read1D("lantidue", mGridLat);
-        reader->read1D("longitude", mGridLon);
-        reader->read2D(mVarName, mGridData, 0.);
-        reader->close();
-        delete reader;
+        if (NetCDF_Reader::checkNetCDF_isAscii(fname)) {
+            NetCDF_ReaderAscii reader;
+            reader.open(fname);
+            reader.read1D("lantidue", mGridLat);
+            reader.read1D("longitude", mGridLon);
+            reader.read2D(mVarName, mGridData);
+            reader.close();
+        } else {
+            NetCDF_Reader reader;
+            reader.open(fname);
+            reader.read1D("lantidue", mGridLat);
+            reader.read1D("longitude", mGridLon);
+            reader.read2D(mVarName, mGridData);
+            reader.close();
+        }
         if (mGridData.rows() != mGridLat.size() || mGridData.cols() != mGridLon.size()) {
             throw std::runtime_error("Geometric3D_EMC::initialize || "
                 "Inconsistent data dimensions || File = " + fname);
