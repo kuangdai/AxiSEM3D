@@ -42,12 +42,16 @@ public:
         std::vector<int> dimids;
         size_t total = 1;
         for (int i = 0; i < dims.size(); i++) {
-            std::stringstream strname;
-            strname << "ncdim_" << vname << "_" << i;
+            std::stringstream dimName;
+            dimName << "ncdim_" << dims[i];
             int dimid = -1;
-            if (nc_def_dim(mFileID, strname.str().c_str(), dims[i], &dimid) != NC_NOERR) {
-                throw std::runtime_error("NetCDF_Writer::defineVariable || "
-                    "Error defining dimensions, variable: " + vname + " || NetCDF file: " + mFileName);
+            // find ID
+            if (nc_inq_dimid(mFileID, dimName.str().c_str(), &dimid) != NC_NOERR) {
+                // if not found, create it
+                if (nc_def_dim(mFileID, dimName.str().c_str(), dims[i], &dimid) != NC_NOERR) {
+                    throw std::runtime_error("NetCDF_Writer::defineVariable || "
+                        "Error defining dimension, dimension: " + dimName + " || NetCDF file: " + mFileName);
+                }
             }
             dimids.push_back(dimid);
             total *= dims[i];
