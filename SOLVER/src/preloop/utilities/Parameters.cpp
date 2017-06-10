@@ -80,7 +80,6 @@ void Parameters::registerAll() {
     registerPar("ATTENUATION_CG4");
     registerPar("ATTENUATION_SPECFEM_LEGACY");
     registerPar("ATTENUATION_QKAPPA");
-    registerPar("DD_BALANCE_EDGE");
     registerPar("OPTION_VERBOSE_LEVEL");
     registerPar("OPTION_STABILITY_INTERVAL");
     registerPar("OPTION_LOOP_INFO_INTERVAL");
