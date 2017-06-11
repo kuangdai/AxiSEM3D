@@ -6,6 +6,7 @@
 #include "ConstNrField.h"
 #include "EmpNrField.h"
 #include "WisdomNrField.h"
+#include "UserNrField.h"
 
 #include "Parameters.h"
 #include "XMPI.h"
@@ -44,6 +45,14 @@ void NrField::buildInparam(NrField *&nrf, const Parameters &par, int verbose) {
             factor = 1.0;
         }
         nrf = new WisdomNrField(useLucky, fname, factor);
+    } else if (boost::iequals(type, "user-defined")) {
+        int nsize = par.getSize("NU_USER_PARAMETER_LIST");
+        std::vector<double> params;
+        for (int ipar = 0; ipar < nsize; ipar++) {
+            double param = par.getValue<double>("NU_USER_PARAMETER_LIST", ipar);
+            params.push_back(param);
+        }
+        nrf = new UserNrField(useLucky, params);
     } else {
         throw std::runtime_error("NrField::build || "
             "Invalid parameter, keyword = NU_TYPE.");

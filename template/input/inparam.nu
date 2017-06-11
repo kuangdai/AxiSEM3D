@@ -12,8 +12,12 @@
 
 # ================================== Type of Nu ==================================
 # WHAT: Top-level type of Nu field
-# TYPE: constant / empirical / wisdom
-# NOTE: Use "constant" with NU_CONST = 2 for 1D and 2D models.
+# TYPE: constant / empirical / wisdom / user-defined
+# NOTE: constant     -- edit NU_CONST below.
+#       empirical    -- edit NU_EMP_* below.
+#       wisdom       -- edit NU_WISDOM_* below.
+#       user-defined -- edit NU_USER_PARAMETER_LIST below and 
+#                       SOLVER/src/preloop/nrfield/UserNrField.cpp 
 NU_TYPE                                     constant
 
 # WHAT: whether to use fftw "lucky" numbers
@@ -29,7 +33,7 @@ NU_FFTW_LUCKY_NUMBER                        true
 # =================================== constant ===================================
 # WHAT: the constant value to be used when NU_TYPE = constant
 # TYPE: integer
-# NOTE: TWO is necessary and sufficient for 1D and 2D simulations.
+# NOTE: NU_CONST = 2 is necessary and sufficient for 1D and 2D in-plane simulations.
 NU_CONST                                    2
 
 
@@ -130,4 +134,13 @@ NU_WISDOM_REUSE_INPUT                       name.nu_wisdom.nc
 #       s20rts can be safely applied to a simulation with s40rts by setting 
 #       NU_WISDOM_REUSE_FACTOR = 1.5
 NU_WISDOM_REUSE_FACTOR                      1.0
+
+
+
+# ================================== user-defined ==================================
+# WHAT: parameters to initialize a user-defined Nu field
+# TYPE: list of reals, can be empty
+# NOTE: to use these parameters, edit SOLVER/src/preloop/nrfield/UserNrField.cpp
+NU_USER_PARAMETER_LIST                      -1.2345
+
 

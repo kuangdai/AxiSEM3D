@@ -242,6 +242,7 @@ add_executable(
     src/preloop/nrfield/NrField.cpp
     src/preloop/nrfield/ConstNrField.cpp
     src/preloop/nrfield/EmpNrField.cpp
+    src/preloop/nrfield/UserNrField.cpp
     src/preloop/nrfield/wisdom/WisdomNrField.cpp
     src/preloop/nrfield/wisdom/NuWisdom.cpp
 

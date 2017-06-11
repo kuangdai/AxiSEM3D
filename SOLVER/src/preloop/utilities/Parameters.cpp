@@ -60,6 +60,7 @@ void Parameters::registerAll() {
     registerPar("NU_WISDOM_LEARN_OUTPUT");
     registerPar("NU_WISDOM_REUSE_INPUT");
     registerPar("NU_WISDOM_REUSE_FACTOR");
+    registerPar("NU_USER_PARAMETER_LIST");
     
     // inparam.time_src_recv
     registerPar("TIME_DELTA_T");
