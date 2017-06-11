@@ -30,7 +30,7 @@ public:
     
     // step 1: define mesh
     Mesh(const ExodusModel *exModel, const NrField *nrf, 
-        double srcLat, double srcLon, double srcDep, const Parameters &par);
+        double srcLat, double srcLon, double srcDep, const Parameters &par, int verbose);
     void setVolumetric3D(const std::vector<Volumetric3D *> &v3D) {mVolumetric3D = v3D;};
     void setGeometric3D(const std::vector<Geometric3D *> &g3D) {mGeometric3D = g3D;};
     void setOceanLoad3D(const OceanLoad3D *o3D) {mOceanLoad3D = o3D;};

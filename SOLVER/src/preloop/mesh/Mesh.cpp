@@ -34,7 +34,7 @@ Mesh::~Mesh() {
 }
 
 Mesh::Mesh(const ExodusModel *exModel, const NrField *nrf, 
-    double srcLat, double srcLon, double srcDep, const Parameters &par):
+    double srcLat, double srcLon, double srcDep, const Parameters &par, int verbose):
 mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
     mAttBuilder = 0;
     mMsgInfo = 0;
@@ -57,7 +57,7 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
     } 
     
     // slice plots
-    SlicePlot::buildInparam(mSlicePlots, par, this);
+    SlicePlot::buildInparam(mSlicePlots, par, this, verbose);
     if (mSlicePlots.size() > 0 && XMPI::root()) {
         std::fstream fs;
         // node coordinates

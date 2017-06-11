@@ -26,7 +26,7 @@ public:
         
     // build from input parameters
     static void buildInparam(std::vector<SlicePlot *> &splots, 
-        const Parameters &par, const Mesh *mesh);   
+        const Parameters &par, const Mesh *mesh, int verbose);   
     
 private:
     void plotPhysicalProperties() const;

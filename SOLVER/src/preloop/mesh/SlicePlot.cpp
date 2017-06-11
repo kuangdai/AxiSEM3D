@@ -70,7 +70,7 @@ mMesh(mesh) {
 }
 
 void SlicePlot::buildInparam(std::vector<SlicePlot *> &splots, 
-    const Parameters &par, const Mesh *mesh) {
+    const Parameters &par, const Mesh *mesh, int verbose) {
     // clear
     for (const auto &sp: splots) delete sp;    
     splots.clear();
@@ -87,10 +87,6 @@ void SlicePlot::buildInparam(std::vector<SlicePlot *> &splots,
     }
     
     // verbose
-    int verbose = 0;
-    std::string vstr = par.getValue<std::string>("OPTION_VERBOSE_LEVEL");
-    if (boost::iequals(vstr, "essential")) verbose = 1;
-    if (boost::iequals(vstr, "detailed")) verbose = 2;
     if (verbose && nplots > 0) {
         std::stringstream ss;
         ss << "\n======================== Slice Plots =======================" << XMPI::endl;

@@ -62,7 +62,8 @@ int axisem_main(int argc, char *argv[]) {
         //////// mesh, phase 1
         // define mesh
         MultilevelTimer::begin("Mesh Definition", 0);
-        pl.mMesh = new Mesh(pl.mExodusModel, pl.mNrField, srcLat, srcLon, srcDep, *(pl.mParameters));
+        pl.mMesh = new Mesh(pl.mExodusModel, pl.mNrField, 
+            srcLat, srcLon, srcDep, *(pl.mParameters), verbose);
         pl.mMesh->setVolumetric3D(pl.mVolumetric3D);
         pl.mMesh->setGeometric3D(pl.mGeometric3D);
         pl.mMesh->setOceanLoad3D(pl.mOceanLoad3D);
