@@ -60,8 +60,8 @@ void Volumetric3D_bubble::initialize(const std::vector<std::string> &params) {
     // optional
     try {
         int ipar = 7;
-        Parameters::castValue(mSourceCentered, params[ipar++], source);
-        Parameters::castValue(mHWHM, params[ipar++], source); mHWHM *= 1e3;
+        Parameters::castValue(mSourceCentered, params.at(ipar++), source);
+        Parameters::castValue(mHWHM, params.at(ipar++), source); mHWHM *= 1e3;
     } catch (std::out_of_range) {
         // nothing
     }    
@@ -139,7 +139,11 @@ std::string Volumetric3D_bubble::verbose() const {
     ss << "  Model Name           =   bubble" << std::endl;
     ss << "  Material Property    =   " << MaterialPropertyString[mMaterialProp] << std::endl;
     ss << "  Reference Type       =   " << MaterialRefTypeString[mReferenceType] << std::endl;
-    ss << "  Value Inside         =   " << mValueInside / MaterialPropertyAbsSI[mMaterialProp] << std::endl;
+    if (mReferenceType == Volumetric3D::MaterialRefType::Absolute) {
+        ss << "  Value Inside         =   " << mValueInside / MaterialPropertyAbsSI[mMaterialProp] << std::endl;
+    } else {
+        ss << "  Value Inside         =   " << mValueInside << std::endl;
+    }
     ss << "  Bubble Radius / km   =   " << mRadius / 1e3 << std::endl;
     ss << "  Depth / km           =   " << mDepth / 1e3 << std::endl;
     ss << "  Lat or Theta / deg   =   " << mLat << std::endl;

@@ -64,9 +64,9 @@ void Volumetric3D_cylinder::initialize(const std::vector<std::string> &params) {
     // optional
     try {
         int ipar = 10;
-        Parameters::castValue(mSourceCentered, params[ipar++], source);
-        Parameters::castValue(mHWHM_lateral, params[ipar++], source); mHWHM_lateral *= 1e3;
-        Parameters::castValue(mHWHM_top_bot, params[ipar++], source); mHWHM_top_bot *= 1e3;
+        Parameters::castValue(mSourceCentered, params.at(ipar++), source);
+        Parameters::castValue(mHWHM_lateral, params.at(ipar++), source); mHWHM_lateral *= 1e3;
+        Parameters::castValue(mHWHM_top_bot, params.at(ipar++), source); mHWHM_top_bot *= 1e3;
     } catch (std::out_of_range) {
         // nothing
     }    
@@ -176,7 +176,11 @@ std::string Volumetric3D_cylinder::verbose() const {
     ss << "  Model Name               =   cylinder" << std::endl;
     ss << "  Material Property        =   " << MaterialPropertyString[mMaterialProp] << std::endl;
     ss << "  Reference Type           =   " << MaterialRefTypeString[mReferenceType] << std::endl;
-    ss << "  Value Inside             =   " << mValueInside / MaterialPropertyAbsSI[mMaterialProp] << std::endl;
+    if (mReferenceType == Volumetric3D::MaterialRefType::Absolute) {
+        ss << "  Value Inside             =   " << mValueInside / MaterialPropertyAbsSI[mMaterialProp] << std::endl;
+    } else {
+        ss << "  Value Inside             =   " << mValueInside << std::endl;
+    }
     ss << "  Cylinder Radius / km     =   " << mRadius / 1e3 << std::endl;
     ss << "  Depth_1 / km             =   " << mD1 / 1e3 << std::endl;
     ss << "  Lat_1 or Theta_1 / deg   =   " << mLat1 << std::endl;
