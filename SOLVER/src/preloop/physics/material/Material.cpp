@@ -84,6 +84,10 @@ Material::Material(const Quad *myQuad, const ExodusModel &exModel): mMyQuad(myQu
 
 void Material::addVolumetric3D(const std::vector<Volumetric3D *> &m3D, 
     double srcLat, double srcLon, double srcDep, double phi2D) {
+    if (m3D.size() == 0) {
+        return;
+    }    
+        
     // pointers for fast access to material matrices
     std::vector<RDRow4 *>  prop1DPtr = {&mVpv1D, &mVph1D, &mVsv1D, &mVsh1D, &mRho1D, &mEta1D, &mQkp1D, &mQmu1D};
     std::vector<RDMatXN *> prop3DPtr = {&mVpv3D, &mVph3D, &mVsv3D, &mVsh3D, &mRho3D, &mEta3D, &mQkp3D, &mQmu3D};

@@ -31,6 +31,9 @@ mMyQuad(quad) {
 
 void Relabelling::addUndulation(const std::vector<Geometric3D *> &g3D, 
     double srcLat, double srcLon, double srcDep, double phi2D) {
+    if (g3D.size() == 0) {
+        return;
+    }    
     double rElemCenter = mMyQuad->computeCenterRadius();
     int Nr = mMyQuad->getNr();
     for (int ipol = 0; ipol <= nPol; ipol++) {
