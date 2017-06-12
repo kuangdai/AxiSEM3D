@@ -19,6 +19,11 @@ void XMPI::initialize(int argc, char *argv[]) {
     std::string argv0(argv[0]);
     std::string execDirectory = argv0.substr(0, argv0.length() - 9); 
     
+    // so far, this problem happens with valgrind only 
+    if (execDirectory.length() == 0) {
+        execDirectory = ".";
+    }
+    
     // input and output
     Parameters::sInputDirectory = execDirectory + "/input";
     Parameters::sOutputDirectory = execDirectory + "/output";
