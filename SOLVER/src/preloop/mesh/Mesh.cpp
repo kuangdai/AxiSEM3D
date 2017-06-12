@@ -77,6 +77,8 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
 void Mesh::buildUnweighted() {
     // balance by Nr
     DecomposeOption option;
+    option.mProcInterval = mDDPar->mProcInterval;
+    option.mNCutsPerProc = mDDPar->mNCutsPerProc;
     int nElemGlobal = mExModel->getNumQuads(); 
     option.mElemWeights = RDColX::Zero(nElemGlobal);
     for (int iquad = 0; iquad < nElemGlobal; iquad++) {
@@ -109,6 +111,8 @@ void Mesh::setAttBuilder(const AttBuilder *attBuild) {
 
 void Mesh::buildWeighted() {
     DecomposeOption measured;
+    measured.mProcInterval = mDDPar->mProcInterval;
+    measured.mNCutsPerProc = mDDPar->mNCutsPerProc;
     MultilevelTimer::begin("Measure", 1);
     measure(measured);
     MultilevelTimer::end("Measure", 1);
@@ -532,6 +536,14 @@ void Mesh::test() {
 
 Mesh::DDParameters::DDParameters(const Parameters &par) {
     mReportMeasure = par.getValue<bool>("DEVELOP_MEASURED_COSTS");
+    mProcInterval = par.getValue<int>("DD_PROC_INTERVAL");
+    mNCutsPerProc = par.getValue<int>("DD_NCUTS_PER_PROC");
+    if (mProcInterval <= 0) {
+        mProcInterval = 1;
+    }
+    if (mNCutsPerProc <= 0) {
+        mNCutsPerProc = 1;
+    }
 }
 
 int Mesh::getMaxNr() const {

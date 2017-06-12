@@ -28,6 +28,25 @@ ATTENUATION_QKAPPA                          false
 
 
 
+# ============================== domain decomposition ==============================
+# WHAT: make candidate partitions only on ranks that are multiples of this number
+# TYPE: integer
+# NOTE: The default is 1. It is unlikely to be changed by users.
+#       This may be changed for very large scale problems (e.g., 1 Hz) where making 
+#       candidate partitions on all processors is undoable due to memory limitation. 
+#       Try to use prime factors of the number of processors per node (RAM) on your HPC.
+#       Partitioning will be performed only on root if DD_PROC_INTERVAL >= nproc.
+DD_PROC_INTERVAL                            1
+
+# WHAT: number of candidate partitions per processor
+# TYPE: integer
+# NOTE: The default is 1. It is unlikely to be changed by users.
+#       If too few processors perform partitioning, e.g. when DD_PROC_INTERVAL is large,
+#       one may increase DD_NCUT_PER_PROC to enhance partitioning quality.
+DD_NCUTS_PER_PROC                           1
+
+
+
 # ============================== simulation options ==============================
 # WHAT: verbose level of the solver
 # TYPE: none / essential / detailed

@@ -10,6 +10,8 @@
 struct DecomposeOption {
     RDColX mElemWeights = RDColX::Zero(0);
     double mImbalance = 0.01;
+    int mProcInterval = 1;
+    int mNCutsPerProc = 1;
 };
 
 class DualGraph {

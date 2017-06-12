@@ -127,6 +127,8 @@ private:
     struct DDParameters {
         DDParameters(const Parameters &par);
         bool mReportMeasure;
+        int mProcInterval;
+        int mNCutsPerProc;
     } *mDDPar;
     
     ////////////////// wisdom learning //////////////////

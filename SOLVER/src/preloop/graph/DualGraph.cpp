@@ -42,46 +42,49 @@ void DualGraph::decompose(const IMatX4 &connectivity, const DecomposeOption &opt
         return;
     }
     
-    // form graph
-    int *xadj, *adjncy;
-    formAdjacency(connectivity, 2, xadj, adjncy);
-    
-    // check size of weights
-    bool welem = option.mElemWeights.size() > 0;
-    if (welem && option.mElemWeights.size() != nelem) {
-        throw std::runtime_error("DualGraph::decompose || "
-            "Incompatible size of element weights.");
+    int objval = std::numeric_limits<int>::max();
+    if (XMPI::rank() % option.mProcInterval == 0) {
+        // form graph
+        int *xadj, *adjncy;
+        formAdjacency(connectivity, 2, xadj, adjncy);
+        
+        // check size of weights
+        bool welem = option.mElemWeights.size() > 0;
+        if (welem && option.mElemWeights.size() != nelem) {
+            throw std::runtime_error("DualGraph::decompose || "
+                "Incompatible size of element weights.");
+        }
+        
+        // metis options
+        int metis_option[METIS_NOPTIONS];
+        metisError(METIS_SetDefaultOptions(metis_option), "METIS_SetDefaultOptions");
+        metis_option[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;
+        metis_option[METIS_OPTION_CONTIG] = 1;
+        metis_option[METIS_OPTION_NCUTS] = option.mNCutsPerProc;
+        metis_option[METIS_OPTION_SEED] = XMPI::rank(); // generate different partitions
+        
+        // prepare input
+        int ncon = 1;
+        float ubvec = (float)(1. + option.mImbalance);
+        int *vwgt = NULL;
+        IColX elemWeightsInt;
+        double imax = std::numeric_limits<int>::max() * .9;
+        double sum = 0.;
+        if (welem) {
+            sum += option.mElemWeights.sum();
+            elemWeightsInt = (option.mElemWeights / sum * imax).array().round().matrix().cast<int>();
+            vwgt = elemWeightsInt.data();
+        }
+        
+        // run
+        metisError(METIS_PartGraphKway(&nelem, &ncon, xadj, adjncy, 
+            vwgt, NULL, NULL, &nproc, NULL, &ubvec, 
+            metis_option, &objval, elemToProc.data()), 
+            "METIS_PartGraphKway");
+         
+        // free memory 
+        freeAdjacency(xadj, adjncy);
     }
-    
-    // metis options
-    int metis_option[METIS_NOPTIONS];
-    metisError(METIS_SetDefaultOptions(metis_option), "METIS_SetDefaultOptions");
-    metis_option[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;
-    metis_option[METIS_OPTION_CONTIG] = 1;
-    metis_option[METIS_OPTION_SEED] = XMPI::rank(); // generate different partitions
-    
-    // prepare input
-    int ncon = 1;
-    float ubvec = (float)(1. + option.mImbalance);
-    int objval = -1;
-    int *vwgt = NULL;
-    IColX elemWeightsInt;
-    double imax = std::numeric_limits<int>::max() * .9;
-    double sum = 0.;
-    if (welem) {
-        sum += option.mElemWeights.sum();
-        elemWeightsInt = (option.mElemWeights / sum * imax).array().round().matrix().cast<int>();
-        vwgt = elemWeightsInt.data();
-    }
-    
-    // run
-    metisError(METIS_PartGraphKway(&nelem, &ncon, xadj, adjncy, 
-        vwgt, NULL, NULL, &nproc, NULL, &ubvec, 
-        metis_option, &objval, elemToProc.data()), 
-        "METIS_PartGraphKway");
-     
-    // free memory 
-    freeAdjacency(xadj, adjncy);
     
     // find best result
     std::vector<int> objall;
