@@ -65,7 +65,6 @@ void DualGraph::decompose(const IMatX4 &connectivity, const DecomposeOption &opt
     float ubvec = (float)(1. + option.mImbalance);
     int objval = -1;
     int *vwgt = NULL;
-    int *adjwgt = NULL;
     IColX elemWeightsInt;
     double imax = std::numeric_limits<int>::max() * .9;
     double sum = 0.;
@@ -77,7 +76,7 @@ void DualGraph::decompose(const IMatX4 &connectivity, const DecomposeOption &opt
     
     // run
     metisError(METIS_PartGraphKway(&nelem, &ncon, xadj, adjncy, 
-        vwgt, NULL, adjwgt, &nproc, NULL, &ubvec, 
+        vwgt, NULL, NULL, &nproc, NULL, &ubvec, 
         metis_option, &objval, elemToProc.data()), 
         "METIS_PartGraphKway");
      
