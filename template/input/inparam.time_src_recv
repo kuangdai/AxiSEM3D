@@ -62,9 +62,9 @@ SOURCE_STF_HALF_DURATION                    0.0
 OUT_STATIONS_FILE                           STATIONS
 
 # WHAT: coordinate system used in OUT_STATIONS_FILE
-# TYPE: geographic / source_centered
+# TYPE: geographic / source-centered
 # NOTE: geographic      -- name network latitude longitude [elevation] depth
-#       source_centered -- name network distance azimuth [elevation] depth
+#       source-centered -- name network distance azimuth [elevation] depth
 OUT_STATIONS_SYSTEM                         geographic
 
 # WHAT: seismogram format

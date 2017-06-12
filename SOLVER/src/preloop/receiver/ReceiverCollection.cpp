@@ -154,7 +154,7 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
         + par.getValue<std::string>("OUT_STATIONS_FILE");
     std::string recSys = par.getValue<std::string>("OUT_STATIONS_SYSTEM");
     bool geographic;
-    if (boost::iequals(recSys, "source_centered")) {
+    if (boost::iequals(recSys, "source-centered")) {
         geographic = false;
     } else if (boost::iequals(recSys, "geographic")) {
         geographic = true;
