@@ -18,6 +18,7 @@
 #include "Geodesy.h"
 #include "Geometric3D.h"
 #include "NuWisdom.h"
+#include "NrField.h"
 
 #include "MultilevelTimer.h"
 #include "SlicePlot.h"
@@ -74,9 +75,17 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
 }
 
 void Mesh::buildUnweighted() {
-    int nElemGlobal = mExModel->getNumQuads(); 
-    // balance solid and fluid separately
+    // balance by Nr
     DecomposeOption option;
+    int nElemGlobal = mExModel->getNumQuads(); 
+    option.mElemWeights = RDColX::Zero(nElemGlobal);
+    for (int iquad = 0; iquad < nElemGlobal; iquad++) {
+        int inode = mExModel->getConnectivity()(iquad, 0);
+        RDCol2 sz;
+        sz(0) = mExModel->getNodalS(inode);
+        sz(1) = mExModel->getNodalZ(inode);
+        option.mElemWeights(iquad) = mNrField->getNrAtPoint(sz) * 1.;
+    }
     MultilevelTimer::begin("Build Local", 1);
     buildLocal(option);
     MultilevelTimer::end("Build Local", 1);
