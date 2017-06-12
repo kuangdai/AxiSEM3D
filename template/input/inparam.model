@@ -76,18 +76,24 @@ MODEL_3D_OCEAN_LOAD                         none
 
 # ================================ in-plane 2D model ================================
 # WHAT: switch of 2D mode
-# TYPE: bool
+# TYPE: off / geographic / source-centered
 # NOTE: After defining a 3D model following the above steps, one may create a 2D 
 #       in-plane (axisymmetric) model by extracting one of the azimuthal slices 
 #       from the 3D model, and use this 2D model for the simulation. 
-MODEL_2D_MODE                               false
+MODEL_2D_MODE                               off
 
 # WHAT: latitude and longitude of a control point on the slice
 # TYPE: real
-# NOTE: The to-be-extracted slice is determined by 3 points: the source point,  
+# NOTE: Used when MODEL_2D_MODE = geographic
+#       The to-be-extracted slice is determined by 3 points: the source point,  
 #       the center of the Earth and the control point specified here. 
 MODEL_2D_LATITUDE                           20.
 MODEL_2D_LONGITUDE                          30.           
+
+# WHAT: azimuth of the slice
+# TYPE: real
+# NOTE: Used when MODEL_2D_MODE = source-centered
+MODEL_2D_AZIMUTH                            20.
 
 
 

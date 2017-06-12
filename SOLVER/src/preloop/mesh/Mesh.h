@@ -135,7 +135,6 @@ private:
     LearnParameters *mLearnPar;
     
     ////////////////// 2D in-plane mode //////////////////
-    bool mUse2D;
     double mPhi2D;
     
     ////////////////// slice plotss //////////////////

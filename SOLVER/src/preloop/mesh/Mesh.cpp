@@ -44,9 +44,10 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
     mLearnPar = new LearnParameters(par);
     
     // 2D mode
-    mUse2D = par.getValue<bool>("MODEL_2D_MODE");
-    mPhi2D = -DBL_MAX;
-    if (mUse2D) {
+    std::string mode2d = par.getValue<std::string>("MODEL_2D_MODE");
+    if (boost::iequals(mode2d, "off")) {
+        mPhi2D = -DBL_MAX;
+    } else if (boost::iequals(mode2d, "geographic")) {
         double lat2D = par.getValue<double>("MODEL_2D_LATITUDE");
         double lon2D = par.getValue<double>("MODEL_2D_LONGITUDE");
         RDCol3 rtpG;
@@ -55,7 +56,17 @@ mExModel(exModel), mNrField(nrf), mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcD
         rtpG(2) = Geodesy::lon2Phi(lon2D);
         const RDCol3 &rtpS = Geodesy::rotateGlob2Src(rtpG, srcLat, srcLon, srcDep);
         mPhi2D = rtpS(2);
-    } 
+    } else if (boost::iequals(mode2d, "source-centered")) {
+         mPhi2D = par.getValue<double>("MODEL_2D_AZIMUTH") * degree;
+         while (mPhi2D < 0.) {
+             mPhi2D += 2. * pi;
+         }
+         while (mPhi2D > 2. * pi) {
+             mPhi2D -= 2. * pi;
+         }
+    } else {
+         throw std::runtime_error("Mesh::Mesh || Invalid input for MODEL_2D_MODE.");
+    }
     
     // slice plots
     SlicePlot::buildInparam(mSlicePlots, par, this, verbose);
@@ -168,7 +179,7 @@ double Mesh::computeRadiusRef(double depth, double lat, double lon) const {
     double router = mExModel->getROuter();
     
     // 2D mode
-    if (mUse2D) {
+    if (mPhi2D < -DBL_MAX * .9) {
         RDCol3 rtpG, rtpS;
         rtpG(0) = 1.;
         rtpG(1) = theta;

@@ -34,6 +34,7 @@ void Parameters::registerAll() {
     registerPar("MODEL_2D_MODE");
     registerPar("MODEL_2D_LATITUDE");
     registerPar("MODEL_2D_LONGITUDE");
+    registerPar("MODEL_2D_AZIMUTH");
     registerPar("MODEL_PLOT_SLICES_NUM");
     registerPar("MODEL_PLOT_SLICES_LIST");
     registerPar("ATTENUATION");
