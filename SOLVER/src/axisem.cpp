@@ -122,7 +122,7 @@ int axisem_main(int argc, char *argv[]) {
         MultilevelTimer::end("Build Receivers", 0);    
         
         //////// computational domain
-        MultilevelTimer::begin("Computationalion Domain", 0);
+        MultilevelTimer::begin("Computational Domain", 0);
         sv.mDomain = new Domain();
         
         // release mesh
@@ -152,7 +152,7 @@ int axisem_main(int argc, char *argv[]) {
             XMPI::cout << sv.mDomain->verbose();
         }
         MultilevelTimer::end("Verbose", 1);
-        MultilevelTimer::end("Computationalion Domain", 0);
+        MultilevelTimer::end("Computational Domain", 0);
         
         MultilevelTimer::finalize();
         
