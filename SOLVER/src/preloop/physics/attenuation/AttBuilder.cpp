@@ -164,6 +164,11 @@ void AttBuilder::buildInparam(AttBuilder *&attBuild, const Parameters &par,
     bool cg4 = par.getValue<bool>("ATTENUATION_CG4");
     bool dokappa = par.getValue<bool>("ATTENUATION_QKAPPA");
     
+    if (cg4 && nPol != 4) {
+        throw std::runtime_error("AttBuilder::buildInparam || "
+            "ATTENUATION_CG4 is turned on but nPol is not 4.");
+    }
+    
     // create model
     if (useLegacy) {
         if (dokappa) {
