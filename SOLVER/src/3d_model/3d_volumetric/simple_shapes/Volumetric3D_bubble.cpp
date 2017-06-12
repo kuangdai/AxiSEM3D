@@ -61,6 +61,7 @@ void Volumetric3D_bubble::initialize(const std::vector<std::string> &params) {
     try {
         int ipar = 7;
         Parameters::castValue(mSourceCentered, params.at(ipar++), source);
+        Parameters::castValue(mFluid, params.at(ipar++), source);
         Parameters::castValue(mHWHM, params.at(ipar++), source); mHWHM *= 1e3;
     } catch (std::out_of_range) {
         // nothing

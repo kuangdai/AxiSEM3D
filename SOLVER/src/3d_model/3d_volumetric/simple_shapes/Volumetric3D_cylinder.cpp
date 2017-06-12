@@ -65,6 +65,7 @@ void Volumetric3D_cylinder::initialize(const std::vector<std::string> &params) {
     try {
         int ipar = 10;
         Parameters::castValue(mSourceCentered, params.at(ipar++), source);
+        Parameters::castValue(mFluid, params.at(ipar++), source);
         Parameters::castValue(mHWHM_lateral, params.at(ipar++), source); mHWHM_lateral *= 1e3;
         Parameters::castValue(mHWHM_top_bot, params.at(ipar++), source); mHWHM_top_bot *= 1e3;
     } catch (std::out_of_range) {

@@ -24,6 +24,8 @@ public:
         mSrcDep = srcDep;
     }
     
+    bool makeFluid3D() const {return mFluid;};
+    
 private:
     // property name
     MaterialProperty mMaterialProp;
@@ -46,6 +48,9 @@ private:
     double mSrcLat = 0.;
     double mSrcLon = 0.;
     double mSrcDep = 0.;
+    
+    // 3d fluid
+    bool mFluid = false;
     
     // halfwidth at half maximum of Gaussian 
     // how the perturbation fades outside the bubble

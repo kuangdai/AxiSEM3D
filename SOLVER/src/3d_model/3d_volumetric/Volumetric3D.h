@@ -65,5 +65,9 @@ public:
     static void buildInparam(std::vector<Volumetric3D *> &models, 
         const Parameters &par, const ExodusModel *exModel, 
         double srcLat, double srcLon, double srcDep, int verbose);
+        
+    // some models may extent into the fluid core
+    // but may not create 3D fluid actually
+    virtual bool makeFluid3D() const {return false;};    
 
 };

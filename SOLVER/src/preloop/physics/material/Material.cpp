@@ -108,6 +108,9 @@ void Material::addVolumetric3D(const std::vector<Volumetric3D *> &m3D,
                 double t = rtp(alpha, 1);
                 double p = rtp(alpha, 2);
                 for (const auto &model: m3D) {
+                    if (mMyQuad->isFluid() && !model->makeFluid3D()) {
+                        continue;
+                    }
                     std::vector<Volumetric3D::MaterialProperty> properties; 
                     std::vector<Volumetric3D::MaterialRefType> refTypes;
                     std::vector<double> values;
