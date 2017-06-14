@@ -9,12 +9,12 @@
 #include "XMPI.h"
 #include <sstream>
 #include <cstdio>
+#include "PointwiseRecorder.h"
 
 void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
-    const std::vector<std::string> &names,
-    const std::vector<std::string> &networks) {
+    const std::vector<PointwiseInfo> &receivers) {
     // number
-    int numRec = names.size();
+    int numRec = receivers.size();
     if (numRec == 0) {
         return;
     }    
@@ -36,7 +36,7 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool EN
     dims.push_back(3);
     mVarNames.resize(numRec);
     for (int irec = 0; irec < numRec; irec++) {
-        mVarNames[irec] = networks[irec] + "." + names[irec];
+        mVarNames[irec] = receivers[irec].mNetwork + "." + receivers[irec].mName;
         mVarNames[irec] += ENZ ? ".ENZ" : ".RTZ";
         mNetCDF->defineVariable(mVarNames[irec], dims, (Real)-1.2345);
     }

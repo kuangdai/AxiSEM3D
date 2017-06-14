@@ -11,8 +11,7 @@ class PointwiseIONetCDF: public PointwiseIO {
 public:
     // before time loop
     void initialize(int totalRecordSteps, int bufferSize, bool ENZ, 
-        const std::vector<std::string> &names,
-        const std::vector<std::string> &networks);
+        const std::vector<PointwiseInfo> &receivers);
     
     // after time loop
     void finalize();

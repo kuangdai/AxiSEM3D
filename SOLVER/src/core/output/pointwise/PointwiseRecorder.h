@@ -9,6 +9,34 @@
 class Element;
 class PointwiseIO;
 
+// receiver info
+struct PointwiseInfo {
+    PointwiseInfo(const std::string &name, const std::string &network, 
+        double phi, const RDMatPP &weights, const Element *ele,
+        double theta, double baz, 
+        double lat, double lon, double dep):
+        mName(name), mNetwork(network), 
+        mPhi(phi), mWeights(weights.cast<Real>()), mElement(ele),
+        mTheta(theta), mBAz(baz),
+        mLat(lat), mLon(lon), mDep(dep) {};
+    
+    //// name
+    std::string mName;
+    std::string mNetwork;
+    
+    //// to compute disp from Element
+    double mPhi;
+    RMatPP mWeights;
+    const Element *mElement;
+    
+    //// to transform disp to RTZ or ENZ
+    double mTheta;
+    double mBAz;
+    
+    // for station XML
+    double mLat, mLon, mDep;
+};
+
 class PointwiseRecorder {
 public:
     PointwiseRecorder(int totalRecordSteps, int recordInterval, 
@@ -17,7 +45,8 @@ public:
     
     // add a receiver
     void addReceiver(const std::string &name, const std::string &network,
-        double phi, const RDMatPP &weights, const Element *ele, double theta, double baz);
+        double phi, const RDMatPP &weights, const Element *ele, double theta, double baz,
+        double lat, double lon, double dep);
     
     // before time loop
     void initialize();
@@ -35,28 +64,6 @@ public:
     void addIO(PointwiseIO *io) {mIOs.push_back(io);};
     
 private:
-    // receiver info
-    struct PointwiseInfo {
-        PointwiseInfo(const std::string &name, const std::string &network, 
-            double phi, const RDMatPP &weights, const Element *ele,
-            double theta, double baz):
-            mName(name), mNetwork(network), 
-            mPhi(phi), mWeights(weights.cast<Real>()), mElement(ele),
-            mTheta(theta), mBAz(baz) {};
-        
-        //// name
-        std::string mName;
-        std::string mNetwork;
-        
-        //// to compute disp from Element
-        double mPhi;
-        RMatPP mWeights;
-        const Element *mElement;
-        
-        //// to transform disp to RTZ or ENZ
-        double mTheta;
-        double mBAz;
-    };
     std::vector<PointwiseInfo> mPointwiseInfo;
     
     // interval

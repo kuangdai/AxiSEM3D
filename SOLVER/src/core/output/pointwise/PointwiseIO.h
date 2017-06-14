@@ -6,6 +6,7 @@
 
 #include "eigenc.h"
 #include <string>
+class PointwiseInfo;
 
 class PointwiseIO {
 public:
@@ -13,8 +14,7 @@ public:
     
     // before time loop
     virtual void initialize(int totalRecordSteps, int bufferSize, bool ENZ,
-        const std::vector<std::string> &names,
-        const std::vector<std::string> &networks) = 0;
+        const std::vector<PointwiseInfo> &receivers) = 0;
     
     // after time loop
     virtual void finalize() = 0;

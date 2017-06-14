@@ -4,12 +4,12 @@
 
 #include "PointwiseIOAscii.h"
 #include "Parameters.h"
+#include "PointwiseRecorder.h"
 
 void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
-    const std::vector<std::string> &names,
-    const std::vector<std::string> &networks) {
+    const std::vector<PointwiseInfo> &receivers) {
     // number
-    int numRec = names.size();
+    int numRec = receivers.size();
     mFileNames.resize(numRec);    
     mFiles.resize(numRec);
     mBuffer = RMatXX::Zero(bufferSize, 4);
@@ -17,7 +17,7 @@ void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize, bool ENZ
     // files
     std::string outdir = Parameters::sOutputDirectory + "/stations/";
     for (int irec = 0; irec < numRec; irec++) {
-        mFileNames[irec] = outdir + networks[irec] + "." + names[irec];
+        mFileNames[irec] = outdir + receivers[irec].mNetwork + "." + receivers[irec].mName;
         mFileNames[irec] += ENZ ? ".ENZ.ascii" : ".RTZ.ascii";
         mFiles[irec].open(mFileNames[irec], std::fstream::out);
         if (!mFiles[irec]) {

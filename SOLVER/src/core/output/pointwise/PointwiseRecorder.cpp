@@ -19,8 +19,9 @@ PointwiseRecorder::~PointwiseRecorder() {
 }
 
 void PointwiseRecorder::addReceiver(const std::string &name, const std::string &network, 
-    double phi, const RDMatPP &weights, const Element *ele, double theta, double baz) {
-    mPointwiseInfo.push_back(PointwiseInfo(name, network, phi, weights, ele, theta, baz));
+    double phi, const RDMatPP &weights, const Element *ele, double theta, double baz,
+    double lat, double lon, double dep) {
+    mPointwiseInfo.push_back(PointwiseInfo(name, network, phi, weights, ele, theta, baz, lat, lon, dep));
 }
 
 void PointwiseRecorder::initialize() {
@@ -34,7 +35,7 @@ void PointwiseRecorder::initialize() {
         networks.push_back(rec.mNetwork);
     }
     for (const auto &io: mIOs) {
-        io->initialize(mTotalRecordSteps, mBufferSize, mENZ, names, networks);
+        io->initialize(mTotalRecordSteps, mBufferSize, mENZ, mPointwiseInfo);
     }
 }
 

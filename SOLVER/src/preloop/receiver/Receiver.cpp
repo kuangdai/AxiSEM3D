@@ -45,7 +45,8 @@ mName(name), mNetwork(network), mDepth(depth) {
 void Receiver::release(PointwiseRecorder &recorderPW, const Domain &domain, 
     int elemTag, const RDMatPP &interpFact) {
     Element *myElem = domain.getElement(elemTag);
-    recorderPW.addReceiver(mName, mNetwork, mPhi, interpFact, myElem, mTheta, mBackAzimuth);
+    recorderPW.addReceiver(mName, mNetwork, mPhi, interpFact, myElem, mTheta, mBackAzimuth,
+        mLat, mLon, mDepth);
 }
 
 bool Receiver::locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const {
