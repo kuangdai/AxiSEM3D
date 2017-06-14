@@ -89,7 +89,7 @@ void OceanLoad3D_crust1::initialize() {
         mGridLat[i] = i * 1. - 90.;
     }
     for (int i = 0; i < sNLon + 1; i++) {
-        mGridLon[i] = i * 1. - 180.;
+        mGridLon[i] = i * 1. - 179.5;
     }
     
     //////////// plot raw data ////////////  
