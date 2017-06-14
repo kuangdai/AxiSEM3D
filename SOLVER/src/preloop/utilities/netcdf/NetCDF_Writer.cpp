@@ -30,6 +30,36 @@ void NetCDF_Writer::close() {
     }
 }
 
+void NetCDF_Writer::writeString(const std::string &vname, const std::string &data) const {
+    std::vector<size_t> dims;
+    dims.push_back(data.length());
+    defineVariable(vname, dims, '0');
+    int varid = inquireVariable(vname);
+    if (data.length() > 0) {
+        if (nc_put_var(mFileID, varid, data.c_str()) != NC_NOERR) {
+            throw std::runtime_error("NetCDF_Writer::writeString || "
+                "Error writing variable, variable: " + vname + " || NetCDF file: " + mFileName);
+        }
+    }
+}
+
+void NetCDF_Writer::writeStringInByte(const std::string &vname, const std::string &data) const {
+    std::vector<size_t> dims;
+    dims.push_back(data.length());
+    defineVariable(vname, dims, (signed char)'0');
+    int varid = inquireVariable(vname);
+    if (data.length() > 0) {
+        std::vector<signed char> buf;
+        for (int i = 0; i < data.length(); i++) {
+            buf.push_back((signed char)(data.c_str()[i]));
+        }
+        if (nc_put_var(mFileID, varid, buf.data()) != NC_NOERR) {
+            throw std::runtime_error("NetCDF_Writer::writeStringInByte || "
+                "Error writing variable, variable: " + vname + " || NetCDF file: " + mFileName);
+        }
+    }
+}
+
 void NetCDF_Writer::createGroup(const std::string &gname) const {
     int grpid = -1;
     nc_redef(mFileID);

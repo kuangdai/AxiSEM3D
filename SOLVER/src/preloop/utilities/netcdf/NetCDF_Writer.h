@@ -86,6 +86,10 @@ public:
         }
     };
     
+    // string
+    void writeString(const std::string &vname, const std::string &data) const;
+    void writeStringInByte(const std::string &vname, const std::string &data) const;
+    
     // create group
     void createGroup(const std::string &gname) const;
 
@@ -99,6 +103,10 @@ private:
             return NC_FLOAT;
         } else if (typeid(base_type) == typeid(int)) {
             return NC_INT;
+        } else if (typeid(base_type) == typeid(char)) {
+            return NC_CHAR;
+        } else if (typeid(base_type) == typeid(signed char)) {
+            return NC_BYTE;
         } else {
             throw std::runtime_error("NetCDF_Writer::to_nc_type || "
                 "Error identifying NetCDF type.");
