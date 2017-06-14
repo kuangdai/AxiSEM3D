@@ -7,7 +7,7 @@
         <Station code="@NAME@">
             <Latitude>@LAT@</Latitude>
             <Longitude>@LON@</Longitude>
-            <Elevation>0</Elevation>
+            <Elevation>-1.2345</Elevation>
             <Depth>@DEP@</Depth>
             <CreationDate>1960-01-01T00:00:00.000Z</CreationDate>
         </Station>
