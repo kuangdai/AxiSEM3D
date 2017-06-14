@@ -19,24 +19,9 @@ public:
     void close();
     bool isOpen() const {return mFileName != "";};
     
-    // type interpreter
-    template<class base_type>
-    static nc_type to_nc_type(base_type var) {
-        if (typeid(base_type) == typeid(double)) {
-            return NC_DOUBLE;
-        } else if (typeid(base_type) == typeid(float)) {
-            return NC_FLOAT;
-        } else if (typeid(base_type) == typeid(int)) {
-            return NC_INT;
-        } else {
-            throw std::runtime_error("NetCDF_Writer::to_nc_type || "
-                "Error identifying NetCDF type.");
-        }
-    };
-    
     // define
     template<class base_type>
-    int defineVariable(const std::string &vname, const std::vector<size_t> &dims, base_type initValue) const {
+    void defineVariable(const std::string &vname, const std::vector<size_t> &dims, base_type initValue) const {
         // define the dimensions
         nc_redef(mFileID);
         std::vector<int> dimids;
@@ -72,14 +57,8 @@ public:
             throw std::runtime_error("NetCDF_Writer::defineVariable || "
                 "Error initializing variable, variable: " + vname + " || NetCDF file: " + mFileName);
         }
-        
-        // return variable ID
-        return varid;
     };
    
-    // inquire
-    int inquireVariable(const std::string &vname) const;    
-    
     // write an entire variable
     // NOTE: if the Container is an Eigen Matrix, it has to be Eigen::RowMajor
     template<class Container>   
@@ -106,8 +85,29 @@ public:
             }
         }
     };
+    
+    // create group
+    void createGroup(const std::string &gname) const;
 
-private:    
+private:
+    // type interpreter
+    template<class base_type>
+    static nc_type to_nc_type(base_type var) {
+        if (typeid(base_type) == typeid(double)) {
+            return NC_DOUBLE;
+        } else if (typeid(base_type) == typeid(float)) {
+            return NC_FLOAT;
+        } else if (typeid(base_type) == typeid(int)) {
+            return NC_INT;
+        } else {
+            throw std::runtime_error("NetCDF_Writer::to_nc_type || "
+                "Error identifying NetCDF type.");
+        }
+    };
+    
+    // inquire
+    int inquireVariable(const std::string &vname) const;    
+    
     // error handler
     void netcdfError(const int retval, const std::string &func_name) const;
     

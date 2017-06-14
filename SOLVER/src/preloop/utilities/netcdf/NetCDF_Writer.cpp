@@ -10,12 +10,12 @@ void NetCDF_Writer::open(const std::string &fname, bool overwrite) {
     close();
     mFileName = fname;
     if (overwrite) {
-        if (nc_create(fname.c_str(), NC_CLOBBER, &mFileID) != NC_NOERR) {
+        if (nc_create(fname.c_str(), NC_NETCDF4, &mFileID) != NC_NOERR) {
             throw std::runtime_error("NetCDF_Writer::open || "
                 "Error creating NetCDF file: || " + fname);    
         }
     } else {
-        if (nc_open(fname.c_str(),  NC_WRITE | NC_SHARE, &mFileID) != NC_NOERR) {
+        if (nc_open(fname.c_str(),  NC_WRITE | NC_NETCDF4, &mFileID) != NC_NOERR) {
             throw std::runtime_error("NetCDF_Writer::open || "
                 "Error opening NetCDF file: || " + fname);    
         }
@@ -28,6 +28,16 @@ void NetCDF_Writer::close() {
         mFileID = -1;
         mFileName = "";
     }
+}
+
+void NetCDF_Writer::createGroup(const std::string &gname) const {
+    int grpid = -1;
+    nc_redef(mFileID);
+    if (nc_def_grp(mFileID, gname.c_str(), &grpid) != NC_NOERR) {
+        throw std::runtime_error("NetCDF_Reader::createGroup || "
+            "Error defining group: " + gname + " || NetCDF file: " + mFileName);
+    }
+    nc_enddef(mFileID);
 }
 
 int NetCDF_Writer::inquireVariable(const std::string &vname) const {
