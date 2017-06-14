@@ -17,7 +17,7 @@ void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize, bool ENZ
     // files
     std::string outdir = Parameters::sOutputDirectory + "/stations/";
     for (int irec = 0; irec < numRec; irec++) {
-        mFileNames[irec] = outdir + networks[irec] + "_" + names[irec];
+        mFileNames[irec] = outdir + networks[irec] + "." + names[irec];
         mFileNames[irec] += ENZ ? ".ENZ.ascii" : ".RTZ.ascii";
         mFiles[irec].open(mFileNames[irec], std::fstream::out);
         if (!mFiles[irec]) {

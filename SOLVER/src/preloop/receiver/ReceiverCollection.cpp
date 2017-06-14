@@ -63,7 +63,7 @@ mInputFile(fileRec), mGeographic(geographic) {
         mWidthName = std::max(mWidthName, (int)name[i].length());
         mWidthNetwork = std::max(mWidthNetwork, (int)network[i].length());
         // check duplicated
-        std::string key = network[i] + "_" + name[i];
+        std::string key = network[i] + "." + name[i];
         if (std::find(recKeys.begin(), recKeys.end(), key) != recKeys.end()) {
             throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
                 "Duplicated station keys (network_name) found in station data file " + mInputFile + " || "

@@ -36,7 +36,7 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool EN
     dims.push_back(3);
     mVarNames.resize(numRec);
     for (int irec = 0; irec < numRec; irec++) {
-        mVarNames[irec] = networks[irec] + "_" + names[irec];
+        mVarNames[irec] = networks[irec] + "." + names[irec];
         mVarNames[irec] += ENZ ? ".ENZ" : ".RTZ";
         mNetCDF->defineVariable(mVarNames[irec], dims, (Real)-1.2345);
     }
