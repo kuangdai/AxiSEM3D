@@ -11,6 +11,7 @@ class Domain;
 class Mesh;
 class Parameters;
 class Receiver;
+class PointwiseIO;
 
 class ReceiverCollection {
 public:
@@ -41,10 +42,8 @@ private:
     bool mENZ = false;
     
     // IO
-    bool mAscii = false;
-    bool mNetCDF = false;
-    bool mASDF = false;
-    
+    std::vector<PointwiseIO *> mPointwiseIO;
+
     // for verbose
     int mWidthName;
     int mWidthNetwork;

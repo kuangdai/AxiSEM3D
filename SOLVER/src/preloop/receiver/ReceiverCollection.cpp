@@ -112,14 +112,8 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     }
     
     // IO
-    if (mAscii) {
-        recorderPW->addIO(new PointwiseIOAscii());
-    }
-    if (mNetCDF) {
-        recorderPW->addIO(new PointwiseIONetCDF());
-    }
-    if (mASDF) {
-        recorderPW->addIO(new PointwiseIOASDF());
+    for (const auto &io: mPointwiseIO) {
+        recorderPW->addIO(io);
     }
     
     // add recorder to domain
@@ -193,18 +187,30 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
     
     // IO
     int numFmt = par.getSize("OUT_STATIONS_FORMAT");
+    // use bool first to avoid duplicated IO
+    bool ascii = false, netcdf = false, asdf = false;
     for (int i = 0; i < numFmt; i++) {
         std::string strfmt = par.getValue<std::string>("OUT_STATIONS_FORMAT", i); 
         if (boost::iequals(strfmt, "ascii")) {
-            rec->mAscii = true;
+            ascii = true;
         } else if (boost::iequals(strfmt, "netcdf")) {
-            rec->mNetCDF = true;
+            netcdf = true;
         } else if (boost::iequals(strfmt, "asdf")) {
-            rec->mASDF = true;
+            asdf = true;
         } else {
             throw std::runtime_error("ReceiverCollection::buildInparam || "
                 "Invalid parameter, keyword = OUT_STATIONS_FORMAT.");
         }
+    }
+    // create IO
+    if (ascii) {
+        rec->mPointwiseIO.push_back(new PointwiseIOAscii());
+    }
+    if (netcdf) {
+        rec->mPointwiseIO.push_back(new PointwiseIONetCDF());
+    }
+    if (asdf) {
+        rec->mPointwiseIO.push_back(new PointwiseIOASDF(srcLat, srcLon, srcDep));
     }
     
     if (verbose) {

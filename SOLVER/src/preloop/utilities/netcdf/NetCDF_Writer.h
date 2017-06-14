@@ -23,7 +23,7 @@ public:
     template<class base_type>
     void defineVariable(const std::string &vname, const std::vector<size_t> &dims, base_type initValue) const {
         // define the dimensions
-        nc_redef(mFileID);
+        netcdfError(nc_redef(mFileID), "nc_redef");
         std::vector<int> dimids;
         size_t total = 1;
         for (int i = 0; i < dims.size(); i++) {
@@ -45,15 +45,15 @@ public:
         // define the variable
         int varid = -1;
         nc_type dtype = to_nc_type(initValue);
-        if (nc_def_var(mFileID, vname.c_str(), dtype, dims.size(), dimids.data(), &varid) != NC_NOERR) {
+        if (nc_def_var(mPWD, vname.c_str(), dtype, dims.size(), dimids.data(), &varid) != NC_NOERR) {
             throw std::runtime_error("NetCDF_Writer::defineVariable || "
                 "Error defining variable, variable: " + vname + " || NetCDF file: " + mFileName);
         }
-        nc_enddef(mFileID);
+        netcdfError(nc_enddef(mFileID), "nc_enddef");
         
         // init value
         std::vector<base_type> constant(total, initValue);
-        if (nc_put_var(mFileID, varid, constant.data()) != NC_NOERR) {
+        if (nc_put_var(mPWD, varid, constant.data()) != NC_NOERR) {
             throw std::runtime_error("NetCDF_Writer::defineVariable || "
                 "Error initializing variable, variable: " + vname + " || NetCDF file: " + mFileName);
         }
@@ -65,7 +65,7 @@ public:
     void writeVariableWhole(const std::string &vname, const Container &data) const {
         int varid = inquireVariable(vname);
         if (data.size() > 0) {
-            if (nc_put_var(mFileID, varid, data.data()) != NC_NOERR) {
+            if (nc_put_var(mPWD, varid, data.data()) != NC_NOERR) {
                 throw std::runtime_error("NetCDF_Writer::writeVariableData || "
                     "Error writing variable, variable: " + vname + " || NetCDF file: " + mFileName);
             }
@@ -79,7 +79,7 @@ public:
         std::vector<size_t> &start, std::vector<size_t> &count) const {
         int varid = inquireVariable(vname);
         if (data.size() > 0) {
-            if (nc_put_vara(mFileID, varid, start.data(), count.data(), data.data()) != NC_NOERR) {
+            if (nc_put_vara(mPWD, varid, start.data(), count.data(), data.data()) != NC_NOERR) {
                 throw std::runtime_error("NetCDF_Writer::writeVariableChunk || "
                     "Error writing variable, variable: " + vname + " || NetCDF file: " + mFileName);
             }
@@ -92,6 +92,8 @@ public:
     
     // create group
     void createGroup(const std::string &gname) const;
+    void goToGroup(const std::string &gname);
+    void goToFileRoot() {mPWD = mFileID;};
 
 private:
     // type interpreter
@@ -121,6 +123,7 @@ private:
     
 private:
     int mFileID = -1;
+    int mPWD = -1;
     
 protected:
     std::string mFileName = "";
