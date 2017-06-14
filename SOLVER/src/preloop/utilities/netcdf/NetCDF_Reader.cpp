@@ -8,7 +8,7 @@
 void NetCDF_Reader::open(const std::string &fname) {
     close();
     mFileName = fname;
-    if (nc_open(fname.c_str(), 0, &mFileID) != NC_NOERR) {
+    if (nc_open(fname.c_str(), NC_NETCDF4, &mFileID) != NC_NOERR) {
         throw std::runtime_error("NetCDF_Reader::open || "
             "Error opening NetCDF file: || " + fname);
     }

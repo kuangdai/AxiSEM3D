@@ -16,6 +16,7 @@
 #include "PointwiseRecorder.h"
 #include "PointwiseIOAscii.h"
 #include "PointwiseIONetCDF.h"
+#include "PointwiseIOASDF.h"
 
 ReceiverCollection::ReceiverCollection(const std::string &fileRec, bool geographic, 
     double srcLat, double srcLon, double srcDep):
@@ -118,7 +119,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
         recorderPW->addIO(new PointwiseIONetCDF());
     }
     if (mASDF) {
-        throw std::runtime_error("ReceiverCollection::release || ASDF not implemented.");
+        recorderPW->addIO(new PointwiseIOASDF());
     }
     
     // add recorder to domain
