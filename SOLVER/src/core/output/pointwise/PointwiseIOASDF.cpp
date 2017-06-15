@@ -24,7 +24,7 @@ void PointwiseIOASDF::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
     
     // open file on all ranks
     std::stringstream fname;
-    fname << Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc.rank" << XMPI::rank();
+    fname << Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.asdf.h5.rank" << XMPI::rank();
     mNetCDF->open(fname.str(), true);
     
     // define time variable
@@ -63,7 +63,7 @@ void PointwiseIOASDF::finalize() {
     // file name
     std::string oneFile = Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.asdf.h5";
     std::stringstream fname;
-    fname << Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc.rank" << XMPI::rank();
+    fname << Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.asdf.h5.rank" << XMPI::rank();
     std::string locFile = fname.str();
     
     // merge
