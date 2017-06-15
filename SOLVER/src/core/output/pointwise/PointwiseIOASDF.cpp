@@ -61,7 +61,7 @@ void PointwiseIOASDF::finalize() {
     }
     
     // file name
-    std::string oneFile = Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.asdf";
+    std::string oneFile = Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.asdf.h5";
     std::stringstream fname;
     fname << Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc.rank" << XMPI::rank();
     std::string locFile = fname.str();
@@ -72,6 +72,10 @@ void PointwiseIOASDF::finalize() {
     #endif
     
     int fileDefined = 0;
+    std::string sourceID;
+    std::string sourceT0_UTC;
+    double seismogramT0 = 0.;
+    double sampling_rate = 0.;
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
         if (iproc == XMPI::rank() && numRec > 0) {
             // reader
@@ -90,7 +94,21 @@ void PointwiseIOASDF::finalize() {
                 nw.createGroup("Waveforms");
                 
                 // create QuakeML
-                createQuakeML(nw);
+                createQuakeML(nw, sourceID, sourceT0_UTC);
+                
+                // t0 and dt
+                RColX times;
+                nr.read1D("time_points", times);
+                if (times.size() > 0) {
+                    seismogramT0 = times(0);
+                } else {
+                    seismogramT0 = -1.2345;
+                }
+                if (times.size() > 1) {
+                    sampling_rate = 1. / (times(1) - times(0));
+                } else {
+                    sampling_rate = -1.2345;
+                }
                 
                 // close
                 nw.close();
@@ -101,8 +119,8 @@ void PointwiseIOASDF::finalize() {
             // read and write seismograms
             NetCDF_Writer nw;
             nw.open(oneFile, false);
+            nw.goToGroup("Waveforms");
             for (int irec = 0; irec < numRec; irec++) {
-                nw.goToFileRoot();
                 std::string key = mNetworks[irec] + "." + mNames[irec];
                 
                 // create group
@@ -110,7 +128,7 @@ void PointwiseIOASDF::finalize() {
                 nw.goToGroup(key);
                 
                 // create station XML
-                createStationML(nw, irec);
+                createStationML(nw, irec, sourceID);
                 
                 // read seis
                 RMatXX_RM seis;
@@ -123,14 +141,26 @@ void PointwiseIOASDF::finalize() {
                     std::string varName = key + "." + comp.c_str()[i];
                     nw.defineVariable(varName, dims, (Real)-1.2345);
                     nw.writeVariableWhole(varName, seis.col(i).eval());
+                    // add attributes
+                    nw.addAttributeString(varName, "event_id", sourceID);
+                    nw.addAttribute(varName, "sampling_rate", sampling_rate);
+                    nw.addAttribute(varName, "starttime", seismogramT0);
                 }
+                
+                // back to root
+                nw.goToFileRoot();
+                nw.goToGroup("Waveforms");
             }
             nw.close();
             
             // close reader
             nr.close();
         }
-        XMPI::bcast(fileDefined);
+        XMPI::bcast(fileDefined, iproc);
+        XMPI::bcast(sourceID, iproc);
+        XMPI::bcast(sourceT0_UTC, iproc);
+        XMPI::bcast(sampling_rate, iproc);
+        XMPI::bcast(seismogramT0, iproc);
         XMPI::barrier();
     } 
     
@@ -184,13 +214,31 @@ void PointwiseIOASDF::dumpToFile(const RMatXX_RM &bufferDisp,
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-void PointwiseIOASDF::createQuakeML(NetCDF_Writer &nw) {
+void PointwiseIOASDF::createQuakeML(NetCDF_Writer &nw, std::string &sourceID, std::string &sourceT0_UTC) {
     std::string quakeStr;
     std::fstream fs(Parameters::sInputDirectory + "/ASDF/quake.xml");
     if (fs) {
         // user provided
         quakeStr = std::string((std::istreambuf_iterator<char>(fs)), 
             std::istreambuf_iterator<char>());
+        
+        // try to find event publicID
+        size_t start = quakeStr.find("<event publicID=\"");
+        if (start == std::string::npos) {
+            throw std::runtime_error("PointwiseIOASDF::createQuakeML || "
+                "Unable to find event publicID in user-provided quake.xml.");
+        }
+        size_t end = quakeStr.find("\"", start + 17);
+        if (end == std::string::npos) {
+            throw std::runtime_error("PointwiseIOASDF::createQuakeML || "
+                "Unable to find event publicID in user-provided quake.xml.");
+        }
+        sourceID = quakeStr.substr(start, end - start - 1);
+        
+        // try to find event time
+        // TODO
+        sourceT0_UTC = "1970-01-01T00:00:00.000Z";
+        
     } else {
         // built-in
         std::string path = projectDirectory + "/src/core/output/pointwise/minimum_quake.xml";
@@ -204,12 +252,15 @@ void PointwiseIOASDF::createQuakeML(NetCDF_Writer &nw) {
         boost::replace_first(quakeStr, "@LAT@", boost::lexical_cast<std::string>(mSrcLat));
         boost::replace_first(quakeStr, "@LON@", boost::lexical_cast<std::string>(mSrcLon));
         boost::replace_first(quakeStr, "@DEP@", boost::lexical_cast<std::string>(mSrcDep));
+        boost::replace_first(quakeStr, "@PATH_TO_SOURCE_FILE@", mSourceFile);
+        sourceID = mSourceFile;
+        sourceT0_UTC = "1970-01-01T00:00:00.000Z";
     }
     fs.close();
     nw.writeStringInByte("QuakeML", quakeStr);
 }
 
-void PointwiseIOASDF::createStationML(NetCDF_Writer &nw, int irec) {
+void PointwiseIOASDF::createStationML(NetCDF_Writer &nw, int irec, const std::string &sourceID) {
     std::string stationStr;
     std::string key = mNetworks[irec] + "." + mNames[irec];
     std::fstream fs(Parameters::sInputDirectory + "/ASDF/" + key + ".xml");
@@ -232,6 +283,7 @@ void PointwiseIOASDF::createStationML(NetCDF_Writer &nw, int irec) {
         boost::replace_first(stationStr, "@LAT@", boost::lexical_cast<std::string>(mLats[irec]));
         boost::replace_first(stationStr, "@LON@", boost::lexical_cast<std::string>(mLons[irec]));
         boost::replace_first(stationStr, "@DEP@", boost::lexical_cast<std::string>(mDeps[irec]));
+        boost::replace_first(stationStr, "@SOURCE@", boost::lexical_cast<std::string>(sourceID));
     }
     fs.close();
     nw.writeStringInByte("StationXML", stationStr);

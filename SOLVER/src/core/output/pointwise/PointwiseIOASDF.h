@@ -9,8 +9,10 @@ class NetCDF_Writer;
 
 class PointwiseIOASDF: public PointwiseIO {
 public:
-    PointwiseIOASDF(double srcLat, double srcLon, double srcDep):
-        mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {};
+    PointwiseIOASDF(double srcLat, double srcLon, double srcDep,
+        const std::string &sourceFile):
+        mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep), 
+        mSourceFile(sourceFile) {};
     
     // before time loop
     void initialize(int totalRecordSteps, int bufferSize, bool ENZ, 
@@ -23,8 +25,8 @@ public:
     void dumpToFile(const RMatXX_RM &bufferDisp, const RColX &bufferTime, int bufferLine);
     
 private:
-    void createQuakeML(NetCDF_Writer &nw);
-    void createStationML(NetCDF_Writer &nw, int irec);
+    void createQuakeML(NetCDF_Writer &nw, std::string &sourceID, std::string &sourceT0_UTC);
+    void createStationML(NetCDF_Writer &nw, int irec, const std::string &sourceID);
     
     
     // variable names
@@ -41,6 +43,7 @@ private:
     double mSrcLat;
     double mSrcLon;
     double mSrcDep;
+    std::string mSourceFile;
     std::vector<std::string> mNetworks;
     std::vector<std::string> mNames;
     std::vector<double> mLats;
