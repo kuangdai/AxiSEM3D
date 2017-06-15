@@ -94,6 +94,23 @@ public:
     void createGroup(const std::string &gname) const;
     void goToGroup(const std::string &gname);
     void goToFileRoot() {mPWD = mFileID;};
+    
+    // add attribute
+    void addAttributeString(const std::string &vname, 
+        const std::string &attname, const std::string &attvalue) const;
+    
+    template<class base_type>
+    void addAttribute(const std::string &vname, 
+        const std::string &attname, base_type attvalue) const {
+        int varid = inquireVariable(vname);
+        netcdfError(nc_redef(mFileID), "nc_redef");
+        if (nc_put_att(mPWD, varid, attname.c_str(), to_nc_type(attvalue), 1, &attvalue) != NC_NOERR) {
+            throw std::runtime_error("NetCDF_Reader::addAttribute || "
+                "Error adding attribute to variable, variable: " + vname + ", attribute: " + attname  
+                + " || NetCDF file: " + mFileName);
+        }
+        netcdfError(nc_enddef(mFileID), "nc_enddef");    
+    };
 
 private:
     // type interpreter
@@ -109,6 +126,8 @@ private:
             return NC_CHAR;
         } else if (typeid(base_type) == typeid(signed char)) {
             return NC_BYTE;
+        } else if (typeid(base_type) == typeid(long)) {
+            return NC_LONG;
         } else {
             throw std::runtime_error("NetCDF_Writer::to_nc_type || "
                 "Error identifying NetCDF type.");

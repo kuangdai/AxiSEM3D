@@ -210,7 +210,8 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
         rec->mPointwiseIO.push_back(new PointwiseIONetCDF());
     }
     if (asdf) {
-        rec->mPointwiseIO.push_back(new PointwiseIOASDF(srcLat, srcLon, srcDep));
+        rec->mPointwiseIO.push_back(new PointwiseIOASDF(srcLat, srcLon, srcDep,
+            Parameters::sInputDirectory + "/" + par.getValue<std::string>("SOURCE_FILE")));
     }
     
     if (verbose) {

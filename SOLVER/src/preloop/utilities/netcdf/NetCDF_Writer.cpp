@@ -83,6 +83,18 @@ void NetCDF_Writer::goToGroup(const std::string &gname) {
     mPWD = grpid;
 }
 
+void NetCDF_Writer::addAttributeString(const std::string &vname, 
+    const std::string &attname, const std::string &attvalue) const {
+    int varid = inquireVariable(vname);
+    netcdfError(nc_redef(mFileID), "nc_redef");
+    if (nc_put_att_text(mPWD, varid, attname.c_str(), attvalue.length(), attvalue.c_str()) != NC_NOERR) {
+        throw std::runtime_error("NetCDF_Reader::addAttributeString || "
+            "Error adding attribute to variable, variable: " + vname + ", attribute: " + attname  
+            + " || NetCDF file: " + mFileName);
+    }
+    netcdfError(nc_enddef(mFileID), "nc_enddef");
+}
+
 int NetCDF_Writer::inquireVariable(const std::string &vname) const {
     int varid = -1;
     if (nc_inq_varid(mPWD, vname.c_str(), &varid) != NC_NOERR) {

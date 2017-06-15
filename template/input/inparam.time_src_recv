@@ -70,8 +70,16 @@ OUT_STATIONS_SYSTEM                         geographic
 # WHAT: seismogram format
 # TYPE: ascii / NetCDF / ASDF (to be implemented)
 # NOTE: may contain one or more of the above options
-#       Do not use ascii if the number of stations exceeds/approximates 
-#       the open-files limit (find it with "ulimit -n")
+#       * Do not use ascii if the number of stations exceeds/approximates 
+#         the open-files limit on you OS (find it with "ulimit -n").
+#       * The integrated result for NetCDF or ASDF is generated at the end of
+#         the simulation. If the simulation is terminated during the time loop,
+#         one will have the intermediate results written by each processor.
+#       * For ASDF, one may specify the XML headers for the event and the stations.
+#         Copy event header to input/ASDF/quake.xml
+#         Copy station headers to input/ASDF/NETWORK.NAME.xml
+#         If the headers do not exist, AxiSEM3D will generate them based on
+#         the simulation parameters, only containing the minimum information.  
 OUT_STATIONS_FORMAT                         ascii
 
 # WHAT: seismogram components

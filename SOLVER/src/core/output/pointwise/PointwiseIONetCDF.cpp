@@ -108,7 +108,7 @@ void PointwiseIONetCDF::finalize() {
             // close reader
             nr.close();
         }
-        XMPI::bcast(fileDefined);
+        XMPI::bcast(fileDefined, iproc);
         XMPI::barrier();
     } 
     
