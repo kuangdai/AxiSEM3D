@@ -21,7 +21,9 @@ void NetCDF_Writer::open(const std::string &fname, bool overwrite) {
         }
     }
     mPWD = mFileID;
-    netcdfError(nc_enddef(mFileID), "nc_enddef");
+    if (overwrite) {
+        netcdfError(nc_enddef(mFileID), "nc_enddef");
+    }
 }
 
 void NetCDF_Writer::close() {
