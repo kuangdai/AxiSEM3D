@@ -5,6 +5,7 @@
 #pragma once
 
 #include "PointwiseIO.h"
+#include "boost/date_time/posix_time/posix_time_types.hpp"
 class NetCDF_Writer;
 
 class PointwiseIOASDF: public PointwiseIO {
@@ -28,6 +29,8 @@ private:
     void createQuakeML(NetCDF_Writer &nw, std::string &sourceID, std::string &sourceT0_UTC);
     void createStationML(NetCDF_Writer &nw, int irec, const std::string &sourceID);
     
+    static boost::posix_time::ptime UTCfromString(const std::string &utcStr);
+    static std::string UTCToString(const boost::posix_time::ptime &utc, bool printfrac);
     
     // variable names
     std::vector<std::string> mVarNames;

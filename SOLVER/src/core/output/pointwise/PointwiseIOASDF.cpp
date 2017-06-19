@@ -11,6 +11,11 @@
 #include <cstdio>
 #include "PointwiseRecorder.h"
 
+#include <fstream>
+#include <iomanip>
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+
 void PointwiseIOASDF::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
     const std::vector<PointwiseInfo> &receivers) {
     // number
@@ -71,50 +76,69 @@ void PointwiseIOASDF::finalize() {
         Eigen::internal::set_is_malloc_allowed(true);
     #endif
     
-    int fileDefined = 0;
+    // find the maximum rank with receivers
+    int lrank = -1;
+    if (numRec > 0) {
+        lrank = XMPI::rank();
+    }
+    int maxRank = XMPI::max(lrank);
+    
+    // define file
     std::string sourceID;
     std::string sourceT0_UTC;
-    double seismogramT0 = 0.;
-    double sampling_rate = 0.;
+    if (XMPI::rank() == maxRank) {
+        // create file
+        NetCDF_Writer nw;
+        nw.open(oneFile, true);
+        
+        // create groups
+        nw.createGroup("AuxiliaryData");
+        nw.createGroup("Provenance");
+        nw.createGroup("Waveforms");
+        nw.addAttributeString("", "file_format", "ASDF");
+        nw.addAttributeString("", "file_format_version", "1.0.0");
+        
+        // create QuakeML
+        createQuakeML(nw, sourceID, sourceT0_UTC);
+        
+        // close
+        nw.close();
+    }
+    XMPI::bcast(sourceID, maxRank);
+    XMPI::bcast(sourceT0_UTC, maxRank);
+    
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
         if (iproc == XMPI::rank() && numRec > 0) {
             // reader
             NetCDF_Reader nr;
             nr.open(locFile);
             
-            // init file
-            if (!fileDefined) {
-                // create file
-                NetCDF_Writer nw;
-                nw.open(oneFile, true);
-                
-                // create groups
-                nw.createGroup("AuxiliaryData");
-                nw.createGroup("Provenance");
-                nw.createGroup("Waveforms");
-                
-                // create QuakeML
-                createQuakeML(nw, sourceID, sourceT0_UTC);
-                
-                // t0 and dt
-                RColX times;
-                nr.read1D("time_points", times);
-                if (times.size() > 0) {
-                    seismogramT0 = times(0);
-                } else {
-                    seismogramT0 = -1.2345;
-                }
-                if (times.size() > 1) {
-                    sampling_rate = 1. / (times(1) - times(0));
-                } else {
-                    sampling_rate = -1.2345;
-                }
-                
-                // close
-                nw.close();
-                // file defined
-                fileDefined = true;
+            // time
+            double tfirst = -1.2345;
+            double tlastt = -1.2345;
+            double sampling_rate = -1.2345;
+            RColX times;
+            nr.read1D("time_points", times);
+            if (times.size() > 0) {
+                tfirst = times(0);
+                tlastt = times(times.size() - 1);
+            } 
+            if (times.size() > 1) {
+                sampling_rate = 1. / (times(1) - times(0));
             }
+            
+            // UTC
+            boost::posix_time::ptime utcSource = UTCfromString(sourceT0_UTC);
+            long secFirst = (long)tfirst;
+            long secLastt = (long)tlastt;
+            long fracFirst = (long)((tfirst - secFirst * 1.) * 1e3);
+            long fracLastt = (long)((tlastt - secLastt * 1.) * 1e3);
+            boost::posix_time::ptime utcFirst(utcSource + boost::posix_time::time_duration(0, 0, secFirst, fracFirst));
+            boost::posix_time::ptime utcLastt(utcSource + boost::posix_time::time_duration(0, 0, secLastt, fracLastt));
+            std::string tFirstStr = UTCToString(utcFirst, false);
+            std::string tLasttStr = UTCToString(utcLastt, false);
+            boost::posix_time::ptime utcZero = UTCfromString("1970-01-01T00:00:00");
+            long long tFirstLong = (utcFirst - utcZero).total_nanoseconds();
             
             // read and write seismograms
             NetCDF_Writer nw;
@@ -138,29 +162,26 @@ void PointwiseIOASDF::finalize() {
                 dims.push_back(seis.rows());
                 std::string comp = mENZ? "ENZ" : "RTZ";
                 for (int i = 0; i < 3; i++) {
-                    std::string varName = key + "." + comp.c_str()[i];
+                    std::string varName = key + ".." + comp.c_str()[i];
+                    varName += "__" + tFirstStr + "__" + tLasttStr + "__synthetic";
                     nw.defineVariable(varName, dims, (Real)-1.2345);
                     nw.writeVariableWhole(varName, seis.col(i).eval());
                     // add attributes
                     nw.addAttributeString(varName, "event_id", sourceID);
                     nw.addAttribute(varName, "sampling_rate", sampling_rate);
-                    nw.addAttribute(varName, "starttime", seismogramT0);
+                    nw.addAttribute(varName, "starttime", tFirstLong);
                 }
                 
                 // back to root
                 nw.goToFileRoot();
                 nw.goToGroup("Waveforms");
             }
+            // close writer
             nw.close();
             
             // close reader
             nr.close();
         }
-        XMPI::bcast(fileDefined, iproc);
-        XMPI::bcast(sourceID, iproc);
-        XMPI::bcast(sourceT0_UTC, iproc);
-        XMPI::bcast(sampling_rate, iproc);
-        XMPI::bcast(seismogramT0, iproc);
         XMPI::barrier();
     } 
     
@@ -211,9 +232,6 @@ void PointwiseIOASDF::dumpToFile(const RMatXX_RM &bufferDisp,
     mCurrentRow += bufferLine;
 }
 
-#include <fstream>
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 void PointwiseIOASDF::createQuakeML(NetCDF_Writer &nw, std::string &sourceID, std::string &sourceT0_UTC) {
     std::string quakeStr;
     std::fstream fs(Parameters::sInputDirectory + "/ASDF/quake.xml");
@@ -223,22 +241,57 @@ void PointwiseIOASDF::createQuakeML(NetCDF_Writer &nw, std::string &sourceID, st
             std::istreambuf_iterator<char>());
         
         // try to find event publicID
-        size_t start = quakeStr.find("<event publicID=\"");
-        if (start == std::string::npos) {
+        std::string eventStr = "<event publicID=\"";
+        size_t pos = quakeStr.find(eventStr);
+        if (pos == std::string::npos) {
             throw std::runtime_error("PointwiseIOASDF::createQuakeML || "
                 "Unable to find event publicID in user-provided quake.xml.");
         }
-        size_t end = quakeStr.find("\"", start + 17);
-        if (end == std::string::npos) {
+        pos += eventStr.length();
+        size_t eventStart = pos;
+        
+        std::string eventStrEnd = "\">";
+        pos = quakeStr.find(eventStrEnd, pos);
+        if (pos == std::string::npos) {
             throw std::runtime_error("PointwiseIOASDF::createQuakeML || "
                 "Unable to find event publicID in user-provided quake.xml.");
         }
-        sourceID = quakeStr.substr(start, end - start - 1);
+        sourceID = quakeStr.substr(eventStart, pos - eventStart);
+        pos += eventStrEnd.length();
         
         // try to find event time
-        // TODO
-        sourceT0_UTC = "1970-01-01T00:00:00.000Z";
+        std::string originStr = "<origin publicID=\"";
+        pos = quakeStr.find(originStr, pos);
+        if (pos == std::string::npos) {
+            throw std::runtime_error("PointwiseIOASDF::createQuakeML || "
+                "Unable to find origin publicID in user-provided quake.xml.");
+        }
+        pos += originStr.length();
         
+        std::string timeStr = "<time>";
+        pos = quakeStr.find(timeStr, pos);
+        if (pos == std::string::npos) {
+            throw std::runtime_error("PointwiseIOASDF::createQuakeML || "
+                "Unable to find \"<time>\" under \"<origion>\" in user-provided quake.xml.");
+        }
+        pos += timeStr.length();
+        
+        std::string valueStr = "<value>";
+        pos = quakeStr.find(valueStr, pos);
+        if (pos == std::string::npos) {
+            throw std::runtime_error("PointwiseIOASDF::createQuakeML || "
+                "Unable to find \"<value>\" under \"<time>\" under \"<origion>\" in user-provided quake.xml.");
+        }
+        pos += valueStr.length();
+        size_t timeStart = pos;
+        
+        std::string timeStrEnd = "</value>";
+        pos = quakeStr.find(timeStrEnd, pos);
+        if (pos == std::string::npos) {
+            throw std::runtime_error("PointwiseIOASDF::createQuakeML || "
+                "Unable to find \"</value>\" under \"<time>\" under \"<origion>\" in user-provided quake.xml.");
+        }
+        sourceT0_UTC = quakeStr.substr(timeStart, pos - timeStart);
     } else {
         // built-in
         std::string path = projectDirectory + "/src/core/output/pointwise/minimum_quake.xml";
@@ -254,7 +307,7 @@ void PointwiseIOASDF::createQuakeML(NetCDF_Writer &nw, std::string &sourceID, st
         boost::replace_first(quakeStr, "@DEP@", boost::lexical_cast<std::string>(mSrcDep));
         boost::replace_first(quakeStr, "@PATH_TO_SOURCE_FILE@", mSourceFile);
         sourceID = mSourceFile;
-        sourceT0_UTC = "1970-01-01T00:00:00.000Z";
+        sourceT0_UTC = "1970-01-01T00:00:00";
     }
     fs.close();
     nw.writeStringInByte("QuakeML", quakeStr);
@@ -288,3 +341,55 @@ void PointwiseIOASDF::createStationML(NetCDF_Writer &nw, int irec, const std::st
     fs.close();
     nw.writeStringInByte("StationXML", stationStr);
 }
+
+boost::posix_time::ptime PointwiseIOASDF::UTCfromString(const std::string &utcStr) {
+    std::string processed(utcStr);
+    boost::replace_first(processed, "Z", "");
+    boost::replace_first(processed, "GMT", "");
+    std::vector<std::string> date_time = Parameters::splitString(processed, "T");
+    // date
+    std::vector<std::string> ymd = Parameters::splitString(date_time[0], "-");
+    long year = boost::lexical_cast<long>(ymd[0]);
+    long month = boost::lexical_cast<long>(ymd[1]);
+    long day = boost::lexical_cast<long>(ymd[2]);
+    // time
+    std::vector<std::string> hms = Parameters::splitString(date_time[1], ":");
+    long hour = boost::lexical_cast<long>(hms[0]);
+    long min = boost::lexical_cast<long>(hms[1]);
+    std::vector<std::string> sec_frac = Parameters::splitString(hms[2], ".");
+    long second = boost::lexical_cast<long>(sec_frac[0]);
+    long frac = 0;
+    if (sec_frac.size() > 1) {
+        if (sec_frac[1].length() > 0) {
+            frac = boost::lexical_cast<long>(sec_frac[1]);
+        }
+    }
+    return boost::posix_time::ptime(boost::gregorian::date(year, month, day), 
+        boost::posix_time::time_duration(hour, min, second, frac));
+}
+
+std::string PointwiseIOASDF::UTCToString(const boost::posix_time::ptime &utc, bool printfrac) {
+    // date
+    boost::gregorian::date myDate = utc.date();
+    long year = myDate.year();
+    long month = myDate.month();
+    long day = myDate.day();
+    // time
+    boost::posix_time::time_duration myTime = utc.time_of_day();
+    long hour = myTime.hours();
+    long min = myTime.minutes();
+    long second = myTime.seconds();
+    long frac = myTime.fractional_seconds();
+    std::stringstream ss;
+    ss << std::setfill ('0') << std::setw(4) << year << "-";
+    ss << std::setfill ('0') << std::setw(2) << month << "-";
+    ss << std::setfill ('0') << std::setw(2) << day << "T";
+    ss << std::setfill ('0') << std::setw(2) << hour << ":";
+    ss << std::setfill ('0') << std::setw(2) << min << ":";
+    ss << std::setfill ('0') << std::setw(2) << second;
+    if (frac > 0 && printfrac) {
+        ss << "." << frac;
+    }
+    return ss.str();
+}
+
