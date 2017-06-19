@@ -1,15 +1,15 @@
 <q:quakeml xsi:schemaLocation="http://quakeml.org/schema/xsd http://quakeml.org/schema/xsd/QuakeML-1.2.xsd" xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <eventParameters>
         <event publicID="@PATH_TO_SOURCE_FILE@">
-            <origin>
+            <origin publicID="OriginID">
                 <time>
-                    <value>1970-01-01T00:00:00.000Z</value>
+                    <value>1970-01-01T00:00:00</value>
                 </time>
                 <longitude>
-                    <value>@LAT@</value>
+                    <value>@LON@</value>
                 </longitude>
                 <latitude>
-                    <value>@LON@</value>
+                    <value>@LAT@</value>
                 </latitude>
                 <depth>
                     <value>@DEP@</value>

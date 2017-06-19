@@ -2,14 +2,14 @@
 
 <FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
     <Source>@SOURCE@</Source>
-    <Created>1960-01-01T00:00:00.000Z</Created>
+    <Created>1960-01-01T00:00:00</Created>
     <Network code="@NETWORK@">
         <Station code="@NAME@">
             <Latitude>@LAT@</Latitude>
             <Longitude>@LON@</Longitude>
             <Elevation>-1.2345</Elevation>
             <Depth>@DEP@</Depth>
-            <CreationDate>1960-01-01T00:00:00.000Z</CreationDate>
+            <CreationDate>1960-01-01T00:00:00</CreationDate>
         </Station>
     </Network>
 </FDSNStationXML>
