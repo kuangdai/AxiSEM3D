@@ -102,9 +102,17 @@ public:
     template<class base_type>
     void addAttribute(const std::string &vname, 
         const std::string &attname, base_type attvalue) const {
-        int varid = inquireVariable(vname);
+        int varid = -1;
+        int varloc = -1;
+        if (vname == "") {
+            varid = NC_GLOBAL;
+            varloc = mFileID;
+        } else {
+            varid = inquireVariable(vname);
+            varloc = mPWD;
+        }
         netcdfError(nc_redef(mFileID), "nc_redef");
-        if (nc_put_att(mPWD, varid, attname.c_str(), to_nc_type(attvalue), 1, &attvalue) != NC_NOERR) {
+        if (nc_put_att(varloc, varid, attname.c_str(), to_nc_type(attvalue), 1, &attvalue) != NC_NOERR) {
             throw std::runtime_error("NetCDF_Reader::addAttribute || "
                 "Error adding attribute to variable, variable: " + vname + ", attribute: " + attname  
                 + " || NetCDF file: " + mFileName);
@@ -128,6 +136,8 @@ private:
             return NC_BYTE;
         } else if (typeid(base_type) == typeid(long)) {
             return NC_LONG;
+        } else if (typeid(base_type) == typeid(long long)) {
+            return NC_INT64;
         } else {
             throw std::runtime_error("NetCDF_Writer::to_nc_type || "
                 "Error identifying NetCDF type.");
