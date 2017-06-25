@@ -115,13 +115,13 @@ int NuWisdom::getMaxNu() const {
 }
 
 double NuWisdom::getCompressionRatio() const {
-    int nu_learn = 0;
-    int nu_orign = 0;
+    double nu_learn = 0.;
+    double nu_orign = 0.;
     for (RTreeValue const &v: mRTree) {
-        nu_learn += v.second[0];
-        nu_orign += v.second[1];
+        nu_learn += v.second[0] * 1.;
+        nu_orign += v.second[1] * 1.;
     }
-    return 1. * nu_learn / nu_orign;
+    return nu_learn / nu_orign;
 }
 
 std::vector<RTreeValue> NuWisdom::queryKNN(const RTreePoint &target, int number) const {
