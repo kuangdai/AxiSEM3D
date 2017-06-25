@@ -528,7 +528,9 @@ void Quad::formNrField(const NrField &nrf) {
             }
             
             // luck number
-            if (nrf.useLuckyNumber()) mPointNr(ipol, jpol) = PreloopFFTW::nextLuckyNumber(mPointNr(ipol, jpol), forceOdd);
+            if (nrf.useLuckyNumber()) {
+                mPointNr(ipol, jpol) = PreloopFFTW::nextLuckyNumber(mPointNr(ipol, jpol), forceOdd);
+            }
         }
     }
     mNr = mPointNr.maxCoeff();
