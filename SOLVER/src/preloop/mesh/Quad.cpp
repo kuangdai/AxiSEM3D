@@ -150,7 +150,7 @@ mQuadTag(quadTag) {
         mNearAxisNodes(j) = exModel.getVicinalAxis(quadTag)[j];
         mNodalAveGLLSpacing(j) = exModel.getAveGLLSpacing(mGlobalNodeTags(j));
     } 
-    formNrField(nrf);
+    formNrField(nrf, distTol);
     
     // integral factor
     formIntegralFactor();    
@@ -471,12 +471,16 @@ void Quad::formIntegralFactor() {
     }
 }
 
-void Quad::formNrField(const NrField &nrf) {
+void Quad::formNrField(const NrField &nrf, double distTol) {
     for (int ipol = 0; ipol <= nPol; ipol++) {
         for (int jpol = 0; jpol <= nPol; jpol++) {
             // interpolate
             const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mIsAxial);
-            const RDCol2 &crds = mapping(xieta);
+            RDCol2 crds = mapping(xieta);
+            // erase numerical error
+            double offset = std::min((double)tinySingle, distTol / 1e3);
+            crds(0) = round(crds(0) / offset) * offset;
+            crds(1) = round(crds(1) / offset) * offset;
             mPointNr(ipol, jpol) = nrf.getNrAtPoint(crds);
             
             // upper limit

@@ -108,7 +108,7 @@ protected:
     void formIntegralFactor();
     
     // form mNr and mPointNr
-    void formNrField(const NrField &nrf);
+    void formNrField(const NrField &nrf, double distTol);
     
     // get courant number
     double getCourant() const;
