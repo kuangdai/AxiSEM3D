@@ -16,6 +16,7 @@
 #include "Volumetric3D_crust1.h"
 #include "Volumetric3D_bubble.h"
 #include "Volumetric3D_cylinder.h"
+#include "Volumetric3D_EMC.h"
 /////////////////////////////// user-defined models here
 
 void Volumetric3D::buildInparam(std::vector<Volumetric3D *> &models, 
@@ -58,6 +59,8 @@ void Volumetric3D::buildInparam(std::vector<Volumetric3D *> &models,
             m = new Volumetric3D_bubble(); 
         } else if (boost::iequals(name, "cylinder")) {
             m = new Volumetric3D_cylinder();        
+        } else if (boost::iequals(name, "emc")) {
+            m = new Volumetric3D_EMC();
             
         /////////////////////////////// 
         // user-defined models here

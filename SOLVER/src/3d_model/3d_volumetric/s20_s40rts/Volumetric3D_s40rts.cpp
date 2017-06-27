@@ -19,6 +19,7 @@ extern "C" {
 };
 
 
+// #include "NetCDF_Writer.h"
 void Volumetric3D_s40rts::initialize() {
     const int np12 = 3549;
     const int ns40 = 35301;
@@ -48,6 +49,30 @@ void Volumetric3D_s40rts::initialize() {
     XMPI::bcast(meta_data_p12, np12);
     XMPI::bcast(meta_data_s40, ns40);
     __s40rts_MOD_initialize_s40rts(&mRCMB, &mRMoho, &mRSurf, meta_data_p12, meta_data_s40);
+    
+    // produce EMC
+    // RColX dvs(721 * 361);
+    // double r = mRSurf - 50.e3; 
+    // int intGrid = 2;
+    // int pos = 0;
+    // for (int i = 180 * intGrid; i >= 0; i--) {
+    //     double theta = i * degree / intGrid;
+    //     for (int j = 0; j <= 360 * intGrid; j++) {
+    //         double phi = j * degree / intGrid;
+    //         if (phi < 0) phi += 2. * pi;
+    //         std::vector<MaterialProperty> properties;
+    //         std::vector<MaterialRefType> refTypes;
+    //         std::vector<double> values;
+    //         get3dProperties(r, theta, phi, r - .01,
+    //             properties, refTypes, values);
+    //         dvs(pos++) = values[1] * 100; 
+    //     }
+    // }   
+    // NetCDF_Writer nw;
+    // nw.open("/Users/kuangdai/build/input/S40RTS/0.5deg_grd-files/LENG_S40RTS_50.grd", false);
+    // nw.writeVariableWhole("z", dvs);
+    // nw.close();
+    // exit(0);
 }
 
 void Volumetric3D_s40rts::initialize(const std::vector<std::string> &params) {
