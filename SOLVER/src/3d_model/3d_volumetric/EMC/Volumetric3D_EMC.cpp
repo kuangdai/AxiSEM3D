@@ -107,6 +107,9 @@ void Volumetric3D_EMC::initialize() {
                 fdata.block(i * depthLen, 0, depthLen, 1) = temp;
             }
             dims.insert(dims.begin(), fdep.size());
+            
+            // perturbations are given in percentage
+            fdata *= .01f;
         } else {
             if (NetCDF_Reader::checkNetCDF_isAscii(fname)) {
                 NetCDF_ReaderAscii reader;
