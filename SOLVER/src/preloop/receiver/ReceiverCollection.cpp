@@ -120,7 +120,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     
     // add recorder to domain
     domain.setPointwiseRecorder(recorderPW);
-    MultilevelTimer::begin("Release to Domain", 2);
+    MultilevelTimer::end("Release to Domain", 2);
 }
 
 std::string ReceiverCollection::verbose() const {
