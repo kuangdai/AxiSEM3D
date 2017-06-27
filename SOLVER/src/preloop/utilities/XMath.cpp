@@ -62,15 +62,6 @@ void XMath::interpLinear(double target, const RDColX &bases, int &loc, double &w
     }
 }
 
-bool XMath::sortedAscending(const RDColX &bases) {
-    for (int i = 0; i < bases.size() - 1; i++) {
-        if (bases(i) > bases(i + 1)) {
-            return false;
-        }
-    }
-    return true;
-}
-
 void XMath::checkLimits(double &value, double low, double up, double tol) {
     if (value < low + tol) {
         value = low + tol;

@@ -12,35 +12,47 @@
 #include "NetCDF_ReaderAscii.h"
 
 void Geometric3D_EMC::initialize() {
+    // EMC is in float
+    Eigen::Matrix<float, Eigen::Dynamic, 1> flat, flon;
+    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> fdata;
+    
+    // read file
     if (XMPI::root()) {
         std::string fname = Parameters::sInputDirectory + "/" + mFileName;
         if (NetCDF_Reader::checkNetCDF_isAscii(fname)) {
             NetCDF_ReaderAscii reader;
             reader.open(fname);
-            reader.read1D("lantidue", mGridLat);
-            reader.read1D("longitude", mGridLon);
-            reader.read2D(mVarName, mGridData);
+            reader.read1D("lantidue", flat);
+            reader.read1D("longitude", flon);
+            reader.read2D(mVarName, fdata);
             reader.close();
         } else {
             NetCDF_Reader reader;
             reader.open(fname);
-            reader.read1D("lantidue", mGridLat);
-            reader.read1D("longitude", mGridLon);
-            reader.read2D(mVarName, mGridData);
+            reader.read1D("lantidue", flat);
+            reader.read1D("longitude", flon);
+            reader.read2D(mVarName, fdata);
             reader.close();
         }
-        if (mGridData.rows() != mGridLat.size() || mGridData.cols() != mGridLon.size()) {
+        if (fdata.rows() != flat.size() || fdata.cols() != flon.size()) {
             throw std::runtime_error("Geometric3D_EMC::initialize || "
                 "Inconsistent data dimensions || File = " + fname);
         }
-        if (!XMath::sortedAscending(mGridLat) || !XMath::sortedAscending(mGridLon)) {
+        if (!XMath::sortedAscending(flat) || !XMath::sortedAscending(flon)) {
             throw std::runtime_error("Geometric3D_EMC::initialize || "
                 "Grid coordinates are not sorted ascendingly || File = " + fname);
         }
     }
-    XMPI::bcastEigen(mGridLat);
-    XMPI::bcastEigen(mGridLon);
-    XMPI::bcastEigen(mGridData);
+    
+    // broadcast
+    XMPI::bcastEigen(flat);
+    XMPI::bcastEigen(flon);
+    XMPI::bcastEigen(fdata);
+    
+    // to double
+    mGridLat = flat.cast<double>();
+    mGridLon = flon.cast<double>();
+    mGridData = fdata.cast<double>();
     
     // to SI
     mGridData *= 1e3;

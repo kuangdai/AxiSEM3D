@@ -23,7 +23,15 @@ public:
     static void interpLinear(double target, const RDColX &bases, int &loc, double &weight); 
     
     // check sorted
-    static bool sortedAscending(const RDColX &bases); 
+    template<class TIN>
+    static bool sortedAscending(const TIN &bases) {
+        for (int i = 0; i < bases.size() - 1; i++) {
+            if (bases(i) > bases(i + 1)) {
+                return false;
+            }
+        }
+        return true;
+    }
     
     // check limits
     static void checkLimits(double &value, double low, double up, double tol = tinyDouble);
