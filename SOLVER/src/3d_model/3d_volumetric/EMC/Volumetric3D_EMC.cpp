@@ -260,6 +260,20 @@ bool Volumetric3D_EMC::get3dProperties(double r, double theta, double phi, doubl
         XMath::checkLimits(lon, -180., 180.);
     }
     
+    // check center
+    double dmin = mGridDep[0];
+    double dmax = mGridDep[mGridDep.size() - 1];
+    double dcenter = Geodesy::getROuter() - rElemCenter;
+    if (dcenter < dmin || dcenter > dmax) {
+        return false;
+    }
+    if (dep < dmin && dep > dmin * 0.999999) {
+        dep = dmin;
+    }
+    if (dep > dmax && dep < dmax * 1.000001) {
+        dep = dmax;
+    }
+    
     // interpolation
     int ldep0, llat0, llon0, ldep1, llat1, llon1;
     double wdep0, wlat0, wlon0, wdep1, wlat1, wlon1;
