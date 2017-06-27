@@ -247,12 +247,18 @@ bool Volumetric3D_EMC::get3dProperties(double r, double theta, double phi, doubl
     double dep = Geodesy::getROuter() - r;
     double lat = 90. - theta / degree;
     double lon = phi / degree;
-    if (lon > 180.) {
-        lon -= 360.;
-    }
     XMath::checkLimits(dep, 0., Geodesy::getROuter());
     XMath::checkLimits(lat, -90., 90.);
-    XMath::checkLimits(lon, -180., 180.);
+    if (mOneFilePerDepth) {
+        // lon starts from 0.
+        XMath::checkLimits(lon, 0., 360.);
+    } else {
+        // lon starts from -180.
+        if (lon > 180.) {
+            lon -= 360.;
+        }
+        XMath::checkLimits(lon, -180., 180.);
+    }
     
     // interpolation
     int ldep0, llat0, llon0, ldep1, llat1, llon1;
