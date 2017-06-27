@@ -11,40 +11,131 @@
 #include "NetCDF_Reader.h"
 #include "NetCDF_ReaderAscii.h"
 
+#include <dirent.h>
+#include <sys/types.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+#include <algorithm>
+
+bool compareFunc(std::pair<std::string, double> &a, 
+    std::pair<std::string, double> &b) {
+    return a.second < b.second;
+}
+
 void Volumetric3D_EMC::initialize() {
     // meta data
     std::vector<size_t> dims;
     RDColX data;
     if (XMPI::root()) {
         std::string fname = Parameters::sInputDirectory + "/" + mFileName;
-        if (NetCDF_Reader::checkNetCDF_isAscii(fname)) {
-            NetCDF_ReaderAscii reader;
-            reader.open(fname);
-            reader.read1D("depth", mGridDep);
-            reader.read1D("lantidue", mGridLat);
-            reader.read1D("longitude", mGridLon);
-            reader.readMetaData(mVarName, data, dims);
-            reader.close();
+        if (mOneFilePerDepth) {
+            // get all files
+            DIR *dir = opendir(fname.c_str());
+            if (!dir) {
+                throw std::runtime_error("Geometric3D_EMC::initialize || " 
+                    "Error opening directory of data files || Directory = " + fname);    
+            }
+            struct dirent *entry;
+            std::vector<std::pair<std::string, double>> fileDepth;
+            while ((entry = readdir(dir)) != NULL) {
+                // file name
+                std::string fn(entry->d_name);
+                if (fn.find(".grd") == std::string::npos) {
+                    continue;
+                }
+                // depth
+                std::string depthStr(fn);
+                boost::replace_first(depthStr, ".grd", "");
+                std::size_t found = depthStr.find_last_of("_");
+                if (found == std::string::npos) {
+                    throw std::runtime_error("Geometric3D_EMC::initialize || " 
+                        "Error processing file name || File = " + fn);    
+                }
+                depthStr = depthStr.substr(found + 1);
+                double depth = 0.;
+                try {
+                    depth = boost::lexical_cast<double>(depthStr);
+                } catch (std::exception) {
+                    throw std::runtime_error("Geometric3D_EMC::initialize || " 
+                        "Error processing file name || File = " + fn);
+                }
+                // add pair
+                fileDepth.push_back(std::make_pair(fname + "/" + fn, depth));
+            }
+            closedir(dir);
+            
+            // sort depth
+            std::sort(fileDepth.begin(), fileDepth.end(), compareFunc);
+            
+            // read lat and long
+            if (NetCDF_Reader::checkNetCDF_isAscii(fileDepth[0].first)) {
+                NetCDF_ReaderAscii reader;
+                reader.open(fileDepth[0].first);
+                reader.read1D("lat", mGridLat);
+                reader.read1D("lon", mGridLon);
+                reader.close();
+            } else {
+                NetCDF_Reader reader;
+                reader.open(fileDepth[0].first);
+                reader.read1D("lat", mGridLat);
+                reader.read1D("lon", mGridLon);
+                reader.close();
+            }
+            
+            // depths and data
+            mGridDep = RDColX::Zero(fileDepth.size());
+            size_t totalLen = mGridDep.size() * mGridLat.size() * mGridLon.size();
+            size_t depthLen = mGridLat.size() * mGridLon.size();
+            data = RDColX::Zero(totalLen);
+            for (int i = 0; i < fileDepth.size(); i++) {
+                mGridDep(i) = fileDepth[i].second;
+                RDColX temp;
+                if (NetCDF_Reader::checkNetCDF_isAscii(fileDepth[i].first)) {
+                    NetCDF_ReaderAscii reader;
+                    reader.open(fileDepth[i].first);
+                    reader.readMetaData(mVarName, temp, dims);
+                    reader.close();
+                } else {
+                    NetCDF_Reader reader;
+                    reader.open(fileDepth[i].first);
+                    reader.readMetaData(mVarName, temp, dims);
+                    reader.close();
+                }
+                data.block(i * depthLen, 0, depthLen, 1) = temp;
+            }
+            dims.insert(dims.begin(), mGridDep.size());
         } else {
-            NetCDF_Reader reader;
-            reader.open(fname);
-            reader.read1D("depth", mGridDep);
-            reader.read1D("lantidue", mGridLat);
-            reader.read1D("longitude", mGridLon);
-            reader.readMetaData(mVarName, data, dims);
-            reader.close();
+            if (NetCDF_Reader::checkNetCDF_isAscii(fname)) {
+                NetCDF_ReaderAscii reader;
+                reader.open(fname);
+                reader.read1D("depth", mGridDep);
+                reader.read1D("lantidue", mGridLat);
+                reader.read1D("longitude", mGridLon);
+                reader.readMetaData(mVarName, data, dims);
+                reader.close();
+            } else {
+                NetCDF_Reader reader;
+                reader.open(fname);
+                reader.read1D("depth", mGridDep);
+                reader.read1D("lantidue", mGridLat);
+                reader.read1D("longitude", mGridLon);
+                reader.readMetaData(mVarName, data, dims);
+                reader.close();
+            }
         }
+        
+        // check dimensions
         if (dims.size() != 3) {
             throw std::runtime_error("Geometric3D_EMC::initialize || Inconsistent data dimensions || "
-            "File = " + fname);
+                "File/Directory = " + fname);
         }
         if (dims[0] != mGridDep.size() || dims[1] != mGridLat.size() || dims[2] != mGridLon.size()) {
             throw std::runtime_error("Geometric3D_EMC::initialize || Inconsistent data dimensions || "
-            "File = " + fname);
+                "File/Directory = " + fname);
         }
         if (!XMath::sortedAscending(mGridDep) || !XMath::sortedAscending(mGridLat) || !XMath::sortedAscending(mGridLon)) {
             throw std::runtime_error("Geometric3D_EMC::initialize || Grid coordinates are not sorted ascendingly || "
-            "File = " + fname);
+                "File/Directory = " + fname);
         }
     }
     XMPI::bcastEigen(mGridDep);
@@ -117,6 +208,7 @@ void Volumetric3D_EMC::initialize(const std::vector<std::string> &params) {
         int ipar = 4;
         Parameters::castValue(mFactor, params.at(ipar++), source);
         Parameters::castValue(mGeographic, params.at(ipar++), source);
+        Parameters::castValue(mOneFilePerDepth, params.at(ipar++), source);
     } catch (std::out_of_range) {
         // nothing
     }
@@ -181,19 +273,20 @@ bool Volumetric3D_EMC::get3dProperties(double r, double theta, double phi, doubl
 std::string Volumetric3D_EMC::verbose() const {
     std::stringstream ss;
     ss << "\n======================= 3D Volumetric =======================" << std::endl;
-    ss << "  Model Name          =   EMC" << std::endl;
-    ss << "  Data File           =   " << mFileName << std::endl;
-    ss << "  Variable Name       =   " << mVarName << std::endl;
-    ss << "  Material Property   =   " << MaterialPropertyString[mMaterialProp] << std::endl;
-    ss << "  Reference Type      =   " << MaterialRefTypeString[mReferenceType] << std::endl;
-    ss << "  Num. Depths         =   " << mGridDep.size() << std::endl;
-    ss << "  Num. Latitudes      =   " << mGridLat.size() << std::endl;
-    ss << "  Num. Longitudes     =   " << mGridLon.size() << std::endl;
-    ss << "  Depth Range         =   [" << mGridDep.minCoeff() << ", " << mGridDep.maxCoeff() << "]" << std::endl;
-    ss << "  Latitude Range      =   [" << mGridLat.minCoeff() << ", " << mGridLat.maxCoeff() << "]" << std::endl;
-    ss << "  Longitude Range     =   [" << mGridLon.minCoeff() << ", " << mGridLon.maxCoeff() << "]" << std::endl;
-    ss << "  Factor              =   " << mFactor << std::endl;
-    ss << "  Use Geographic      =   " << (mGeographic ? "YES" : "NO") << std::endl;
+    ss << "  Model Name           =   EMC" << std::endl;
+    ss << "  Data File            =   " << mFileName << std::endl;
+    ss << "  Variable Name        =   " << mVarName << std::endl;
+    ss << "  Material Property    =   " << MaterialPropertyString[mMaterialProp] << std::endl;
+    ss << "  Reference Type       =   " << MaterialRefTypeString[mReferenceType] << std::endl;
+    ss << "  Num. Depths          =   " << mGridDep.size() << std::endl;
+    ss << "  Num. Latitudes       =   " << mGridLat.size() << std::endl;
+    ss << "  Num. Longitudes      =   " << mGridLon.size() << std::endl;
+    ss << "  Depth Range          =   [" << mGridDep.minCoeff() << ", " << mGridDep.maxCoeff() << "]" << std::endl;
+    ss << "  Latitude Range       =   [" << mGridLat.minCoeff() << ", " << mGridLat.maxCoeff() << "]" << std::endl;
+    ss << "  Longitude Range      =   [" << mGridLon.minCoeff() << ", " << mGridLon.maxCoeff() << "]" << std::endl;
+    ss << "  Factor               =   " << mFactor << std::endl;
+    ss << "  Use Geographic       =   " << (mGeographic ? "YES" : "NO") << std::endl;
+    ss << "  One File per Depth   =   " << (mOneFilePerDepth ? "YES" : "NO") << std::endl;
     ss << "======================= 3D Volumetric =======================\n" << std::endl;
     return ss.str();
 }

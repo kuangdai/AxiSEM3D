@@ -34,6 +34,9 @@ private:
     // use geocentric or geographic
     bool mGeographic = false;
     
+    // one-file-per-depth format
+    bool mOneFilePerDepth = false;
+    
     // data
     std::vector<RDMatXX> mGridData;
     RDColX mGridDep;
