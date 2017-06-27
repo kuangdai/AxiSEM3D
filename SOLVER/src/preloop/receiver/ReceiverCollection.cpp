@@ -59,18 +59,20 @@ mInputFile(fileRec), mGeographic(geographic) {
     mWidthNetwork = -1;
     std::vector<std::string> recKeys;
     for (int i = 0; i < name.size(); i++) {
+        // check duplicated
+        int append = 0;
+        std::string key = network[i] + "." + name[i];
+        std::string nameOriginal = name[i];
+        while (std::find(recKeys.begin(), recKeys.end(), key) != recKeys.end()) {
+            name[i] = nameOriginal + "__DUPLICATED" + boost::lexical_cast<std::string>(++append);
+            key = network[i] + "." + name[i];
+        }
+        recKeys.push_back(key);
+        // add receiver
         mReceivers.push_back(new Receiver(name[i], network[i], 
             theta[i], phi[i], geographic, depth[i], srcLat, srcLon, srcDep));
         mWidthName = std::max(mWidthName, (int)name[i].length());
         mWidthNetwork = std::max(mWidthNetwork, (int)network[i].length());
-        // check duplicated
-        std::string key = network[i] + "." + name[i];
-        if (std::find(recKeys.begin(), recKeys.end(), key) != recKeys.end()) {
-            throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
-                "Duplicated station keys (network_name) found in station data file " + mInputFile + " || "
-                "Name = " + name[i] + "; Network = " + network[i]);
-        }
-        recKeys.push_back(key);
     }
 }
 
