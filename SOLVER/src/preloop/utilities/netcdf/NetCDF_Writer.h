@@ -113,7 +113,7 @@ public:
         }
         netcdfError(nc_redef(mFileID), "nc_redef");
         if (nc_put_att(varloc, varid, attname.c_str(), to_nc_type(attvalue), 1, &attvalue) != NC_NOERR) {
-            throw std::runtime_error("NetCDF_Reader::addAttribute || "
+            throw std::runtime_error("NetCDF_Writer::addAttribute || "
                 "Error adding attribute to variable, variable: " + vname + ", attribute: " + attname  
                 + " || NetCDF file: " + mFileName);
         }
