@@ -17,16 +17,16 @@
 #include <boost/lexical_cast.hpp>
 #include <algorithm>
 
-bool compareFunc(std::pair<std::string, double> &a, 
-    std::pair<std::string, double> &b) {
+bool compareFunc(std::pair<std::string, float> &a, 
+    std::pair<std::string, float> &b) {
     return a.second < b.second;
 }
 
 void Volumetric3D_EMC::initialize() {
     // meta data
-    std::vector<size_t> dims;
-    RDColX data;
+    Eigen::Matrix<float, Eigen::Dynamic, 1> fdata, fdep, flat, flon;
     if (XMPI::root()) {
+        std::vector<size_t> dims;
         std::string fname = Parameters::sInputDirectory + "/" + mFileName;
         if (mOneFilePerDepth) {
             // get all files
@@ -36,7 +36,7 @@ void Volumetric3D_EMC::initialize() {
                     "Error opening directory of data files || Directory = " + fname);    
             }
             struct dirent *entry;
-            std::vector<std::pair<std::string, double>> fileDepth;
+            std::vector<std::pair<std::string, float>> fileDepth;
             while ((entry = readdir(dir)) != NULL) {
                 // file name
                 std::string fn(entry->d_name);
@@ -52,9 +52,9 @@ void Volumetric3D_EMC::initialize() {
                         "Error processing file name || File = " + fn);    
                 }
                 depthStr = depthStr.substr(found + 1);
-                double depth = 0.;
+                float depth = 0.;
                 try {
-                    depth = boost::lexical_cast<double>(depthStr);
+                    depth = boost::lexical_cast<float>(depthStr);
                 } catch (std::exception) {
                     throw std::runtime_error("Geometric3D_EMC::initialize || " 
                         "Error processing file name || File = " + fn);
@@ -67,29 +67,32 @@ void Volumetric3D_EMC::initialize() {
             // sort depth
             std::sort(fileDepth.begin(), fileDepth.end(), compareFunc);
             
-            // read lat and long
+            // read lat and lon
+            RDColX dlat, dlon;
             if (NetCDF_Reader::checkNetCDF_isAscii(fileDepth[0].first)) {
                 NetCDF_ReaderAscii reader;
                 reader.open(fileDepth[0].first);
-                reader.read1D("lat", mGridLat);
-                reader.read1D("lon", mGridLon);
+                reader.read1D("lat", dlat);
+                reader.read1D("lon", dlon);
                 reader.close();
             } else {
                 NetCDF_Reader reader;
                 reader.open(fileDepth[0].first);
-                reader.read1D("lat", mGridLat);
-                reader.read1D("lon", mGridLon);
+                reader.read1D("lat", dlat);
+                reader.read1D("lon", dlon);
                 reader.close();
             }
+            flat = dlat.cast<float>();
+            flon = dlon.cast<float>();
             
             // depths and data
-            mGridDep = RDColX::Zero(fileDepth.size());
-            size_t totalLen = mGridDep.size() * mGridLat.size() * mGridLon.size();
-            size_t depthLen = mGridLat.size() * mGridLon.size();
-            data = RDColX::Zero(totalLen);
+            size_t depthLen = flat.size() * flon.size();   
+            size_t totalLen = depthLen * fileDepth.size();
+            fdep.resize(fileDepth.size());
+            fdata.resize(totalLen);
             for (int i = 0; i < fileDepth.size(); i++) {
-                mGridDep(i) = fileDepth[i].second;
-                RDColX temp;
+                fdep(i) = fileDepth[i].second;
+                Eigen::Matrix<float, Eigen::Dynamic, 1> temp;
                 if (NetCDF_Reader::checkNetCDF_isAscii(fileDepth[i].first)) {
                     NetCDF_ReaderAscii reader;
                     reader.open(fileDepth[i].first);
@@ -101,25 +104,25 @@ void Volumetric3D_EMC::initialize() {
                     reader.readMetaData(mVarName, temp, dims);
                     reader.close();
                 }
-                data.block(i * depthLen, 0, depthLen, 1) = temp;
+                fdata.block(i * depthLen, 0, depthLen, 1) = temp;
             }
-            dims.insert(dims.begin(), mGridDep.size());
+            dims.insert(dims.begin(), fdep.size());
         } else {
             if (NetCDF_Reader::checkNetCDF_isAscii(fname)) {
                 NetCDF_ReaderAscii reader;
                 reader.open(fname);
-                reader.read1D("depth", mGridDep);
-                reader.read1D("lantidue", mGridLat);
-                reader.read1D("longitude", mGridLon);
-                reader.readMetaData(mVarName, data, dims);
+                reader.read1D("depth", fdep);
+                reader.read1D("lantidue", flat);
+                reader.read1D("longitude", flon);
+                reader.readMetaData(mVarName, fdata, dims);
                 reader.close();
             } else {
                 NetCDF_Reader reader;
                 reader.open(fname);
-                reader.read1D("depth", mGridDep);
-                reader.read1D("lantidue", mGridLat);
-                reader.read1D("longitude", mGridLon);
-                reader.readMetaData(mVarName, data, dims);
+                reader.read1D("depth", fdep);
+                reader.read1D("lantidue", flat);
+                reader.read1D("longitude", flon);
+                reader.readMetaData(mVarName, fdata, dims);
                 reader.close();
             }
         }
@@ -129,21 +132,27 @@ void Volumetric3D_EMC::initialize() {
             throw std::runtime_error("Geometric3D_EMC::initialize || Inconsistent data dimensions || "
                 "File/Directory = " + fname);
         }
-        if (dims[0] != mGridDep.size() || dims[1] != mGridLat.size() || dims[2] != mGridLon.size()) {
+        if (dims[0] != fdep.size() || dims[1] != flat.size() || dims[2] != flon.size()) {
             throw std::runtime_error("Geometric3D_EMC::initialize || Inconsistent data dimensions || "
                 "File/Directory = " + fname);
         }
-        if (!XMath::sortedAscending(mGridDep) || !XMath::sortedAscending(mGridLat) || !XMath::sortedAscending(mGridLon)) {
+        if (!XMath::sortedAscending(fdep) || !XMath::sortedAscending(flat) || !XMath::sortedAscending(flon)) {
             throw std::runtime_error("Geometric3D_EMC::initialize || Grid coordinates are not sorted ascendingly || "
                 "File/Directory = " + fname);
         }
     }
-    XMPI::bcastEigen(mGridDep);
-    XMPI::bcastEigen(mGridLat);
-    XMPI::bcastEigen(mGridLon);
-    XMPI::bcastEigen(data);
+    XMPI::bcastEigen(fdep);
+    XMPI::bcastEigen(flat);
+    XMPI::bcastEigen(flon);
+    XMPI::bcastEigen(fdata);
+    
+    mGridDep = fdep.cast<double>();
+    mGridLat = flat.cast<double>();
+    mGridLon = flon.cast<double>();
+    RDColX data = fdata.cast<double>();
     
     // SI
+    mGridDep *= 1e3;
     if (mReferenceType == Volumetric3D::MaterialRefType::Absolute) {
         // convert to SI
         data *= MaterialPropertyAbsSI[mMaterialProp];
