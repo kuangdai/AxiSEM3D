@@ -67,6 +67,13 @@ OUT_STATIONS_FILE                           STATIONS
 #       source-centered -- name network distance azimuth [elevation] depth
 OUT_STATIONS_SYSTEM                         geographic
 
+# WHAT: if duplicated stations (network + name) are found in OUT_STATIONS_FILE
+# TYPE: ignore / rename / error
+# NOTE: ignore -- take the first and ignore the rest duplications
+#       rename -- rename the duplicated stations
+#       error  -- raise an error and terminate the simulation
+OUT_STATIONS_DUPLICATED                     rename
+
 # WHAT: seismogram format
 # TYPE: ascii / NetCDF / ASDF (to be implemented)
 # NOTE: may contain one or more of the above options

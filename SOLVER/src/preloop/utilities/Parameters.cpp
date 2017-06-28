@@ -72,6 +72,7 @@ void Parameters::registerAll() {
     registerPar("SOURCE_TIME_FUNCTION");
     registerPar("SOURCE_STF_HALF_DURATION");
     registerPar("OUT_STATIONS_FILE");
+    registerPar("OUT_STATIONS_DUPLICATED");
     registerPar("OUT_STATIONS_SYSTEM");
     registerPar("OUT_STATIONS_FORMAT");
     registerPar("OUT_STATIONS_COMPONENTS");

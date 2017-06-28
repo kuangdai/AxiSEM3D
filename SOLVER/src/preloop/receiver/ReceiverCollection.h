@@ -16,7 +16,7 @@ class PointwiseIO;
 class ReceiverCollection {
 public:
     ReceiverCollection(const std::string &fileRec, bool geographic, 
-        double srcLat, double srcLon, double srcDep);
+        double srcLat, double srcLon, double srcDep, int duplicated);
     ~ReceiverCollection();
     
     void release(Domain &domain, const Mesh &mesh); 

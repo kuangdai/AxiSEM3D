@@ -19,7 +19,7 @@
 #include "PointwiseIOASDF.h"
 
 ReceiverCollection::ReceiverCollection(const std::string &fileRec, bool geographic, 
-    double srcLat, double srcLon, double srcDep):
+    double srcLat, double srcLon, double srcDep, int duplicated):
 mInputFile(fileRec), mGeographic(geographic) {
     std::vector<std::string> name, network;
     std::vector<double> theta, phi, depth;
@@ -60,12 +60,25 @@ mInputFile(fileRec), mGeographic(geographic) {
     std::vector<std::string> recKeys;
     for (int i = 0; i < name.size(); i++) {
         // check duplicated
-        int append = 0;
         std::string key = network[i] + "." + name[i];
-        std::string nameOriginal = name[i];
-        while (std::find(recKeys.begin(), recKeys.end(), key) != recKeys.end()) {
-            name[i] = nameOriginal + "__DUPLICATED" + boost::lexical_cast<std::string>(++append);
-            key = network[i] + "." + name[i];
+        if (std::find(recKeys.begin(), recKeys.end(), key) != recKeys.end()) {
+            if (duplicated == 0) {
+                // ignore
+                continue;
+            } else if (duplicated == 1) {
+                // rename
+                int append = 0;
+                std::string nameOriginal = name[i];
+                while (std::find(recKeys.begin(), recKeys.end(), key) != recKeys.end()) {
+                    name[i] = nameOriginal + "__DUPLICATED" + boost::lexical_cast<std::string>(++append);
+                    key = network[i] + "." + name[i];
+                }
+            } else {
+                // error
+                throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
+                    "Duplicated station keys (network_name) found in station data file " + mInputFile + " || "
+                    "Name = " + name[i] + "; Network = " + network[i]);
+            }
         }
         recKeys.push_back(key);
         // add receiver
@@ -159,7 +172,19 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
         throw std::runtime_error("ReceiverCollection::buildInparam || "
             "Invalid parameter, keyword = OUT_STATIONS_SYSTEM.");
     }
-    rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep); 
+    std::string dupOption = par.getValue<std::string>("OUT_STATIONS_DUPLICATED");
+    int duplicated = 0;
+    if (boost::iequals(dupOption, "ignore")) {
+        duplicated = 0;
+    } else if (boost::iequals(dupOption, "rename")) {
+        duplicated = 1;
+    } else if (boost::iequals(dupOption, "error")) {
+        duplicated = 2;
+    } else {
+        throw std::runtime_error("ReceiverCollection::buildInparam || "
+            "Invalid parameter, keyword = OUT_STATIONS_DUPLICATED.");
+    }
+    rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep, duplicated); 
     
     // options 
     rec->mRecordInterval = par.getValue<int>("OUT_STATIONS_RECORD_INTERVAL");
