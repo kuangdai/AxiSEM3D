@@ -17,8 +17,8 @@
 #include <boost/lexical_cast.hpp>
 #include <algorithm>
 
-bool compareFunc(std::pair<std::string, float> &a, 
-    std::pair<std::string, float> &b) {
+bool compareFunc(const std::pair<std::string, float> &a, 
+    const std::pair<std::string, float> &b) {
     return a.second < b.second;
 }
 
