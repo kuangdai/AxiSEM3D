@@ -10,9 +10,9 @@ export MY_CONDA_INSTALL_DIR=$HOME/anaconda
 
 # your bash_profile
 # Mac OS X default
-export MY_BASH_PROFILE=$HOME/.bash_profile
+export MY_BASH_PROFILE_OSX=$HOME/.bash_profile
 # Ubuntu default
-# export MY_BASH_PROFILE=$HOME/.bashrc
+export MY_BASH_PROFILE_UBT=$HOME/.bashrc
 
 # What do you have already? And where are they?
 # boost
@@ -89,8 +89,20 @@ echo "export EIGEN3_ROOT=$MY_EIGEN3_DIR" >> $MY_AXISEM_ROOTS
 echo "export FFTW_ROOT=$MY_FFTW_DIR" >> $MY_AXISEM_ROOTS
 echo "export METIS_ROOT=$MY_METIS_DIR" >> $MY_AXISEM_ROOTS
 echo "export NETCDF_ROOT=$MY_NETCDF_DIR" >> $MY_AXISEM_ROOTS
-if ! grep -Fxq ". $MY_AXISEM_ROOTS" $MY_BASH_PROFILE 
-then
-    echo ". $MY_AXISEM_ROOTS" >> $MY_BASH_PROFILE
+. $MY_AXISEM_ROOTS
+
+# add to bash profile
+if [ -f $MY_BASH_PROFILE_OSX ]; then
+    if ! grep -Fxq ". $MY_AXISEM_ROOTS" $MY_BASH_PROFILE_OSX 
+    then
+        echo ". $MY_AXISEM_ROOTS" >> $MY_BASH_PROFILE_OSX
+    fi
 fi
-. $MY_BASH_PROFILE
+
+if [ -f $MY_BASH_PROFILE_UBT ]; then
+    if ! grep -Fxq ". $MY_AXISEM_ROOTS" $MY_BASH_PROFILE_UBT 
+    then
+        echo ". $MY_AXISEM_ROOTS" >> $MY_BASH_PROFILE_UBT
+    fi
+fi
+
