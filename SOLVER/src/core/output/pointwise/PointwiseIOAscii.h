@@ -24,7 +24,7 @@ private:
     std::vector<std::string> mFileNames;
     
     // fstream
-    std::vector<std::fstream> mFiles;
+    std::vector<std::fstream *> mFiles;
     
     // buffer
     RMatXX mBuffer;

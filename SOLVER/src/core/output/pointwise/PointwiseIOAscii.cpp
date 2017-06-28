@@ -11,7 +11,7 @@ void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize, bool ENZ
     // number
     int numRec = receivers.size();
     mFileNames.resize(numRec);    
-    mFiles.resize(numRec);
+    mFiles.clear();
     mBuffer = RMatXX::Zero(bufferSize, 4);
     
     // files
@@ -19,19 +19,21 @@ void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize, bool ENZ
     for (int irec = 0; irec < numRec; irec++) {
         mFileNames[irec] = outdir + receivers[irec].mNetwork + "." + receivers[irec].mName;
         mFileNames[irec] += ENZ ? ".ENZ.ascii" : ".RTZ.ascii";
-        mFiles[irec].open(mFileNames[irec], std::fstream::out);
-        if (!mFiles[irec]) {
+        std::fstream *fs = new std::fstream(mFileNames[irec], std::fstream::out);
+        if (!(*fs)) {
             throw std::runtime_error("PointwiseIOAscii::initialize || "
                 "Error opening ascii output file: || " + mFileNames[irec]
                 + " || Use NetCDF or ASDF instead of ascii if there are too many stations.");
         }
+        mFiles.push_back(fs);
     }
 }
 
 void PointwiseIOAscii::finalize() {
     int numRec = mFileNames.size();
     for (int irec = 0; irec < numRec; irec++) {
-        mFiles[irec].close();
+        mFiles[irec]->close();
+        delete mFiles[irec];
     }
 }
 
@@ -48,8 +50,8 @@ void PointwiseIOAscii::dumpToFile(const RMatXX_RM &bufferDisp, const RColX &buff
     for (int irec = 0; irec < numRec; irec++) {
         mBuffer.topRows(bufferLine) << bufferTime.topRows(bufferLine), 
                                        bufferDisp.block(0, irec * 3, bufferLine, 3);
-        mFiles[irec] << mBuffer.topRows(bufferLine).format(EIGEN_FMT) << std::endl;   
-        mFiles[irec].flush();
+        (*mFiles[irec]) << mBuffer.topRows(bufferLine).format(EIGEN_FMT) << std::endl;   
+        mFiles[irec]->flush();
     }
     
     #ifndef NDEBUG
