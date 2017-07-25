@@ -270,6 +270,9 @@ bool Volumetric3D_crust1::get3dProperties(double r, double theta, double phi, do
     }
     XMath::checkLimits(lat, -90., 90.);
     XMath::checkLimits(lon, -180., 180.);
+    if (lon < -179.5) {
+        lon += 360.; 
+    }
     
     // interpolation on sphere
     int llat[2], llon[2];

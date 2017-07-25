@@ -193,6 +193,9 @@ double Geometric3D_crust1::getDeltaR(double r, double theta, double phi, double 
     }
     XMath::checkLimits(lat, -90., 90.);
     XMath::checkLimits(lon, -180., 180.);
+    if (lon < -179.5) {
+        lon += 360.; 
+    }
     
     // interpolation on sphere
     int llat0, llon0, llat1, llon1;
