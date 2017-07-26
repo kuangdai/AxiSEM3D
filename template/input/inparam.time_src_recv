@@ -75,18 +75,18 @@ OUT_STATIONS_SYSTEM                         geographic
 OUT_STATIONS_DUPLICATED                     rename
 
 # WHAT: seismogram format
-# TYPE: ascii / NetCDF / ASDF (to be implemented)
-# NOTE: may contain one or more of the above options
+# TYPE: ascii / netcdf 
+# NOTE: may be one or both of the two options
 #       * Do not use ascii if the number of stations exceeds/approximates 
 #         the open-files limit on you OS (find it with "ulimit -n").
-#       * The integrated result for NetCDF or ASDF is generated at the end of
-#         the simulation. If the simulation is terminated during the time loop,
-#         one will have the intermediate results written by each processor.
-#       * For ASDF, one may specify the XML headers for the event and the stations.
-#         Copy event header to input/ASDF/quake.xml
-#         Copy station headers to input/ASDF/NETWORK.NAME.xml
-#         If the headers do not exist, AxiSEM3D will generate them based on
-#         the simulation parameters, only containing the minimum information.  
+#       * If serial NetCDF library is used, the processors dump synthetics to individual 
+#         NetCDF files named axisem3d_synthetics.nc.rankXXXX (XXXX = processor rank),
+#         each containing part of the stations. The complete NetCDF file containing all 
+#         stations, named axisem3d_synthetics.nc, will be assembled after the time loop.
+#       * If parallel NetCDF library is used, all processors dump directly into 
+#         axisem3d_synthetics.nc during the time loop. 
+#       * Use the python tool axisem3d_ASDF.py to convert axisem3d_synthetics.nc
+#         into the ASDF format (https://seismic-data.org/). 
 OUT_STATIONS_FORMAT                         ascii
 
 # WHAT: seismogram components

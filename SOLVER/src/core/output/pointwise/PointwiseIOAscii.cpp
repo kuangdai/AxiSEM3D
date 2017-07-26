@@ -23,7 +23,7 @@ void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize, bool ENZ
         if (!(*fs)) {
             throw std::runtime_error("PointwiseIOAscii::initialize || "
                 "Error opening ascii output file: || " + mFileNames[irec]
-                + " || Use NetCDF or ASDF instead of ascii if there are too many stations.");
+                + " || Use NetCDF instead of ascii if there are too many stations.");
         }
         mFiles.push_back(fs);
     }

@@ -210,7 +210,6 @@ add_executable(
     src/core/output/pointwise/PointwiseRecorder.cpp
     src/core/output/pointwise/PointwiseIOAscii.cpp
     src/core/output/pointwise/PointwiseIONetCDF.cpp
-    src/core/output/pointwise/PointwiseIOASDF.cpp
     src/core/domain/Domain.cpp
     src/core/newmark/Newmark.cpp
 

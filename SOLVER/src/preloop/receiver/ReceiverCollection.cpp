@@ -16,7 +16,6 @@
 #include "PointwiseRecorder.h"
 #include "PointwiseIOAscii.h"
 #include "PointwiseIONetCDF.h"
-#include "PointwiseIOASDF.h"
 
 ReceiverCollection::ReceiverCollection(const std::string &fileRec, bool geographic, 
     double srcLat, double srcLon, double srcDep, int duplicated):
@@ -215,15 +214,13 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
     // IO
     int numFmt = par.getSize("OUT_STATIONS_FORMAT");
     // use bool first to avoid duplicated IO
-    bool ascii = false, netcdf = false, asdf = false;
+    bool ascii = false, netcdf = false; 
     for (int i = 0; i < numFmt; i++) {
         std::string strfmt = par.getValue<std::string>("OUT_STATIONS_FORMAT", i); 
         if (boost::iequals(strfmt, "ascii")) {
             ascii = true;
         } else if (boost::iequals(strfmt, "netcdf")) {
             netcdf = true;
-        } else if (boost::iequals(strfmt, "asdf")) {
-            asdf = true;
         } else {
             throw std::runtime_error("ReceiverCollection::buildInparam || "
                 "Invalid parameter, keyword = OUT_STATIONS_FORMAT.");
@@ -235,10 +232,6 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
     }
     if (netcdf) {
         rec->mPointwiseIO.push_back(new PointwiseIONetCDF());
-    }
-    if (asdf) {
-        rec->mPointwiseIO.push_back(new PointwiseIOASDF(srcLat, srcLon, srcDep,
-            Parameters::sInputDirectory + "/" + par.getValue<std::string>("SOURCE_FILE")));
     }
     
     if (verbose) {

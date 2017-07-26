@@ -19,12 +19,12 @@ ATTENUATION_CG4                             true
 # WHAT: whether to use SPECFEM legacy model
 # TYPE: bool
 # NOTE: turn this on when benchmarking SPECFEM solutions
-ATTENUATION_SPECFEM_LEGACY                  true
+ATTENUATION_SPECFEM_LEGACY                  false
 
 # WHAT: whether to consider Q_Kappa or not
 # TYPE: bool 
 # NOTE: must be turned off if ATTENUATION_SPECFEM_LEGACY = true
-ATTENUATION_QKAPPA                          false
+ATTENUATION_QKAPPA                          true
 
 
 
