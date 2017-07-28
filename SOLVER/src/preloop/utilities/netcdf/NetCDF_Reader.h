@@ -13,6 +13,7 @@ class NetCDF_Reader {
 public:    
     // file
     void open(const std::string &fname);
+    void openParallel(const std::string &fname);
     void close();
     bool isOpen() const {return mFileName != "";};
     

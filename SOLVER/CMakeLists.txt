@@ -31,9 +31,15 @@ SET(NPOL 4)
 # solver precision
 SET(USE_DOUBLE FALSE)
 
+# use parallel NetCDF or not
+# Modules that require parallel NetCDF: 
+# * seismic inversion
+# * wavefield and model visualisation
+SET(USE_PARALLEL_NETCDF FALSE)
+
 # directory to store FFTW wisdom files
 # Specify any directory that does not require a `sudo` to write.
-# Once set, it is not likely to be changed. See Mannual for details.
+# Once set, it is unlikely to be changed. 
 SET(FFTW_WISDOM_DIR $ENV{HOME}/.axisem3d_fftw_wisdom_dir)
 ##################################### EDITABLE #####################################
 
@@ -56,6 +62,11 @@ ADD_DEFINITIONS(-D_PROJECT_DIR=\"${PROJECT_SOURCE_DIR}\")
 
 # measure all costs in time loop
 ADD_DEFINITIONS(-D_MEASURE_TIMELOOP)
+
+# parallel NetCDF
+if (USE_PARALLEL_NETCDF)
+    ADD_DEFINITIONS(-D_USE_PARALLEL_NETCDF)
+endif ()
 
 ############# serial build #############
 SET(SERIAL_BUILD FALSE)

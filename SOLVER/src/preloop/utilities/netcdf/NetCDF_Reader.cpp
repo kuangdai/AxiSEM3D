@@ -5,6 +5,10 @@
 #include "NetCDF_Reader.h"
 #include <netcdf.h>
 
+#ifdef _USE_PARALLEL_NETCDF
+    #include <netcdf_par.h>
+#endif
+
 void NetCDF_Reader::open(const std::string &fname) {
     close();
     mFileName = fname;
@@ -12,6 +16,20 @@ void NetCDF_Reader::open(const std::string &fname) {
         throw std::runtime_error("NetCDF_Reader::open || "
             "Error opening NetCDF file: || " + fname);
     }
+}
+
+void NetCDF_Reader::openParallel(const std::string &fname) {
+    #ifdef _USE_PARALLEL_NETCDF
+        close();
+        mFileName = fname;
+        if (nc_open_par(fname.c_str(), NC_MPIIO, MPI_COMM_WORLD, MPI_INFO_NULL, &mFileID) != NC_NOERR) {
+            throw std::runtime_error("NetCDF_Reader::openParallel || "
+                "Error opening NetCDF file: || " + fname);
+        }
+    #else
+        throw std::runtime_error("NetCDF_Reader::openParallel || "
+            "Parallel NetCDF is disabled in CMakeLists.txt");
+    #endif
 }
 
 void NetCDF_Reader::close() {

@@ -6,6 +6,10 @@
 #include "NetCDF_Writer.h"
 #include <sstream>
 
+#ifdef _USE_PARALLEL_NETCDF
+    #include <netcdf_par.h>
+#endif
+
 void NetCDF_Writer::open(const std::string &fname, bool overwrite) {
     close();
     mFileName = fname;
@@ -25,6 +29,21 @@ void NetCDF_Writer::open(const std::string &fname, bool overwrite) {
         netcdfError(nc_enddef(mFileID), "nc_enddef");
     }
 }
+
+void NetCDF_Writer::openParallel(const std::string &fname) {
+    #ifdef _USE_PARALLEL_NETCDF
+        close();
+        mFileName = fname;
+        if (nc_open_par(fname.c_str(), NC_MPIIO | NC_WRITE, MPI_COMM_WORLD, MPI_INFO_NULL, &mFileID) != NC_NOERR) {
+            throw std::runtime_error("NetCDF_Writer::openParallel || "
+                "Error opening NetCDF file: || " + fname);
+        }
+    #else
+        throw std::runtime_error("NetCDF_Writer::openParallel || "
+            "Parallel NetCDF is disabled in CMakeLists.txt");
+    #endif
+}
+
 
 void NetCDF_Writer::close() {
     if (isOpen()) {

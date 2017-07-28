@@ -15,22 +15,52 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool EN
     const std::vector<PointwiseInfo> &receivers) {
     // number
     int numRec = receivers.size();
-    if (numRec == 0) {
+    std::vector<int> allNumRec;
+    XMPI::gather(numRec, allNumRec, false);
+    if (XMPI::root()) {
+        mMinRankWithRec = -1;
+        for (int i = 0; i < allNumRec.size(); i++) {
+            if (allNumRec[i] > 0) {
+                mMinRankWithRec = i;
+                break;
+            }
+        }
+    }
+    XMPI::bcast(mMinRankWithRec);
+    if (mMinRankWithRec == -1) {
+        // no receiver at all
         return;
-    }    
-        
+    }
+    
     // file
     mNetCDF = new NetCDF_Writer();
-    
-    // open file on all ranks
-    std::stringstream fname;
-    fname << Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc.rank" << XMPI::rank();
-    mNetCDF->open(fname.str(), true);
-    
-    // define time variable
     std::vector<size_t> dims;
     dims.push_back(totalRecordSteps);
-    mNetCDF->defineVariable("time_points", dims, (Real)-1.2345);
+    
+    #ifndef _USE_PARALLEL_NETCDF
+        // open file on all ranks
+        if (numRec == 0) {
+            delete mNetCDF;
+            return;
+        }
+        std::stringstream fname;
+        fname << Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc.rank" << XMPI::rank();
+        mNetCDF->open(fname.str(), true);
+        mNetCDF->defineVariable("time_points", dims, (Real)-1.2345);
+    #else
+        std::string fname = Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc";
+        if (XMPI::rank() == mMinRankWithRec) {
+            mNetCDF->open(fname, true);
+            mNetCDF->defineVariable("time_points", dims, (Real)-1.2345);
+            mNetCDF->close();
+        }
+        XMPI::barrier();
+        if (numRec == 0) {
+            delete mNetCDF;
+            return;
+        }
+        mNetCDF->openParallel(fname);
+    #endif
     
     // define seismogram variables
     dims.push_back(3);
@@ -53,6 +83,10 @@ void PointwiseIONetCDF::finalize() {
         delete mNetCDF;
     }
     
+    #ifdef _USE_PARALLEL_NETCDF
+        return;
+    #endif
+    
     // file name
     std::string oneFile = Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc";
     std::stringstream fname;
@@ -64,51 +98,52 @@ void PointwiseIONetCDF::finalize() {
         Eigen::internal::set_is_malloc_allowed(true);
     #endif
     
-    int fileDefined = 0;
+    // create file 
+    if (XMPI::rank() == mMinRankWithRec) {
+        // read time
+        NetCDF_Reader nr;
+        nr.open(locFile);
+        RColX times;
+        nr.read1D("time_points", times);
+        nr.close();
+        std::vector<size_t> dims;
+        dims.push_back(times.rows());
+        
+        // create file and write time
+        NetCDF_Writer nw;
+        nw.open(oneFile, true);
+        nw.defineVariable("time_points", dims, (Real)-1.2345);
+        nw.writeVariableWhole("time_points", times);
+        nw.close();
+    }
+    XMPI::barrier();
+    
+    // write seismograms
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
         if (iproc == XMPI::rank() && numRec > 0) {
-            // reader
+            // open
             NetCDF_Reader nr;
             nr.open(locFile);
-            
-            // init file
-            if (!fileDefined) {
-                // read time
-                RColX times;
-                nr.read1D("time_points", times);
-                // create file
-                NetCDF_Writer nw;
-                nw.open(oneFile, true);
-                // write time
-                std::vector<size_t> dims;
-                dims.push_back(times.rows());
-                nw.defineVariable("time_points", dims, (Real)-1.2345);
-                nw.writeVariableWhole("time_points", times);
-                nw.close();
-                // file defined
-                fileDefined = true;
-            }
-            
-            // read and write seismograms
             NetCDF_Writer nw;
             nw.open(oneFile, false);
+            
+            // read and write seismograms
             for (int irec = 0; irec < numRec; irec++) {
                 // read seis
                 RMatXX_RM seis;
                 nr.read2D(mVarNames[irec], seis);
-                // write seis
                 std::vector<size_t> dims;
                 dims.push_back(seis.rows());
                 dims.push_back(seis.cols());
+                // write seis
                 nw.defineVariable(mVarNames[irec], dims, (Real)-1.2345);
                 nw.writeVariableWhole(mVarNames[irec], seis);
             }
-            nw.close();
             
-            // close reader
+            // close
+            nw.close();
             nr.close();
         }
-        XMPI::bcast(fileDefined, iproc);
         XMPI::barrier();
     } 
     
@@ -137,8 +172,15 @@ void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp,
     std::vector<size_t> count;
     start.push_back(mCurrentRow);
     count.push_back(bufferLine);
-    mNetCDF->writeVariableChunk("time_points", 
-        bufferTime.topRows(bufferLine), start, count);
+    #ifndef _USE_PARALLEL_NETCDF
+        mNetCDF->writeVariableChunk("time_points", 
+            bufferTime.topRows(bufferLine), start, count);
+    #else
+        if (XMPI::rank() == mMinRankWithRec) {
+            mNetCDF->writeVariableChunk("time_points", 
+                bufferTime.topRows(bufferLine), start, count);
+        }
+    #endif
     
     // write seismograms
     #ifndef NDEBUG

@@ -29,5 +29,8 @@ private:
     // location in nc 
     int mCurrentRow = 0;
     
+    // minimum MPI rank that has receivers
+    int mMinRankWithRec = -1;
+    
 };
 
