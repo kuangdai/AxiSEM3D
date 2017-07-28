@@ -40,7 +40,6 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool EN
     #ifndef _USE_PARALLEL_NETCDF
         // open file on all ranks
         if (numRec == 0) {
-            delete mNetCDF;
             return;
         }
         std::stringstream fname;
@@ -55,11 +54,7 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool EN
             mNetCDF->close();
         }
         XMPI::barrier();
-        if (numRec == 0) {
-            delete mNetCDF;
-            return;
-        }
-        mNetCDF->openParallel(fname);
+        mNetCDF->openParallel(fname, false);
     #endif
     
     // define seismogram variables
@@ -76,18 +71,21 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool EN
 }
 
 void PointwiseIONetCDF::finalize() {
-    // dispose writer
-    int numRec = mVarNames.size();
-    if (numRec > 0) {
-        mNetCDF->close();
-        delete mNetCDF;
+    if (mMinRankWithRec == -1) {
+        // no receiver at all
+        return;
     }
+    
+    // dispose writer
+    mNetCDF->close();
+    delete mNetCDF;
     
     #ifdef _USE_PARALLEL_NETCDF
         return;
     #endif
     
     // file name
+    int numRec = mVarNames.size();
     std::string oneFile = Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc";
     std::stringstream fname;
     fname << Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc.rank" << XMPI::rank();
