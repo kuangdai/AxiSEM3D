@@ -8,6 +8,7 @@
 
 #ifdef _USE_PARALLEL_NETCDF
     #include <netcdf_par.h>
+    #include "XMPI.h"
 #endif
 
 void NetCDF_Writer::open(const std::string &fname, bool overwrite) {
@@ -30,13 +31,26 @@ void NetCDF_Writer::open(const std::string &fname, bool overwrite) {
     }
 }
 
-void NetCDF_Writer::openParallel(const std::string &fname) {
+void NetCDF_Writer::openParallel(const std::string &fname, bool overwrite) {
     #ifdef _USE_PARALLEL_NETCDF
         close();
         mFileName = fname;
-        if (nc_open_par(fname.c_str(), NC_MPIIO | NC_WRITE, MPI_COMM_WORLD, MPI_INFO_NULL, &mFileID) != NC_NOERR) {
-            throw std::runtime_error("NetCDF_Writer::openParallel || "
-                "Error opening NetCDF file: || " + fname);
+        if (overwrite) {
+            if (nc_create_par(fname.c_str(), NC_MPIIO | NC_NETCDF4, 
+                MPI_COMM_WORLD, MPI_INFO_NULL, &mFileID) != NC_NOERR) {
+                throw std::runtime_error("NetCDF_Writer::openParallel || "
+                    "Error creating NetCDF file: || " + fname);    
+            }
+        } else {
+            if (nc_open_par(fname.c_str(),  NC_MPIIO | NC_WRITE | NC_NETCDF4, 
+                MPI_COMM_WORLD, MPI_INFO_NULL, &mFileID) != NC_NOERR) {
+                throw std::runtime_error("NetCDF_Writer::openParallel || "
+                    "Error opening NetCDF file: || " + fname);    
+            }
+        }
+        mPWD = mFileID;
+        if (overwrite) {
+            netcdfError(nc_enddef(mFileID), "nc_enddef");
         }
     #else
         throw std::runtime_error("NetCDF_Writer::openParallel || "

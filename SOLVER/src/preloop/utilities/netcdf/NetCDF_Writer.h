@@ -16,7 +16,7 @@ class NetCDF_Writer {
 public:    
     // file
     void open(const std::string &fname, bool overwrite);
-    void openParallel(const std::string &fname);
+    void openParallel(const std::string &fname, bool overwrite);
     void close();
     bool isOpen() const {return mFileName != "";};
     

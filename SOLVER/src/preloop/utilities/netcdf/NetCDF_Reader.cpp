@@ -22,7 +22,8 @@ void NetCDF_Reader::openParallel(const std::string &fname) {
     #ifdef _USE_PARALLEL_NETCDF
         close();
         mFileName = fname;
-        if (nc_open_par(fname.c_str(), NC_MPIIO, MPI_COMM_WORLD, MPI_INFO_NULL, &mFileID) != NC_NOERR) {
+        if (nc_open_par(fname.c_str(), NC_MPIIO | NC_NETCDF4, 
+            MPI_COMM_WORLD, MPI_INFO_NULL, &mFileID) != NC_NOERR) {
             throw std::runtime_error("NetCDF_Reader::openParallel || "
                 "Error opening NetCDF file: || " + fname);
         }
