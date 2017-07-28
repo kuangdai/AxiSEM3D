@@ -30,14 +30,14 @@ if(NOT NETCDF_INCLUDE_DIR OR NOT NETCDF_LIBRARIES)
         PATH_SUFFIXES include
     )
     
-    set(PARALLEL_NETCDF_FOUND TRUE)
-    if(USE_PARALLEL_NETCDF)
-        if(NOT EXISTS ${NETCDF_INCLUDE_DIR}/netcdf_par.h)
-            message(STATUS "Parallel NetCDF header netcdf_par.h is not found.")
-            set(PARALLEL_NETCDF_FOUND FALSE)
-        endif()
+endif()
+
+set(PARALLEL_NETCDF_FOUND TRUE)
+if(USE_PARALLEL_NETCDF)
+    if(NOT EXISTS ${NETCDF_INCLUDE_DIR}/netcdf_par.h)
+        message(STATUS "Parallel NetCDF header netcdf_par.h is not found.")
+        set(PARALLEL_NETCDF_FOUND FALSE)
     endif()
-    
 endif()
 
 set(NETCDF_LIBRARIES ${NETCDF_LIB})
