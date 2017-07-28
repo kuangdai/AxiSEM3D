@@ -63,17 +63,17 @@ ADD_DEFINITIONS(-D_PROJECT_DIR=\"${PROJECT_SOURCE_DIR}\")
 # measure all costs in time loop
 ADD_DEFINITIONS(-D_MEASURE_TIMELOOP)
 
+# serial build
+SET(SERIAL_BUILD FALSE)
+if (SERIAL_BUILD)
+    ADD_DEFINITIONS(-D_SERIAL_BUILD)
+    SET(USE_PARALLEL_NETCDF FALSE)
+endif ()
+
 # parallel NetCDF
 if (USE_PARALLEL_NETCDF)
     ADD_DEFINITIONS(-D_USE_PARALLEL_NETCDF)
 endif ()
-
-############# serial build #############
-SET(SERIAL_BUILD FALSE)
-if (SERIAL_BUILD)
-    ADD_DEFINITIONS(-D_SERIAL_BUILD)
-endif ()
-
 
 ############# find packages #############
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
