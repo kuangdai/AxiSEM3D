@@ -219,9 +219,9 @@ void SolidPoint::maskField(CMatX3 &field) {
             field(1, 0) = half * (s0 - ii * s1);
             field(1, 1) = half * (s1 + ii * s0);
             field(1, 2) = czero;
+            // alpha > 1
+            field.bottomRows(mNu - 1).setZero();
         }
-        // alpha > 1
-        field.bottomRows(mNu - 1).setZero();
     }
     // mask Nyquist 
     if (mNr % 2 == 0) {
