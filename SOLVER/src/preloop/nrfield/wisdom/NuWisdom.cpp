@@ -38,7 +38,7 @@ void NuWisdom::writeToFile(const std::string &fname) const {
         std::vector<size_t> dims;
         dims.push_back(mRTree.size());
         dims.push_back(4);
-        ncw.defineVariable("axisem3d_wisdom", dims, 0.);
+        ncw.defineVariable<double>("axisem3d_wisdom", dims);
         ncw.writeVariableWhole("axisem3d_wisdom", data);
         ncw.close();
     }

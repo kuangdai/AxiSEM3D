@@ -37,6 +37,10 @@ SET(USE_DOUBLE FALSE)
 # * wavefield and model visualisation
 SET(USE_PARALLEL_NETCDF FALSE)
 
+# additional libraries to link with
+# such as HDF5 when NetCDF is built with --disable-shared (e.g., the parallel build)
+SET(ADDITIONAL_LIBS "-L$ENV{HOME}/axisem3d_depends/hdf5/lib -lhdf5 -lhdf5_hl")
+
 # directory to store FFTW wisdom files
 # Specify any directory that does not require a `sudo` to write.
 # Once set, it is unlikely to be changed. 
@@ -303,4 +307,5 @@ target_link_libraries(
     ${FFTW_LIBRARIES}
     ${METIS_LIBRARIES}
     ${NETCDF_LIBRARIES}
+    ${ADDITIONAL_LIBS}
 )

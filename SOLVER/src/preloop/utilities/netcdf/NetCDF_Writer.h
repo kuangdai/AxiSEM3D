@@ -12,21 +12,26 @@
 #include <memory>
 #include <typeinfo>
 
+#ifdef _USE_PARALLEL_NETCDF
+    #include <netcdf_par.h>
+#endif
+
+#define NC_ERR_VALUE -1.2345
+
+
 class NetCDF_Writer {
 public:    
     // file
     void open(const std::string &fname, bool overwrite);
-    void openParallel(const std::string &fname, bool overwrite);
+    void openParallel(const std::string &fname);
     void close();
     bool isOpen() const {return mFileName != "";};
     
     // define
     template<class base_type>
-    void defineVariable(const std::string &vname, const std::vector<size_t> &dims, base_type initValue) const {
+    void defineVariable(const std::string &vname, const std::vector<size_t> &dims, bool collective = true) const {
         // define the dimensions
-        netcdfError(nc_redef(mFileID), "nc_redef");
         std::vector<int> dimids;
-        size_t total = 1;
         for (int i = 0; i < dims.size(); i++) {
             std::stringstream dimName;
             dimName << "ncdim_" << dims[i];
@@ -40,34 +45,31 @@ public:
                 }
             }
             dimids.push_back(dimid);
-            total *= dims[i];
         }
         
         // define the variable
         int varid = -1;
-        nc_type dtype = to_nc_type(initValue);
+        nc_type dtype = to_nc_type<base_type>();
         if (nc_def_var(mPWD, vname.c_str(), dtype, dims.size(), dimids.data(), &varid) != NC_NOERR) {
             throw std::runtime_error("NetCDF_Writer::defineVariable || "
                 "Error defining variable, variable: " + vname + " || NetCDF file: " + mFileName);
         }
-        netcdfError(nc_enddef(mFileID), "nc_enddef");
         
-        // init value
-        std::vector<base_type> constant(total, initValue);
-        if (nc_put_var(mPWD, varid, constant.data()) != NC_NOERR) {
-            throw std::runtime_error("NetCDF_Writer::defineVariable || "
-                "Error initializing variable, variable: " + vname + " || NetCDF file: " + mFileName);
-        }
+        #ifdef _USE_PARALLEL_NETCDF
+            if (collective) {
+                nc_var_par_access(mPWD, varid, NC_COLLECTIVE);
+            } else {
+                nc_var_par_access(mPWD, varid, NC_INDEPENDENT);
+            }
+        #endif
     };
    
-    // write an entire variable
-    // NOTE: if the Container is an Eigen Matrix, it has to be Eigen::RowMajor
     template<class Container>   
     void writeVariableWhole(const std::string &vname, const Container &data) const {
         int varid = inquireVariable(vname);
         if (data.size() > 0) {
             if (nc_put_var(mPWD, varid, data.data()) != NC_NOERR) {
-                throw std::runtime_error("NetCDF_Writer::writeVariableData || "
+                throw std::runtime_error("NetCDF_Writer::writeVariableWhole || "
                     "Error writing variable, variable: " + vname + " || NetCDF file: " + mFileName);
             }
         }
@@ -87,44 +89,64 @@ public:
         }
     };
     
+    template<class base_type>   
+    void fillConstant(const std::string &vname, const std::vector<size_t> &dims, const base_type &value) const {
+        size_t total = 1;
+        for (int i = 0; i < dims.size(); i++) {
+            total *= dims[i];
+        }
+        std::vector<base_type> data(total, value); 
+        writeVariableWhole(vname, data);
+    };
+    
     // string
-    void writeString(const std::string &vname, const std::string &data) const;
-    void writeStringInByte(const std::string &vname, const std::string &data) const;
+    // void writeString(const std::string &vname, const std::string &data) const;
+    // void writeStringInByte(const std::string &vname, const std::string &data) const;
     
     // create group
-    void createGroup(const std::string &gname) const;
-    void goToGroup(const std::string &gname);
-    void goToFileRoot() {mPWD = mFileID;};
+    // void createGroup(const std::string &gname) const;
+    // void goToGroup(const std::string &gname);
+    // void goToFileRoot() {mPWD = mFileID;};
     
     // add attribute
-    void addAttributeString(const std::string &vname, 
-        const std::string &attname, const std::string &attvalue) const;
+    // void addAttributeString(const std::string &vname, 
+    //     const std::string &attname, const std::string &attvalue) const;
     
-    template<class base_type>
-    void addAttribute(const std::string &vname, 
-        const std::string &attname, base_type attvalue) const {
-        int varid = -1;
-        int varloc = -1;
-        if (vname == "") {
-            varid = NC_GLOBAL;
-            varloc = mFileID;
-        } else {
-            varid = inquireVariable(vname);
-            varloc = mPWD;
-        }
+    // template<class base_type>
+    // void addAttribute(const std::string &vname, 
+    //     const std::string &attname, base_type attvalue) const {
+    //     int varid = -1;
+    //     int varloc = -1;
+    //     if (vname == "") {
+    //         varid = NC_GLOBAL;
+    //         varloc = mFileID;
+    //     } else {
+    //         varid = inquireVariable(vname);
+    //         varloc = mPWD;
+    //     }
+    //     if (nc_put_att(varloc, varid, attname.c_str(), to_nc_type(attvalue), 1, &attvalue) != NC_NOERR) {
+    //         throw std::runtime_error("NetCDF_Writer::addAttribute || "
+    //             "Error adding attribute to variable, variable: " + vname + ", attribute: " + attname  
+    //             + " || NetCDF file: " + mFileName);
+    //     }
+    // };
+    
+    void defModeOn() const {
         netcdfError(nc_redef(mFileID), "nc_redef");
-        if (nc_put_att(varloc, varid, attname.c_str(), to_nc_type(attvalue), 1, &attvalue) != NC_NOERR) {
-            throw std::runtime_error("NetCDF_Writer::addAttribute || "
-                "Error adding attribute to variable, variable: " + vname + ", attribute: " + attname  
-                + " || NetCDF file: " + mFileName);
-        }
+    };
+    
+    void defModeOff() const {
         netcdfError(nc_enddef(mFileID), "nc_enddef");    
     };
+    
+    void flush() const {
+        netcdfError(nc_sync(mFileID), "nc_sync");    
+    }
 
 private:
     // type interpreter
     template<class base_type>
-    static nc_type to_nc_type(base_type var) {
+    static nc_type to_nc_type() {
         if (typeid(base_type) == typeid(double)) {
             return NC_DOUBLE;
         } else if (typeid(base_type) == typeid(float)) {

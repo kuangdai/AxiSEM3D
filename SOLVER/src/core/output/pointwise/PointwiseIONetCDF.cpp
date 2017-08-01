@@ -32,39 +32,76 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool EN
         return;
     }
     
+    // station names
+    mVarNames.resize(numRec);
+    for (int irec = 0; irec < numRec; irec++) {
+        mVarNames[irec] = receivers[irec].mNetwork + "." + receivers[irec].mName;
+        mVarNames[irec] += ENZ ? ".ENZ" : ".RTZ";
+    }
+    
+    // dims
+    std::vector<size_t> dimsTime;
+    std::vector<size_t> dimsSeis;
+    dimsTime.push_back(totalRecordSteps);
+    dimsSeis.push_back(totalRecordSteps);
+    dimsSeis.push_back(3);
+
     // file
     mNetCDF = new NetCDF_Writer();
-    std::vector<size_t> dims;
-    dims.push_back(totalRecordSteps);
-    
     #ifndef _USE_PARALLEL_NETCDF
-        // open file on all ranks
+        // open file on all ranks with receivers
         if (numRec == 0) {
             return;
         }
         std::stringstream fname;
         fname << Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc.rank" << XMPI::rank();
         mNetCDF->open(fname.str(), true);
-        mNetCDF->defineVariable("time_points", dims, (Real)-1.2345);
+        mNetCDF->defModeOn();
+        // define time
+        mNetCDF->defineVariable<Real>("time_points", dimsTime);
+        // define seismograms
+        for (int irec = 0; irec < numRec; irec++) {
+            mNetCDF->defineVariable<Real>(mVarNames[irec], dimsSeis);
+        }
+        mNetCDF->defModeOff();
+        // fill time with err values
+        mNetCDF->fillConstant("time_points", dimsTime, (Real)NC_ERR_VALUE);
+        // fill seismograms with err values
+        for (int irec = 0; irec < numRec; irec++) {
+            mNetCDF->fillConstant(mVarNames[irec], dimsSeis, (Real)NC_ERR_VALUE);
+        }
+        mNetCDF->flush();
     #else
+        // gather all station names 
+        std::vector<std::vector<std::string>> allNames; 
+        XMPI::gather(mVarNames, allNames, true);
+        // open file on min rank and define all variables
         std::string fname = Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc";
         if (XMPI::rank() == mMinRankWithRec) {
             mNetCDF->open(fname, true);
-            mNetCDF->defineVariable("time_points", dims, (Real)-1.2345);
+            mNetCDF->defModeOn();
+            // define time
+            mNetCDF->defineVariable<Real>("time_points", dimsTime);
+            // define seismograms
+            for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
+                for (int irec = 0; irec < allNames[iproc].size(); irec++) {
+                    mNetCDF->defineVariable<Real>(allNames[iproc][irec], dimsSeis);
+                }
+            }
+            mNetCDF->defModeOff();
+            // fill time with err values
+            mNetCDF->fillConstant("time_points", dimsTime, (Real)NC_ERR_VALUE);
+            // fill seismograms with err values
+            for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
+                for (int irec = 0; irec < allNames[iproc].size(); irec++) {
+                    mNetCDF->fillConstant<Real>(allNames[iproc][irec], dimsSeis, (Real)NC_ERR_VALUE);
+                }
+            }
             mNetCDF->close();
         }
         XMPI::barrier();
-        mNetCDF->openParallel(fname, false);
+        mNetCDF->openParallel(fname);
     #endif
-    
-    // define seismogram variables
-    dims.push_back(3);
-    mVarNames.resize(numRec);
-    for (int irec = 0; irec < numRec; irec++) {
-        mVarNames[irec] = receivers[irec].mNetwork + "." + receivers[irec].mName;
-        mVarNames[irec] += ENZ ? ".ENZ" : ".RTZ";
-        mNetCDF->defineVariable(mVarNames[irec], dims, (Real)-1.2345);
-    }
     
     // record postion in nc file
     mCurrentRow = 0;
@@ -96,6 +133,13 @@ void PointwiseIONetCDF::finalize() {
         Eigen::internal::set_is_malloc_allowed(true);
     #endif
     
+    // dims
+    std::vector<size_t> dimsTime;
+    std::vector<size_t> dimsSeis;
+    dimsTime.push_back(mCurrentRow);
+    dimsSeis.push_back(mCurrentRow);
+    dimsSeis.push_back(3);
+    
     // create file 
     if (XMPI::rank() == mMinRankWithRec) {
         // read time
@@ -104,13 +148,13 @@ void PointwiseIONetCDF::finalize() {
         RColX times;
         nr.read1D("time_points", times);
         nr.close();
-        std::vector<size_t> dims;
-        dims.push_back(times.rows());
         
         // create file and write time
         NetCDF_Writer nw;
         nw.open(oneFile, true);
-        nw.defineVariable("time_points", dims, (Real)-1.2345);
+        nw.defModeOn();
+        nw.defineVariable<Real>("time_points", dimsTime);
+        nw.defModeOff();
         nw.writeVariableWhole("time_points", times);
         nw.close();
     }
@@ -125,16 +169,17 @@ void PointwiseIONetCDF::finalize() {
             NetCDF_Writer nw;
             nw.open(oneFile, false);
             
+            // create variable
+            nw.defModeOn();
+            for (int irec = 0; irec < numRec; irec++) {
+                nw.defineVariable<Real>(mVarNames[irec], dimsSeis);
+            }
+            nw.defModeOff();
+            
             // read and write seismograms
             for (int irec = 0; irec < numRec; irec++) {
-                // read seis
                 RMatXX_RM seis;
                 nr.read2D(mVarNames[irec], seis);
-                std::vector<size_t> dims;
-                dims.push_back(seis.rows());
-                dims.push_back(seis.cols());
-                // write seis
-                nw.defineVariable(mVarNames[irec], dims, (Real)-1.2345);
                 nw.writeVariableWhole(mVarNames[irec], seis);
             }
             
@@ -194,6 +239,9 @@ void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp,
     #ifndef NDEBUG
         Eigen::internal::set_is_malloc_allowed(false);
     #endif
+    
+    // flush to disk
+    mNetCDF->flush();
     
     // record postion in nc file
     mCurrentRow += bufferLine;
