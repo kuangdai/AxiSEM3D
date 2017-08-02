@@ -118,11 +118,17 @@ double Geometric3D_EMC::getDeltaR(double r, double theta, double phi, double rEl
     // regularise
     double lat = 90. - theta / degree;
     double lon = phi / degree;
-    if (lon > 180.) {
-        lon -= 360.;
-    }
     XMath::checkLimits(lat, -90., 90.);
-    XMath::checkLimits(lon, -180., 180.);
+    if (mGridLon[0] < 0.) {
+        // lon starts from -180.
+        if (lon > 180.) {
+            lon -= 360.;
+        }
+        XMath::checkLimits(lon, -180., 180.);
+    } else {
+        // lon starts from 0.
+        XMath::checkLimits(lon, 0., 360.);
+    }
     
     // interpolation on sphere
     int llat0, llon0, llat1, llon1;

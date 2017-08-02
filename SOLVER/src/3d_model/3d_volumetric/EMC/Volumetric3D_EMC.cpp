@@ -68,22 +68,19 @@ void Volumetric3D_EMC::initialize() {
             std::sort(fileDepth.begin(), fileDepth.end(), compareFunc);
             
             // read lat and lon
-            RDColX dlat, dlon;
             if (NetCDF_Reader::checkNetCDF_isAscii(fileDepth[0].first)) {
                 NetCDF_ReaderAscii reader;
                 reader.open(fileDepth[0].first);
-                reader.read1D("lat", dlat);
-                reader.read1D("lon", dlon);
+                reader.read1D("latitude", flat);
+                reader.read1D("longitude", flon);
                 reader.close();
             } else {
                 NetCDF_Reader reader;
                 reader.open(fileDepth[0].first);
-                reader.read1D("lat", dlat);
-                reader.read1D("lon", dlon);
+                reader.read1D("latitude", flat);
+                reader.read1D("longitude", flon);
                 reader.close();
             }
-            flat = dlat.cast<float>();
-            flon = dlon.cast<float>();
             
             // depths and data
             size_t depthLen = flat.size() * flon.size();   
@@ -249,15 +246,15 @@ bool Volumetric3D_EMC::get3dProperties(double r, double theta, double phi, doubl
     double lon = phi / degree;
     XMath::checkLimits(dep, 0., Geodesy::getROuter());
     XMath::checkLimits(lat, -90., 90.);
-    if (mOneFilePerDepth) {
-        // lon starts from 0.
-        XMath::checkLimits(lon, 0., 360.);
-    } else {
+    if (mGridLon[0] < 0.) {
         // lon starts from -180.
         if (lon > 180.) {
             lon -= 360.;
         }
         XMath::checkLimits(lon, -180., 180.);
+    } else {
+        // lon starts from 0.
+        XMath::checkLimits(lon, 0., 360.);
     }
     
     // check center
