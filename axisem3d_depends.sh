@@ -74,7 +74,7 @@ fi
 
 ##### NetCDF #####
 if [ $MY_NETCDF_READY == false ]; then
-    conda install -c anaconda netcdf4=1.2.4
+    conda install netcdf4
     export MY_NETCDF_DIR=$MY_CONDA_INSTALL_DIR
     export MY_NETCDF_READY=true
 fi

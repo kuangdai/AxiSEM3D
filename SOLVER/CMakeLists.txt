@@ -15,7 +15,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # compiler suit
 SET(CMAKE_C_COMPILER           mpicc)
 SET(CMAKE_CXX_COMPILER         mpicxx)
-SET(CMAKE_Fortran_COMPILER     mpif90)
+SET(CMAKE_Fortran_COMPILER     gfortran)
 
 # external packages
 # uncomment and edit the following lines to specify preferred prefix
@@ -39,7 +39,7 @@ SET(USE_PARALLEL_NETCDF FALSE)
 
 # additional libraries to link with
 # such as HDF5 when NetCDF is built with --disable-shared (e.g., the parallel build)
-SET(ADDITIONAL_LIBS "-L$ENV{HOME}/axisem3d_depends/hdf5/lib -lhdf5 -lhdf5_hl")
+# SET(ADDITIONAL_LIBS "-L$ENV{HOME}/axisem3d_depends/hdf5/lib -lhdf5 -lhdf5_hl")
 
 # directory to store FFTW wisdom files
 # Specify any directory that does not require a `sudo` to write.
