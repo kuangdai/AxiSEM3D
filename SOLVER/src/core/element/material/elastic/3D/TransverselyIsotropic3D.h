@@ -10,7 +10,7 @@
 class TransverselyIsotropic3D: public Elastic3D {
 public:
     // constructor
-    TransverselyIsotropic3D( const RMatXN &A, const RMatXN &C, const RMatXN &F, 
+    TransverselyIsotropic3D(const RMatXN &A, const RMatXN &C, const RMatXN &F, 
         const RMatXN &L, const RMatXN &N, Attenuation3D *att):
         Elastic3D(att) , mA(A), mC(C), mF(F), mL(L), mN(N), mN2(two * N) {};
         
