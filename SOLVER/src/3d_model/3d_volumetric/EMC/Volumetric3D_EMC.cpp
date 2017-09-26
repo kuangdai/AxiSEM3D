@@ -112,7 +112,7 @@ void Volumetric3D_EMC::initialize() {
                 NetCDF_ReaderAscii reader;
                 reader.open(fname);
                 reader.read1D("depth", fdep);
-                reader.read1D("lantidue", flat);
+                reader.read1D("latitude", flat);
                 reader.read1D("longitude", flon);
                 reader.readMetaData(mVarName, fdata, dims);
                 reader.close();
@@ -120,7 +120,7 @@ void Volumetric3D_EMC::initialize() {
                 NetCDF_Reader reader;
                 reader.open(fname);
                 reader.read1D("depth", fdep);
-                reader.read1D("lantidue", flat);
+                reader.read1D("latitude", flat);
                 reader.read1D("longitude", flon);
                 reader.readMetaData(mVarName, fdata, dims);
                 reader.close();
