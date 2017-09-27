@@ -32,6 +32,7 @@ public:
     
     // Elastic
     Elastic *createElastic(bool elem1D, const AttBuilder *attBuild) const;
+    Elastic *createElasticAniso(bool elem1D, const AttBuilder *attBuild) const;
         
     // get v_max to compute dt 
     double getVMaxRef() const;
@@ -47,6 +48,12 @@ public:
     // get properties
     RDMatXN getProperty(const std::string &vname, int refType);
         
+    //////////// anisotropy /////////////
+private:    
+    void initAniso();
+    void rotateAniso(double srcLat, double srcLon, double srcDep);
+    static RDMatXX bondTransformation(RDMatXX inCijkl, double alpha, double beta, double gamma);
+    
 private:
     // 1D reference material
     RDRow4 mVpv1D, mVph1D;
@@ -61,6 +68,21 @@ private:
     RDMatXN mRho3D;
     RDMatXN mEta3D;
     RDMatXN mQkp3D, mQmu3D;
+    
+    // full anisotropy in 1D and 3D
+    RDRow4 mC11_1D, mC12_1D, mC13_1D, mC14_1D, mC15_1D, mC16_1D;
+    RDRow4 mC22_1D, mC23_1D, mC24_1D, mC25_1D, mC26_1D;
+    RDRow4 mC33_1D, mC34_1D, mC35_1D, mC36_1D;
+    RDRow4 mC44_1D, mC45_1D, mC46_1D;
+    RDRow4 mC55_1D, mC56_1D;
+    RDRow4 mC66_1D;
+    RDMatXN mC11_3D, mC12_3D, mC13_3D, mC14_3D, mC15_3D, mC16_3D;
+    RDMatXN mC22_3D, mC23_3D, mC24_3D, mC25_3D, mC26_3D;
+    RDMatXN mC33_3D, mC34_3D, mC35_3D, mC36_3D;
+    RDMatXN mC44_3D, mC45_3D, mC46_3D;
+    RDMatXN mC55_3D, mC56_3D;
+    RDMatXN mC66_3D;
+    bool mFullAniso = false;
     
     // 3D material sampled at mass points
     arPP_RDColX mRhoMass3D;

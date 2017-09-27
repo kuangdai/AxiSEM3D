@@ -20,11 +20,33 @@ public:
         "Ref1D", "Ref3D", "RefPtb"};
         
     // allowed keys for material properties
-    enum MaterialProperty {VPV, VPH, VSV, VSH, RHO, ANIS_ETA, QKAPPA, QMU, VP, VS};
+    enum MaterialProperty {VPV, VPH, VSV, VSH, RHO, ANIS_ETA, QKAPPA, QMU, VP, VS, 
+        C11, C12, C13, C14, C15, C16,
+        C22, C23, C24, C25, C26,
+        C33, C34, C35, C36,
+        C44, C45, C46,
+        C55, C56,
+        C66
+    };
     const std::vector<std::string> MaterialPropertyString = {"VPV", "VPH", "VSV", "VSH", 
-        "RHO", "ANIS_ETA", "QKAPPA", "QMU", "VP", "VS"};
+        "RHO", "ANIS_ETA", "QKAPPA", "QMU", "VP", "VS",
+        "C11", "C12", "C13", "C14", "C15", "C16",
+        "C22", "C23", "C24", "C25", "C26",
+        "C33", "C34", "C35", "C36",
+        "C44", "C45", "C46",
+        "C55", "C56",
+        "C66"
+    };
     const std::vector<double> MaterialPropertyAbsSI = {1e3, 1e3, 1e3, 1e3, 
-        1e3, 1., 1., 1., 1e3, 1e3};
+        1e3, 1., 1., 1., 1e3, 1e3, 
+        // Cijkl should be given in GPa
+        1e9, 1e9, 1e9, 1e9, 1e9, 1e9, 
+        1e9, 1e9, 1e9, 1e9, 1e9, 
+        1e9, 1e9, 1e9, 1e9,
+        1e9, 1e9, 1e9,
+        1e9, 1e9, 
+        1e9
+    };
     
     virtual ~Volumetric3D() {finalize();};
     

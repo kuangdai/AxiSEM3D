@@ -204,9 +204,11 @@ add_executable(
     src/core/element/material/elastic/1D/Elastic1D.cpp
     src/core/element/material/elastic/1D/Isotropic1D.cpp
     src/core/element/material/elastic/1D/TransverselyIsotropic1D.cpp
+    src/core/element/material/elastic/1D/Anisotropic1D.cpp
     src/core/element/material/elastic/3D/Elastic3D.cpp
     src/core/element/material/elastic/3D/Isotropic3D.cpp
     src/core/element/material/elastic/3D/TransverselyIsotropic3D.cpp
+    src/core/element/material/elastic/3D/Anisotropic3D.cpp
 
     src/core/element/grad/Gradient.cpp
     
