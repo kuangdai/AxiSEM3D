@@ -84,6 +84,7 @@ public:
     Mapping::MappingTypes getMappingType() const {return mMapping->getType();};
     const RDRowN &getIntegralFactor() const {return mIntegralFactor;};
     const Relabelling &getRelabelling() const {return *mRelabelling;};
+    const RDMat24 &getNodalCoords() const {return mNodalCoords;};
     
     // compute gradient of a scalar field
     void computeGradientScalar(const vec_CDMatPP &u, vec_ar3_CDMatPP &u_i) const;
