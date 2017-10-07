@@ -82,13 +82,10 @@ DEVELOP_NON_SOURCE_MODE                     false
 # NOTE: see results in output/develop/preloop_timer.txt
 DEVELOP_DIAGNOSE_PRELOOP                    false
 
-
 # WHAT: dump cost measurements for elements and points
 # TYPE: bool
 # NOTE: see results in output/develop/measured_costs.txt
 DEVELOP_MEASURED_COSTS                      false
-
-
 
 # WHAT: disable FFTW wisdom
 # TYPE: bool
