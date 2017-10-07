@@ -26,10 +26,10 @@
 
 class SolverFFTW {
 public:
-    static void importWisdom();
-    static void exportWisdom();
+    static void importWisdom(bool disableWisdom);
+    static void exportWisdom();    
+    static unsigned mWisdomLearnOption;
+    
+private:    
+    static bool mDisableWisdom; 
 };
-
-// #define FFTW_LEARN_OPTION FFTW_ESTIMATE
-#define FFTW_LEARN_OPTION FFTW_PATIENT
-

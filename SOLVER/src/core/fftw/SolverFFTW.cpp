@@ -8,7 +8,17 @@
 #include <fstream>
 #include <sstream>
 
-void SolverFFTW::importWisdom() {
+unsigned SolverFFTW::mWisdomLearnOption = FFTW_PATIENT;
+bool SolverFFTW::mDisableWisdom = false; 
+
+void SolverFFTW::importWisdom(bool disableWisdom) {
+    mDisableWisdom = disableWisdom;
+    if (mDisableWisdom) {
+        mWisdomLearnOption = FFTW_ESTIMATE;
+        return;
+    }
+    mWisdomLearnOption = FFTW_PATIENT;
+    
     std::string wisdomstr = "";
     if (XMPI::root()) {
         #ifdef _USE_DOUBLE
@@ -35,6 +45,10 @@ void SolverFFTW::importWisdom() {
 }
 
 void SolverFFTW::exportWisdom() {
+    if (mDisableWisdom) {
+        return;
+    }
+    
     if (XMPI::root()) {
         XMPI::mkdir(fftwWisdomDirectory);
         if (!XMPI::dirExists(fftwWisdomDirectory)) {

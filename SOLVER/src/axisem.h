@@ -71,7 +71,7 @@ struct SolverVariables {
 
 //////////////////////////////// functons ////////////////////////////////
 int axisem_main(int argc, char *argv[]);
-void initializeSolverStatic(int maxNr);
+void initializeSolverStatic(int maxNr, bool disableWisdomFFTW);
 void finalizeSolverStatic();
 
 

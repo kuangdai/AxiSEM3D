@@ -89,3 +89,10 @@ DEVELOP_DIAGNOSE_PRELOOP                    false
 DEVELOP_MEASURED_COSTS                      false
 
 
+
+# WHAT: disable FFTW wisdom
+# TYPE: bool
+# NOTE: a memory issue may occur with FFTW wisdom for very large-scale problems
+DEVELOP_DISABLE_FFTW_WISDOM                 false
+
+

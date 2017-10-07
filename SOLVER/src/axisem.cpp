@@ -75,8 +75,9 @@ int axisem_main(int argc, char *argv[]) {
         MultilevelTimer::end("Build Unweighted Mesh", 0);
         
         //////// static variables in solver, mainly FFTW
+        bool disableWisdomFFTW = pl.mParameters->getValue<bool>("DEVELOP_DISABLE_FFTW_WISDOM");
         MultilevelTimer::begin("Initialize FFTW", 0);
-        initializeSolverStatic(pl.mMesh->getMaxNr()); 
+        initializeSolverStatic(pl.mMesh->getMaxNr(), disableWisdomFFTW); 
         MultilevelTimer::end("Initialize FFTW", 0);
         
         //////// dt
@@ -211,9 +212,9 @@ int axisem_main(int argc, char *argv[]) {
 #include "SolidElement.h"
 #include "FluidElement.h"
 
-extern void initializeSolverStatic(int maxNr) {
+extern void initializeSolverStatic(int maxNr, bool disableWisdomFFTW) {
     // fftw
-    SolverFFTW::importWisdom();
+    SolverFFTW::importWisdom(disableWisdomFFTW);
     SolverFFTW_1::initialize(maxNr);
     SolverFFTW_3::initialize(maxNr); 
     SolverFFTW_N3::initialize(maxNr);
