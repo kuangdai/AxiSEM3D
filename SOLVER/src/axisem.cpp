@@ -95,7 +95,7 @@ int axisem_main(int argc, char *argv[]) {
         
         //////// attenuation
         MultilevelTimer::begin("Build Attenuation", 0);
-        AttBuilder::buildInparam(pl.mAttBuilder, *(pl.mParameters), *(pl.mAttParameters), dt, verbose);
+        AttBuilder::buildInparam(pl.mAttBuilder, *(pl.mParameters), pl.mAttParameters, dt, verbose);
         MultilevelTimer::end("Build Attenuation", 0);
         
         //////// mesh, phase 2

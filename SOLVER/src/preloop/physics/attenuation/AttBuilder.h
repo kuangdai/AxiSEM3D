@@ -38,7 +38,7 @@ public:
     std::string verbose() const;
     
     static void buildInparam(AttBuilder *&attBuild, const Parameters &par, 
-        const AttParameters &attPar, double dt, int verbose);
+        const AttParameters *attPar, double dt, int verbose);
 
 protected:    
     virtual void computeAttFactors(const RDMatXN &QKp, const RDMatXN &QMu,

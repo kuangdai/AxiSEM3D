@@ -143,13 +143,13 @@ std::string AttBuilder::verbose() const {
 }
 
 void AttBuilder::buildInparam(AttBuilder *&attBuild, const Parameters &par, 
-    const AttParameters &attPar, double dt, int verbose) {
+    const AttParameters *attPar, double dt, int verbose) {
     if (attBuild) {
         delete attBuild;
     }
     
     // pure elastic
-    if (!par.getValue<bool>("ATTENUATION")) {
+    if (!par.getValue<bool>("ATTENUATION") || attPar == 0) {
         attBuild = 0;
         if (verbose) {
             XMPI::cout << "\n=================== Attenuation Builder ====================" << XMPI::endl;
@@ -175,14 +175,14 @@ void AttBuilder::buildInparam(AttBuilder *&attBuild, const Parameters &par,
             throw std::runtime_error("AttBuilder::buildInparam || "
                 "Cannot include Q_Kappa when ATTENUATION_SPECFEM_LEGACY = true.");
         }
-        if (attPar.mNSLS != 3) {
+        if (attPar->mNSLS != 3) {
             throw std::runtime_error("AttBuilder::buildInparam || "
                 "Number of SLSs can only be 3 when ATTENUATION_SPECFEM_LEGACY = true.");
         }
-        attBuild = new AttSimplex(cg4, attPar.mNSLS, attPar.mFmin, attPar.mFmax, attPar.mFref, dt);
+        attBuild = new AttSimplex(cg4, attPar->mNSLS, attPar->mFmin, attPar->mFmax, attPar->mFref, dt);
     } else {
-        attBuild = new AttAxiSEM(cg4, attPar.mNSLS, attPar.mFmin, attPar.mFmax, attPar.mFref, 
-            attPar.mW, attPar.mY, dt, dokappa);
+        attBuild = new AttAxiSEM(cg4, attPar->mNSLS, attPar->mFmin, attPar->mFmax, attPar->mFref, 
+            attPar->mW, attPar->mY, dt, dokappa);
     }
     
     // verbose 
