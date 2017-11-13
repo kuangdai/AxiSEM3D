@@ -1,6 +1,6 @@
 // PointForce.h
 // created by Alex on 25-oct-2016
-// earthquake source
+// axial point-force source
 
 #pragma once
 #include "Source.h"

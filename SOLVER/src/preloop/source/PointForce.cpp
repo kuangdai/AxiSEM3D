@@ -1,6 +1,6 @@
 // PointForce.cpp
 // created by Alex on 8-May-2016
-// earthquake source
+// axial point-force source
 
 #include "PointForce.h"
 #include "Quad.h"

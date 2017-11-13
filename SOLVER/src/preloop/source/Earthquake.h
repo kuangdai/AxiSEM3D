@@ -1,6 +1,6 @@
 // Earthquake.h
 // created by Kuangdai on 8-May-2016 
-// earthquake source
+// axial earthquake source
 
 #pragma once
 #include "Source.h"

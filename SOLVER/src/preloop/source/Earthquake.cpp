@@ -1,6 +1,6 @@
 // Earthquake.cpp
 // created by Kuangdai on 8-May-2016 
-// earthquake source
+// axial earthquake source
 
 #include "Earthquake.h"
 #include "Quad.h"
