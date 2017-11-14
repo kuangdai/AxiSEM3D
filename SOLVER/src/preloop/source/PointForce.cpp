@@ -4,10 +4,8 @@
 
 #include "PointForce.h"
 #include "Quad.h"
-#include "eigenc.h"
 #include "SpectralConstants.h"
 #include <sstream>
-#include <fstream>
 
 #include "Relabelling.h"
 
