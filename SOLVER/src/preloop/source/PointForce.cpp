@@ -21,34 +21,22 @@ void PointForce::computeSourceFourier(const Quad &myQuad, const RDColP &interpFa
     for (int ipnt = 0; ipnt < nPntElem; ipnt++) {
         fouriers[ipnt] = CMatX3::Zero(2, 3);
     }
-    // Jacobian on axis
-    std::array<RDMat22, nPntEdge> axJ;
-    int ipol_src = 0;
-    for (int jpol_src = 0; jpol_src <= nPol; jpol_src++) {
-        const RDCol2 &xieta = SpectralConstants::getXiEta(ipol_src, jpol_src, true);
-        axJ[jpol_src] = myQuad.jacobian(xieta);
-        axJ[jpol_src] /= axJ[jpol_src].determinant();
-    }
-    // particle relabelling
+	// particle relabelling
     RDColP J_PRT;
     if (myQuad.hasRelabelling()) {
         const RDMatXN &JJ = myQuad.getRelabelling().getStiffJacobian();
         J_PRT = JJ.block(0, 0, 1, nPntEdge).transpose();
     }
     // compute source pointwise
-    for (int ipol = 0; ipol <= nPol; ipol++) {
+	int ipol_src = 0;
+	for (int ipol = 0; ipol <= nPol; ipol++) {
         for (int jpol = 0; jpol <= nPol; jpol++) {
             int ipnt = ipol * nPntEdge + jpol;
             // spatial delta function
             RDMatPP w = RDMatPP::Zero();
             w(ipol, jpol) = 1.;
-            const RDMatPP &GU = SpectralConstants::getG_GLJ().transpose() * w;
-            const RDMatPP &UG = w * SpectralConstants::getG_GLL();
             for (int jpol_src = 0; jpol_src <= nPol; jpol_src++) {
                 double fact = interpFactZ(jpol_src);
-                const RDMat22 &J = axJ[jpol_src];
-                double dwds = J(1, 1) * GU(ipol_src, jpol_src) - J(1, 0) * UG(ipol_src, jpol_src);
-                double dwdz = J(0, 0) * UG(ipol_src, jpol_src) - J(0, 1) * GU(ipol_src, jpol_src);
                 if (myQuad.hasRelabelling()) {
                     //particle relabelling point force
                     // monopole
