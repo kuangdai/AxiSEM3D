@@ -150,6 +150,7 @@ include_directories(
 
     src/preloop/source
     src/preloop/source/stf
+	src/preloop/source/offaxis
     src/preloop/receiver
 
     src/3d_model/3d_volumetric
@@ -279,6 +280,8 @@ add_executable(
     src/preloop/source/stf/ErfSTF.cpp
     src/preloop/source/stf/GaussSTF.cpp
     src/preloop/source/stf/RickerSTF.cpp
+	src/preloop/source/offaxis/OffAxisSource.cpp
+	src/preloop/source/offaxis/OffAxisPointForce.cpp
     src/preloop/receiver/Receiver.cpp
     src/preloop/receiver/ReceiverCollection.cpp
 
