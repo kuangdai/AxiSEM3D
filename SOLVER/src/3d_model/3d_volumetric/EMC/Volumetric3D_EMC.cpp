@@ -68,19 +68,22 @@ void Volumetric3D_EMC::initialize() {
             std::sort(fileDepth.begin(), fileDepth.end(), compareFunc);
             
             // read lat and lon
+			Eigen::Matrix<double, Eigen::Dynamic, 1> dlat, dlon;
             if (NetCDF_Reader::checkNetCDF_isAscii(fileDepth[0].first)) {
                 NetCDF_ReaderAscii reader;
                 reader.open(fileDepth[0].first);
-                reader.read1D("latitude", flat);
-                reader.read1D("longitude", flon);
+                reader.read1D("lat", dlat);
+                reader.read1D("lon", dlon);
                 reader.close();
             } else {
                 NetCDF_Reader reader;
                 reader.open(fileDepth[0].first);
-                reader.read1D("latitude", flat);
-                reader.read1D("longitude", flon);
+                reader.read1D("lat", dlat);
+                reader.read1D("lon", dlon);
                 reader.close();
             }
+			flat = dlat.cast<float>();
+			flon = dlon.cast<float>();
             
             // depths and data
             size_t depthLen = flat.size() * flon.size();   
@@ -106,7 +109,7 @@ void Volumetric3D_EMC::initialize() {
             dims.insert(dims.begin(), fdep.size());
             
             // perturbations are given in percentage
-            // fdata *= .01f;
+            fdata *= .01f;
         } else {
             if (NetCDF_Reader::checkNetCDF_isAscii(fname)) {
                 NetCDF_ReaderAscii reader;

@@ -380,7 +380,7 @@ std::string ExodusModel::verbose() const {
         for (int q = 0; q < getNumQuads(); q++) {
             pair += (int)(it->second(q) >= 0);
         }
-        ss << pair << " paris" << std::endl;
+        ss << pair << " edges" << std::endl;
     }
     ss << "  Miscellaneous_____________________________________________" << std::endl;
     ss << "    Distance Tolerance / m   =   " << mDistTolerance << std::endl;
