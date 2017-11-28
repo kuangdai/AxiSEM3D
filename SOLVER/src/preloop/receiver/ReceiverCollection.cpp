@@ -22,36 +22,39 @@ ReceiverCollection::ReceiverCollection(const std::string &fileRec, bool geograph
 mInputFile(fileRec), mGeographic(geographic) {
     std::vector<std::string> name, network;
     std::vector<double> theta, phi, depth;
-    if (XMPI::root()) {
-        std::fstream fs(mInputFile, std::fstream::in);
-        if (!fs) {
-            throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
-                "Error opening station data file " + mInputFile + ".");
-        }
-        std::string line;
-        while (getline(fs, line)) {
-            try {
-                std::vector<std::string> strs = Parameters::splitString(line, "\t ");
-                if (strs.size() < 5 || strs.size() > 6) {
-                    continue;
-                }
-                name.push_back(strs[0]);
-                network.push_back(strs[1]);
-                theta.push_back(boost::lexical_cast<double>(strs[2]));
-                phi.push_back(boost::lexical_cast<double>(strs[3]));
-                depth.push_back(boost::lexical_cast<double>(strs[strs.size() - 1]));
-            } catch(std::exception) {
-                // simply ignore invalid lines
-                continue;
-            }
-        }
-        fs.close();
-    }
-    XMPI::bcast(name);
-    XMPI::bcast(network);
-    XMPI::bcast(theta);
-    XMPI::bcast(phi);
-    XMPI::bcast(depth);
+	if (!boost::iequals(fileRec, "none")) {
+		mInputFile = Parameters::sInputDirectory + "/" + mInputFile;
+		if (XMPI::root()) {
+	        std::fstream fs(mInputFile, std::fstream::in);
+	        if (!fs) {
+	            throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
+	                "Error opening station data file " + mInputFile + ".");
+	        }
+	        std::string line;
+	        while (getline(fs, line)) {
+	            try {
+	                std::vector<std::string> strs = Parameters::splitString(line, "\t ");
+	                if (strs.size() < 5 || strs.size() > 6) {
+	                    continue;
+	                }
+	                name.push_back(strs[0]);
+	                network.push_back(strs[1]);
+	                theta.push_back(boost::lexical_cast<double>(strs[2]));
+	                phi.push_back(boost::lexical_cast<double>(strs[3]));
+	                depth.push_back(boost::lexical_cast<double>(strs[strs.size() - 1]));
+	            } catch(std::exception) {
+	                // simply ignore invalid lines
+	                continue;
+	            }
+	        }
+	        fs.close();
+	    }
+	    XMPI::bcast(name);
+	    XMPI::bcast(network);
+	    XMPI::bcast(theta);
+	    XMPI::bcast(phi);
+	    XMPI::bcast(depth);
+	}
     
     // create receivers
     mWidthName = -1;
@@ -159,8 +162,7 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
     }
     
     // create from file
-    std::string recFile = Parameters::sInputDirectory + "/" 
-        + par.getValue<std::string>("OUT_STATIONS_FILE");
+    std::string recFile = par.getValue<std::string>("OUT_STATIONS_FILE");
     std::string recSys = par.getValue<std::string>("OUT_STATIONS_SYSTEM");
     bool geographic;
     if (boost::iequals(recSys, "source-centered")) {
