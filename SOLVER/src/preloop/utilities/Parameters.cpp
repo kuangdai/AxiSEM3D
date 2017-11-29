@@ -78,6 +78,7 @@ void Parameters::registerAll() {
     registerPar("OUT_STATIONS_COMPONENTS");
     registerPar("OUT_STATIONS_RECORD_INTERVAL");
     registerPar("OUT_STATIONS_DUMP_INTERVAL");
+	registerPar("OUT_STATIONS_WHOLE_SURFACE");
     
     // inparam.advanced
     registerPar("ATTENUATION_CG4");

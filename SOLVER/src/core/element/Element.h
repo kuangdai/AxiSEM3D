@@ -27,6 +27,10 @@ public:
     
     // compute Real displacement, used by receiver
     virtual void computeGroundMotion(Real phi, const RMatPP &weights, RRow3 &u_spz) const = 0; 
+	
+	// side-wise
+	virtual void feedDispOnSide(int side, CMatXX_RM &buffer, int row) const = 0; 
+	RDMatXX getCoordsOnSide(int side) const; 
     
     // verbose
     virtual std::string verbose() const = 0;
@@ -39,6 +43,7 @@ public:
     
     // get nr 
     int getMaxNr() const {return mMaxNr;};
+	int getMaxNu() const {return mMaxNu;};
     
     // signature for cost measurement
     std::string costSignature() const;

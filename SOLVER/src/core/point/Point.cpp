@@ -34,3 +34,11 @@ std::string Point::costSignature() const {
     ss << verbose() << "$DimAzimuth=" << mNr << "$Axial=" << (axial() ? "T" : "F");
     return ss.str();
 }
+
+const CMatX3 &Point::getDispFourierSolid() const {
+	throw std::runtime_error("Point::getDispFourier || Incompatible point type.");
+}
+
+const CColX &Point::getDispFourierFluid() const {
+	throw std::runtime_error("Point::getDispFourier || Incompatible point type.");
+}

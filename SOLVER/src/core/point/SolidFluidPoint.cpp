@@ -130,3 +130,10 @@ int SolidFluidPoint::getNuWisdom() const {
     return std::max(mSolidPoint->getNuWisdom(), mFluidPoint->getNuWisdom());
 }
 
+const CMatX3 &SolidFluidPoint::getDispFourierSolid() const {
+	return mSolidPoint->getDispFourierSolid();
+}
+
+const CColX &SolidFluidPoint::getDispFourierFluid() const {
+	return mFluidPoint->getDispFourierFluid();
+}

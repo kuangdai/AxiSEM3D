@@ -161,6 +161,13 @@ void FluidElement::test() const {
 }
 
 void FluidElement::computeGroundMotion(Real phi, const RMatPP &weights, RRow3 &u_spz) const {
+	throw std::runtime_error("FluidElement::computeGroundMotion || "
+		"Not implemented."); 
+}
+
+void FluidElement::feedDispOnSide(int side, CMatXX_RM &buffer, int row) const {
+	throw std::runtime_error("FluidElement::getDispOnSide || "
+		"Not implemented."); 
 }
 
 std::string FluidElement::verbose() const {

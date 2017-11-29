@@ -59,6 +59,7 @@ SOURCE_STF_HALF_DURATION                    0.0
 #       File format 2 -- name network latitude longitude elevation depth
 #       File format 2 is compatible with SPECFEM input. However, the 
 #       "elevation" data are not used in either SPECFEM or AxiSEM3D.
+#       Use "none" if no station presents.
 OUT_STATIONS_FILE                           STATIONS
 
 # WHAT: coordinate system used in OUT_STATIONS_FILE
@@ -108,4 +109,12 @@ OUT_STATIONS_RECORD_INTERVAL                1
 # NOTE: set this to some large number to avoid frequent I/O access
 OUT_STATIONS_DUMP_INTERVAL                  1000
 
+# WHAT: whether to save wavefield on the surface
+# TYPE: bool
+# NOTE: * Having the whole wavefield on the surface, one can extract synthetics
+#         at any unburied receiver locations after the simulation, using the
+#         provided script python_tools/extract_from_surface.py.
+#       * parameters OUT_STATIONS_RECORD_INTERVAL and OUT_STATIONS_DUMP_INTERVAL 
+#         still apply to this option.
+OUT_STATIONS_WHOLE_SURFACE                  false
 

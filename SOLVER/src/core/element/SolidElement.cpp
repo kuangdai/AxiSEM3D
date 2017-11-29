@@ -213,6 +213,40 @@ void SolidElement::computeGroundMotion(Real phi, const RMatPP &weights, RRow3 &u
     }
 }
 
+void SolidElement::feedDispOnSide(int side, CMatXX_RM &buffer, int row) const {
+	int ipol0 = 0, ipol1 = 0, jpol0 = 0, jpol1 = 0;
+	if (side == 0) {
+		ipol0 = 0;
+		ipol1 = nPol;
+		jpol0 = jpol1 = 0;
+	} else if (side == 1) {
+		ipol0 = ipol1 = nPol;
+		jpol0 = 0;
+		jpol1 = nPol;
+	} else if (side == 2) {
+		ipol0 = 0;
+		ipol1 = nPol;
+		jpol0 = jpol1 = nPol;
+	} else {
+		ipol0 = ipol1 = 0;
+		jpol0 = 0;
+		jpol1 = nPol;
+	}
+	buffer.row(row).setZero();
+	int ipntedge = 0;
+	for (int ipol = ipol0; ipol <= ipol1; ipol++) {
+		for (int jpol = jpol0; jpol <= jpol1; jpol++) {
+			int ipnt = ipol * nPntEdge + jpol;
+			const CMatX3 &disp = mPoints[ipnt]->getDispFourierSolid();
+			for (int idim = 0; idim < 3; idim++) {
+				buffer.block(row, ipntedge * 3 * mMaxNu + idim * mMaxNu, 1, disp.rows())
+				= disp.col(idim).transpose();
+			}
+			ipntedge++;
+		}
+	}
+}
+
 std::string SolidElement::verbose() const {
     if (mHasPRT) {
         return "SolidElement$" + mPRT->verbose() + "$" + mElastic->verbose();
