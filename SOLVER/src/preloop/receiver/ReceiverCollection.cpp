@@ -16,10 +16,13 @@
 #include "PointwiseRecorder.h"
 #include "PointwiseIOAscii.h"
 #include "PointwiseIONetCDF.h"
+#include "SurfaceRecorder.h"
+#include "Mesh.h"
+#include "Quad.h"
 
 ReceiverCollection::ReceiverCollection(const std::string &fileRec, bool geographic, 
-    double srcLat, double srcLon, double srcDep, int duplicated):
-mInputFile(fileRec), mGeographic(geographic) {
+    double srcLat, double srcLon, double srcDep, int duplicated, bool saveSurf):
+mInputFile(fileRec), mGeographic(geographic), mSaveWholeSurface(saveSurf) {
     std::vector<std::string> name, network;
     std::vector<double> theta, phi, depth;
 	if (!boost::iequals(fileRec, "none")) {
@@ -135,6 +138,20 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     
     // add recorder to domain
     domain.setPointwiseRecorder(recorderPW);
+	
+	// whole surface
+	if (mSaveWholeSurface) {
+		SurfaceRecorder *recorderSF = new SurfaceRecorder(mTotalRecordSteps, 
+			mRecordInterval, mBufferSize);
+		for (int iloc = 0; iloc < mesh.getNumQuads(); iloc++) {
+	        const Quad *quad = mesh.getQuad(iloc);
+	        if (quad->onSurface()) {
+				Element *ele = domain.getElement(quad->getElementTag());
+				recorderSF->addElement(ele, quad->getSurfSide());
+			}
+	    }
+		domain.setSurfaceRecorder(recorderSF);
+	}
     MultilevelTimer::end("Release to Domain", 2);
 }
 
@@ -151,6 +168,9 @@ std::string ReceiverCollection::verbose() const {
         ss << "    " << std::setw(mWidthName) << "..." << std::endl;
         ss << "    " << mReceivers[mReceivers.size() - 1]->verbose(mGeographic, mWidthName, mWidthNetwork) << std::endl;
     }
+	if (mSaveWholeSurface) {
+		ss << "  * Wavefield on the whole surface will be saved." << std::endl;
+	}
     ss << "========================= Receivers ========================\n" << std::endl;
     return ss.str();
 }
@@ -185,7 +205,9 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
         throw std::runtime_error("ReceiverCollection::buildInparam || "
             "Invalid parameter, keyword = OUT_STATIONS_DUPLICATED.");
     }
-    rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep, duplicated); 
+	bool saveSurf = par.getValue<bool>("OUT_STATIONS_WHOLE_SURFACE");
+    rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep, 
+		duplicated, saveSurf); 
     
     // options 
     rec->mRecordInterval = par.getValue<int>("OUT_STATIONS_RECORD_INTERVAL");

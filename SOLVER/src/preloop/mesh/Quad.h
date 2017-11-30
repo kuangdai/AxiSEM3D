@@ -78,7 +78,7 @@ public:
     bool isAxial() const {return mIsAxial;};
     bool onSFBoundary() const {return mOnSFBoundary;};
     bool onSurface() const {return mOnSurface;};
-	bool getSurfSide() const {return mSurfaceSide;};
+	int getSurfSide() const {return mSurfaceSide;};
     int getNr() const {return mNr;}
     int getNu() const {return mNr / 2;}
     const int &getPointNr(int ipol, int jpol) const {return mPointNr(ipol, jpol);};
