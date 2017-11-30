@@ -39,7 +39,7 @@ SET(USE_PARALLEL_NETCDF FALSE)
 
 # additional libraries to link with
 # such as HDF5 when NetCDF is built with --disable-shared (e.g., the parallel build)
-# SET(ADDITIONAL_LIBS "-L$ENV{HOME}/axisem3d_depends/hdf5/lib -lhdf5 -lhdf5_hl")
+# SET(ADDITIONAL_LIBS "-L$ENV{HOME}/axisem3d_depends/parhdf5/lib -lhdf5 -lhdf5_hl -lcurl")
 
 # directory to store FFTW wisdom files
 # Specify any directory that does not require a `sudo` to write.
