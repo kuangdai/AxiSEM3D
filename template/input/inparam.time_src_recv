@@ -57,9 +57,10 @@ SOURCE_STF_HALF_DURATION                    0.0
 # TYPE: string (path to file)
 # NOTE: File format 1 -- name network latitude longitude depth
 #       File format 2 -- name network latitude longitude elevation depth
-#       File format 2 is compatible with SPECFEM input. However, the 
-#       "elevation" data are not used in either SPECFEM or AxiSEM3D.
-#       Use "none" if no station presents.
+#       * File format 2 is compatible with SPECFEM input. However, the 
+#         "elevation" column is not used in either SPECFEM or AxiSEM3D.
+#       * The "depth" column should be given in meters.
+#       * Use "none" if no station presents.
 OUT_STATIONS_FILE                           STATIONS
 
 # WHAT: coordinate system used in OUT_STATIONS_FILE
