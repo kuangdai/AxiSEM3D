@@ -12,7 +12,8 @@ class SurfaceIO {
 public:
     // before time loop
     void initialize(int totalRecordSteps, int bufferSize,
-		const std::vector<SurfaceInfo> &surfaceInfo);
+		const std::vector<SurfaceInfo> &surfaceInfo,
+		double srcLat, double srcLon, double srcDep);
     
     // after time loop
     void finalize();
@@ -34,5 +35,8 @@ private:
     
     // minimum MPI rank that has elements
     int mMinRankWithEle = -1;
+	
+	// source location
+	double mSrcLat, mSrcLon, mSrcDep;
 };
 

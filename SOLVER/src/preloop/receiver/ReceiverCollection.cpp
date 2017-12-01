@@ -144,7 +144,8 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
 	// whole surface
 	if (mSaveWholeSurface) {
 		SurfaceRecorder *recorderSF = new SurfaceRecorder(mTotalRecordSteps, 
-			mRecordInterval, mBufferSize);
+			mRecordInterval, mBufferSize, 
+			mSrcLat, mSrcLon, mSrcDep);
 		for (int iloc = 0; iloc < mesh.getNumQuads(); iloc++) {
 	        const Quad *quad = mesh.getQuad(iloc);
 	        if (quad->onSurface()) {

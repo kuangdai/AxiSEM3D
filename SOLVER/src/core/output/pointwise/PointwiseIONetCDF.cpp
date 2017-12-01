@@ -15,6 +15,7 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool EN
     const std::vector<PointwiseInfo> &receivers,
 	double srcLat, double srcLon, double srcDep) {
 	mReceivers = &receivers;
+	// source location
 	mSrcLat = srcLat;
 	mSrcLon = srcLon;
 	mSrcDep = srcDep;
@@ -82,7 +83,7 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool EN
         for (int irec = 0; irec < numRec; irec++) {
             mNetCDF->fillConstant(mVarNames[irec], dimsSeis, (Real)NC_ERR_VALUE);
         }
-		// src
+		// source location
 		mNetCDF->addAttribute("", "source_latitude", mSrcLat);
 		mNetCDF->addAttribute("", "source_longitude", mSrcLon);
 		mNetCDF->addAttribute("", "source_depth", mSrcDep);
@@ -123,7 +124,7 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool EN
                     mNetCDF->fillConstant<Real>(allNames[iproc][irec], dimsSeis, (Real)NC_ERR_VALUE);
                 }
             }
-			// src
+			// source location
 			mNetCDF->addAttribute("", "source_latitude", mSrcLat);
 			mNetCDF->addAttribute("", "source_longitude", mSrcLon);
 			mNetCDF->addAttribute("", "source_depth", mSrcDep);
@@ -186,6 +187,11 @@ void PointwiseIONetCDF::finalize() {
         nw.defineVariable<Real>("time_points", dimsTime);
         nw.defModeOff();
         nw.writeVariableWhole("time_points", times);
+		
+		// source location
+		nw.addAttribute("", "source_latitude", mSrcLat);
+		nw.addAttribute("", "source_longitude", mSrcLon);
+		nw.addAttribute("", "source_depth", mSrcDep);
         nw.close();
     }
     XMPI::barrier();
@@ -216,12 +222,7 @@ void PointwiseIONetCDF::finalize() {
                 nw.writeVariableWhole(mVarNames[irec], seis);
             }
             
-			// src
-			nw.addAttribute("", "source_latitude", mSrcLat);
-			nw.addAttribute("", "source_longitude", mSrcLon);
-			nw.addAttribute("", "source_depth", mSrcDep);
-			
-            // close
+			// close
             nw.close();
             nr.close();
         }

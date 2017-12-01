@@ -12,7 +12,8 @@ class Element;
 
 class SurfaceRecorder {
 public:
-    SurfaceRecorder(int totalRecordSteps, int recordInterval, int bufferSize);
+    SurfaceRecorder(int totalRecordSteps, int recordInterval, int bufferSize,
+		double srcLat, double srcLon, double srcDep);
     ~SurfaceRecorder();
 
     // add a surface element
@@ -48,6 +49,9 @@ private:
 	
 	// IO
 	SurfaceIO *mIO;
+	
+	// source location
+	double mSrcLat, mSrcLon, mSrcDep;
 };
 
 

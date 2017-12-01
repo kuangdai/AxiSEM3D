@@ -13,7 +13,12 @@
 #include "eigenp.h"
 
 void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
-	const std::vector<SurfaceInfo> &surfaceInfo) {
+	const std::vector<SurfaceInfo> &surfaceInfo,
+	double srcLat, double srcLon, double srcDep) {
+	// source location
+	mSrcLat = srcLat;
+	mSrcLon = srcLon;
+	mSrcDep = srcDep;
     // number
     int numEle = surfaceInfo.size();
     std::vector<int> allNumEle;
@@ -94,6 +99,10 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
         }
 		// fill theta
 		mNetCDF->writeVariableWhole("theta", theta);
+		// source location
+		mNetCDF->addAttribute("", "source_latitude", mSrcLat);
+		mNetCDF->addAttribute("", "source_longitude", mSrcLon);
+		mNetCDF->addAttribute("", "source_depth", mSrcDep);
         mNetCDF->flush();
     #else
         // gather all variable names 
@@ -132,6 +141,10 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
             }
 			// fill theta
 			mNetCDF->writeVariableWhole("theta", theta);
+			// source location
+			mNetCDF->addAttribute("", "source_latitude", mSrcLat);
+			mNetCDF->addAttribute("", "source_longitude", mSrcLon);
+			mNetCDF->addAttribute("", "source_depth", mSrcDep);
             mNetCDF->close();
         }
         XMPI::barrier();
@@ -201,6 +214,11 @@ void SurfaceIO::finalize() {
         nw.defModeOff();
         nw.writeVariableWhole("time_points", times);
 		nw.writeVariableWhole("theta", theta);
+		
+		// source location
+		nw.addAttribute("", "source_latitude", mSrcLat);
+		nw.addAttribute("", "source_longitude", mSrcLon);
+		nw.addAttribute("", "source_depth", mSrcDep);
         nw.close();
     }
     XMPI::barrier();
