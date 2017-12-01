@@ -15,6 +15,7 @@ python nc2ascii.py -h
 
 aim = '''Extract synthetics from a NetCDF waveform database created by AxiSEM3D
 (named axisem3d_synthetics.nc by the solver) and save them in ascii format.'''
+
 notes = '''String replacement rules for FILENAME_FORMAT, HEADER_FORMAT and FOOTER_FORMAT:
   @NW@ -> network name
   @ST@ -> station name
@@ -31,6 +32,14 @@ import argparse
 from argparse import RawTextHelpFormatter
 parser = argparse.ArgumentParser(description=aim, epilog=notes, 
                                  formatter_class=RawTextHelpFormatter)
+parser.add_argument('-i', '--input', dest='in_nc_file', action='store', 
+                    type=str, required=True,
+                    help='NetCDF waveform database created by AxiSEM3D;\n' +
+						 '* Required') 
+parser.add_argument('-o', '--output', dest='out_ascii_dir', action='store', 
+                    type=str, required=True,
+                    help='directory to store the ascii output files;\n' +
+						 '* Required') 
 parser.add_argument('-s', '--stations', dest='stations', action='store', 
                     nargs='+', type=str, default=['*.*'],
                     help='stations to be extracted, given as a\n' +  
@@ -59,10 +68,6 @@ parser.add_argument('-F', '--footerfmt', dest='footer_format', action='store',
                     help='format of the footer to be placed\n' +  
                          'at the end of each ascii file;\n' + 
                          'default = ""')
-parser.add_argument('IN_NC_FILE', action='store', type=str, 
-                    help='NetCDF waveform database created by AxiSEM3D')
-parser.add_argument('OUT_ASCII_DIR', action='store', type=str, 
-                    help='directory to store the ascii output files')
 args = parser.parse_args()
 
 ################### PARSER ###################
@@ -72,7 +77,7 @@ from netCDF4 import Dataset
 import fnmatch, os
 
 # open file
-ncdf = Dataset(args.IN_NC_FILE, 'r', format='NETCDF4')
+ncdf = Dataset(args.in_nc_file, 'r', format='NETCDF4')
 
 # time info
 vartime = ncdf.variables['time_points']
@@ -94,7 +99,7 @@ print()
 
 # create output directory
 try:
-    os.makedirs(args.OUT_ASCII_DIR)
+    os.makedirs(args.out_ascii_dir)
 except OSError:
     pass
 
@@ -137,7 +142,7 @@ for var in ncdf.variables:
         fname = fname.replace('@SR@', sampling_rate)
         fname = fname.replace('@T0@', tstart)
         fname = fname.replace('@T1@', tend)
-        fname = args.OUT_ASCII_DIR + '/' + fname
+        fname = args.out_ascii_dir + '/' + fname
         # header
         header = args.header_format.replace('@NW@', network)
         header = header.replace('@ST@', station)
