@@ -11,7 +11,8 @@ class PointwiseIONetCDF: public PointwiseIO {
 public:
     // before time loop
     void initialize(int totalRecordSteps, int bufferSize, bool ENZ, 
-        const std::vector<PointwiseInfo> &receivers);
+        const std::vector<PointwiseInfo> &receivers, 
+		double srcLat, double srcLon, double srcDep);
     
     // after time loop
     void finalize();
@@ -22,6 +23,7 @@ public:
 private:
     // variable names
     std::vector<std::string> mVarNames;
+	const std::vector<PointwiseInfo> *mReceivers;
     
     // file ID
     NetCDF_Writer *mNetCDF = 0;
@@ -31,6 +33,8 @@ private:
     
     // minimum MPI rank that has receivers
     int mMinRankWithRec = -1;
-    
+	
+	// source location
+	double mSrcLat, mSrcLon, mSrcDep;
 };
 

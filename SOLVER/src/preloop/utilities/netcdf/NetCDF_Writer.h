@@ -109,27 +109,29 @@ public:
     // void goToFileRoot() {mPWD = mFileID;};
     
     // add attribute
-    // void addAttributeString(const std::string &vname, 
-    //     const std::string &attname, const std::string &attvalue) const;
+    void addAttributeString(const std::string &vname, 
+        const std::string &attname, const std::string &attvalue) const;
     
-    // template<class base_type>
-    // void addAttribute(const std::string &vname, 
-    //     const std::string &attname, base_type attvalue) const {
-    //     int varid = -1;
-    //     int varloc = -1;
-    //     if (vname == "") {
-    //         varid = NC_GLOBAL;
-    //         varloc = mFileID;
-    //     } else {
-    //         varid = inquireVariable(vname);
-    //         varloc = mPWD;
-    //     }
-    //     if (nc_put_att(varloc, varid, attname.c_str(), to_nc_type(attvalue), 1, &attvalue) != NC_NOERR) {
-    //         throw std::runtime_error("NetCDF_Writer::addAttribute || "
-    //             "Error adding attribute to variable, variable: " + vname + ", attribute: " + attname  
-    //             + " || NetCDF file: " + mFileName);
-    //     }
-    // };
+    template<class base_type>
+    void addAttribute(const std::string &vname, 
+        const std::string &attname, base_type attvalue) const {
+        int varid = -1;
+        int varloc = -1;
+        if (vname == "") {
+            varid = NC_GLOBAL;
+            varloc = mFileID;
+        } else {
+            varid = inquireVariable(vname);
+            varloc = mPWD;
+        }
+        if (nc_put_att(varloc, varid, attname.c_str(), to_nc_type<base_type>(), 
+			1, &attvalue) != NC_NOERR) {
+            throw std::runtime_error("NetCDF_Writer::addAttribute || "
+                "Error adding attribute to variable, variable: " + vname 
+				+ ", attribute: " + attname  
+                + " || NetCDF file: " + mFileName);
+        }
+    };
     
     void defModeOn() const {
         netcdfError(nc_redef(mFileID), "nc_redef");

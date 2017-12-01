@@ -98,23 +98,23 @@ void NetCDF_Writer::close() {
 //     mPWD = grpid;
 // }
 
-// void NetCDF_Writer::addAttributeString(const std::string &vname, 
-//     const std::string &attname, const std::string &attvalue) const {
-//     int varid = -1;
-//     int varloc = -1;
-//     if (vname == "") {
-//         varid = NC_GLOBAL;
-//         varloc = mFileID;
-//     } else {
-//         varid = inquireVariable(vname);
-//         varloc = mPWD;
-//     }
-//     if (nc_put_att_text(varloc, varid, attname.c_str(), attvalue.length(), attvalue.c_str()) != NC_NOERR) {
-//         throw std::runtime_error("NetCDF_Writer::addAttributeString || "
-//             "Error adding attribute to variable, variable: " + vname + ", attribute: " + attname  
-//             + " || NetCDF file: " + mFileName);
-//     }
-// }
+void NetCDF_Writer::addAttributeString(const std::string &vname, 
+    const std::string &attname, const std::string &attvalue) const {
+    int varid = -1;
+    int varloc = -1;
+    if (vname == "") {
+        varid = NC_GLOBAL;
+        varloc = mFileID;
+    } else {
+        varid = inquireVariable(vname);
+        varloc = mPWD;
+    }
+    if (nc_put_att_text(varloc, varid, attname.c_str(), attvalue.length(), attvalue.c_str()) != NC_NOERR) {
+        throw std::runtime_error("NetCDF_Writer::addAttributeString || "
+            "Error adding attribute to variable, variable: " + vname + ", attribute: " + attname  
+            + " || NetCDF file: " + mFileName);
+    }
+}
 
 int NetCDF_Writer::inquireVariable(const std::string &vname) const {
     int varid = -1;

@@ -7,8 +7,10 @@
 #include "PointwiseIO.h"
 
 PointwiseRecorder::PointwiseRecorder(int totalRecordSteps, int recordInterval, 
-    int bufferSize, bool ENZ): mTotalRecordSteps(totalRecordSteps),
-mRecordInterval(recordInterval), mBufferSize(bufferSize), mENZ(ENZ) {
+    int bufferSize, bool ENZ, double srcLat, double srcLon, double srcDep): 
+mTotalRecordSteps(totalRecordSteps),
+mRecordInterval(recordInterval), mBufferSize(bufferSize), mENZ(ENZ),
+mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
     mBufferLine = 0;
 }
 
@@ -35,7 +37,8 @@ void PointwiseRecorder::initialize() {
         networks.push_back(rec.mNetwork);
     }
     for (const auto &io: mIOs) {
-        io->initialize(mTotalRecordSteps, mBufferSize, mENZ, mPointwiseInfo);
+        io->initialize(mTotalRecordSteps, mBufferSize, mENZ, mPointwiseInfo,
+			mSrcLat, mSrcLon, mSrcDep);
     }
 }
 

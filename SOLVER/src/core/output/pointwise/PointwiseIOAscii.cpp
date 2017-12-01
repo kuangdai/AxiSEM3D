@@ -7,7 +7,8 @@
 #include "PointwiseRecorder.h"
 
 void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
-    const std::vector<PointwiseInfo> &receivers) {
+    const std::vector<PointwiseInfo> &receivers,
+	double srcLat, double srcLon, double srcDep) {
     // number
     int numRec = receivers.size();
     mFileNames.resize(numRec);    

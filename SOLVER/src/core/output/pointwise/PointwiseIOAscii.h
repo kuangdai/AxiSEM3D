@@ -11,7 +11,8 @@ class PointwiseIOAscii: public PointwiseIO {
 public:
     // before time loop
     void initialize(int totalRecordSteps, int bufferSize, bool ENZ, 
-        const std::vector<PointwiseInfo> &receivers);
+        const std::vector<PointwiseInfo> &receivers, 
+		double srcLat, double srcLon, double srcDep);
     
     // after time loop
     void finalize();

@@ -40,7 +40,8 @@ struct PointwiseInfo {
 class PointwiseRecorder {
 public:
     PointwiseRecorder(int totalRecordSteps, int recordInterval, 
-        int bufferSize, bool ENZ);
+        int bufferSize, bool ENZ, 
+		double srcLat, double srcLon, double srcDep);
     ~PointwiseRecorder();
     
     // add a receiver
@@ -82,6 +83,9 @@ private:
     
     // IO
     std::vector<PointwiseIO *> mIOs;    
+	
+	// source location
+	double mSrcLat, mSrcLon, mSrcDep;
 };
 
 

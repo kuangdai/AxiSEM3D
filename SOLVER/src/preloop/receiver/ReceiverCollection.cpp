@@ -22,7 +22,8 @@
 
 ReceiverCollection::ReceiverCollection(const std::string &fileRec, bool geographic, 
     double srcLat, double srcLon, double srcDep, int duplicated, bool saveSurf):
-mInputFile(fileRec), mGeographic(geographic), mSaveWholeSurface(saveSurf) {
+mInputFile(fileRec), mGeographic(geographic), mSaveWholeSurface(saveSurf),
+mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
     std::vector<std::string> name, network;
     std::vector<double> theta, phi, depth;
 	if (!boost::iequals(fileRec, "none")) {
@@ -117,7 +118,8 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     // release to domain
     MultilevelTimer::begin("Release to Domain", 2);
     PointwiseRecorder *recorderPW = new PointwiseRecorder(
-        mTotalRecordSteps, mRecordInterval, mBufferSize, mENZ);
+        mTotalRecordSteps, mRecordInterval, mBufferSize, mENZ,
+		mSrcLat, mSrcLon, mSrcDep);
     for (int irec = 0; irec < mReceivers.size(); irec++) {
         int recRankMin = XMPI::min(recRank[irec]);
         if (recRankMin == XMPI::nproc()) {
