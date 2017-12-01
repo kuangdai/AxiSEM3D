@@ -34,12 +34,12 @@ parser = argparse.ArgumentParser(description=aim, epilog=notes,
                                  formatter_class=RawTextHelpFormatter)
 parser.add_argument('-i', '--input', dest='in_nc_file', action='store', 
                     type=str, required=True,
-                    help='NetCDF waveform database created by AxiSEM3D;\n' +
-						 '* Required') 
+                    help='NetCDF waveform database created by AxiSEM3D\n' +
+						 '<required>') 
 parser.add_argument('-o', '--output', dest='out_ascii_dir', action='store', 
                     type=str, required=True,
                     help='directory to store the ascii output files;\n' +
-						 '* Required') 
+						 '<required>') 
 parser.add_argument('-s', '--stations', dest='stations', action='store', 
                     nargs='+', type=str, default=['*.*'],
                     help='stations to be extracted, given as a\n' +  
