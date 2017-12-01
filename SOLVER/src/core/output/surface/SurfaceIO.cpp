@@ -11,6 +11,7 @@
 #include <cstdio>
 #include "SurfaceInfo.h"
 #include "eigenp.h"
+#include "Geodesy.h"
 
 void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
 	const std::vector<SurfaceInfo> &surfaceInfo,
@@ -103,6 +104,7 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
 		mNetCDF->addAttribute("", "source_latitude", mSrcLat);
 		mNetCDF->addAttribute("", "source_longitude", mSrcLon);
 		mNetCDF->addAttribute("", "source_depth", mSrcDep);
+		mNetCDF->addAttribute("", "flattening", Geodesy::getFlattening());
         mNetCDF->flush();
     #else
         // gather all variable names 
@@ -145,6 +147,7 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
 			mNetCDF->addAttribute("", "source_latitude", mSrcLat);
 			mNetCDF->addAttribute("", "source_longitude", mSrcLon);
 			mNetCDF->addAttribute("", "source_depth", mSrcDep);
+			mNetCDF->addAttribute("", "flattening", Geodesy::getFlattening());
             mNetCDF->close();
         }
         XMPI::barrier();
@@ -219,6 +222,7 @@ void SurfaceIO::finalize() {
 		nw.addAttribute("", "source_latitude", mSrcLat);
 		nw.addAttribute("", "source_longitude", mSrcLon);
 		nw.addAttribute("", "source_depth", mSrcDep);
+		nw.addAttribute("", "flattening", Geodesy::getFlattening());
         nw.close();
     }
     XMPI::barrier();
