@@ -15,7 +15,7 @@ python nc2ascii.py -h
 
 aim = '''Extract synthetics from a NetCDF waveform database created by AxiSEM3D
 (named axisem3d_synthetics.nc by the solver) and save them in ascii format.'''
-rules = '''String replacement rules for FILENAME_FORMAT, HEADER_FORMAT and FOOTER_FORMAT:
+notes = '''String replacement rules for FILENAME_FORMAT, HEADER_FORMAT and FOOTER_FORMAT:
   @NW@ -> network name
   @ST@ -> station name
   @CH@ -> channel
@@ -29,7 +29,7 @@ rules = '''String replacement rules for FILENAME_FORMAT, HEADER_FORMAT and FOOTE
 
 import argparse
 from argparse import RawTextHelpFormatter
-parser = argparse.ArgumentParser(description=aim, epilog=rules, 
+parser = argparse.ArgumentParser(description=aim, epilog=notes, 
                                  formatter_class=RawTextHelpFormatter)
 parser.add_argument('-s', '--stations', dest='stations', action='store', 
                     nargs='+', type=str, default=['*.*'],
