@@ -41,11 +41,11 @@ parser.add_argument('-c', '--channels', dest='channels', action='store',
                     help='channels to be extracted, depending on\n' + 
                          'OUT_STATIONS_COMPONENTS in inparam.time_src_recv;\n' +  
                          'default = ENZRT (all channels)')
-parser.add_argument('-N', '--numfmt', dest='number_format', action='store', 
+parser.add_argument('-e', '--numfmt', dest='number_format', action='store', 
                     type=str, default='%.6e',
                     help='output number format;\n' +
                          'default = %%.6e') 
-parser.add_argument('-F', '--fnamefmt', dest='filename_format', action='store', 
+parser.add_argument('-n', '--fnamefmt', dest='filename_format', action='store', 
                     type=str, default='@NW@.@ST@..BH@CH@.ascii',
                     help='output filename format;\n' +  
                          'default = @NW@.@ST@..BH@CH@.ascii')
@@ -54,7 +54,7 @@ parser.add_argument('-H', '--headerfmt', dest='header_format', action='store',
                     help='format of the header to be placed\n' + 
                          'at the beginning of each ascii file;\n' + 
                          'default = ""')
-parser.add_argument('-T', '--footerfmt', dest='footer_format', action='store', 
+parser.add_argument('-F', '--footerfmt', dest='footer_format', action='store', 
                     type=str, default='',
                     help='format of the footer to be placed\n' +  
                          'at the end of each ascii file;\n' + 
