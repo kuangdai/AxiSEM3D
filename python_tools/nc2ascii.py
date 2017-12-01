@@ -4,8 +4,8 @@
 '''
 nc2ascii.py
 
-Extract synthetics from a NetCDF4 output file of AxiSEM3D (named 
-axisem3d_synthetics.nc by the solver) and save them in ascii format.
+Extract synthetics from a NetCDF waveform database created by AxiSEM3D
+(named axisem3d_synthetics.nc by the solver) and save them in ascii format.
 
 To see usage, type
 python nc2ascii.py -h
@@ -13,8 +13,8 @@ python nc2ascii.py -h
 
 ################### PARSER ###################
 
-aim = '''Extract synthetics from a NetCDF4 output file of AxiSEM3D (named
-axisem3d_synthetics.nc by the solver) and save them in ascii format.'''
+aim = '''Extract synthetics from a NetCDF waveform database created by AxiSEM3D
+(named axisem3d_synthetics.nc by the solver) and save them in ascii format.'''
 rules = '''String replacement rules for FILENAME_FORMAT, HEADER_FORMAT and FOOTER_FORMAT:
   @NW@ -> network name
   @ST@ -> station name
@@ -24,6 +24,7 @@ rules = '''String replacement rules for FILENAME_FORMAT, HEADER_FORMAT and FOOTE
   @SR@ -> sampling rate
   @T0@ -> start time w.r.t. source origin
   @T1@ -> end time w.r.t. source origin
+  
 '''
 
 import argparse
@@ -59,7 +60,7 @@ parser.add_argument('-T', '--footerfmt', dest='footer_format', action='store',
                          'at the end of each ascii file;\n' + 
                          'default = ""')
 parser.add_argument('IN_NC_FILE', action='store', type=str, 
-                    help='path to a NetCDF output file of AxiSEM3D')
+                    help='NetCDF waveform database created by AxiSEM3D')
 parser.add_argument('OUT_ASCII_DIR', action='store', type=str, 
                     help='directory to store the ascii output files')
 args = parser.parse_args()
