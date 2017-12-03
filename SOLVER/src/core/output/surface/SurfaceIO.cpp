@@ -12,6 +12,7 @@
 #include "SurfaceInfo.h"
 #include "eigenp.h"
 #include "Geodesy.h"
+#include "SpectralConstants.h"
 
 void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
 	const std::vector<SurfaceInfo> &surfaceInfo,
@@ -62,11 +63,13 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
     std::vector<size_t> dimsTime;
 	std::vector<size_t> dimsSeis;
 	std::vector<size_t> dimsTheta;
+	std::vector<size_t> dimsGLL;
     dimsTime.push_back(totalRecordSteps);
 	dimsSeis.push_back(totalRecordSteps);
 	dimsSeis.push_back(0);
 	dimsTheta.push_back(numEleGlob);
 	dimsTheta.push_back(2);
+	dimsGLL.push_back(nPntEdge);
 	
     // file
     mNetCDF = new NetCDF_Writer();
@@ -89,6 +92,9 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
         }
 		// define theta
 		mNetCDF->defineVariable<double>("theta", dimsTheta);
+		// define GLL and GLJ
+		mNetCDF->defineVariable<double>("GLL", dimsGLL);
+		mNetCDF->defineVariable<double>("GLJ", dimsGLL);
         mNetCDF->defModeOff();
         // fill time with err values
         mNetCDF->fillConstant("time_points", dimsTime, (Real)NC_ERR_VALUE);
@@ -100,6 +106,9 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
         }
 		// fill theta
 		mNetCDF->writeVariableWhole("theta", theta);
+		// fill GLL and GLJ
+		mNetCDF->writeVariableWhole("GLL", SpectralConstants::getP_GLL());
+		mNetCDF->writeVariableWhole("GLJ", SpectralConstants::getP_GLJ());
 		// source location
 		mNetCDF->addAttribute("", "source_latitude", mSrcLat);
 		mNetCDF->addAttribute("", "source_longitude", mSrcLon);
@@ -132,6 +141,9 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
             }
 			// define theta
 			mNetCDF->defineVariable<double>("theta", dimsTheta);
+			// define GLL and GLJ
+			mNetCDF->defineVariable<double>("GLL", dimsGLL);
+			mNetCDF->defineVariable<double>("GLJ", dimsGLL);
             mNetCDF->defModeOff();
             // fill time with err values
             mNetCDF->fillConstant("time_points", dimsTime, (Real)NC_ERR_VALUE);
@@ -145,6 +157,9 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
             }
 			// fill theta
 			mNetCDF->writeVariableWhole("theta", theta);
+			// fill GLL and GLJ
+			mNetCDF->writeVariableWhole("GLL", SpectralConstants::getP_GLL());
+			mNetCDF->writeVariableWhole("GLJ", SpectralConstants::getP_GLJ());
 			// source location
 			mNetCDF->addAttribute("", "source_latitude", mSrcLat);
 			mNetCDF->addAttribute("", "source_longitude", mSrcLon);
@@ -191,9 +206,11 @@ void SurfaceIO::finalize() {
     // dims
     std::vector<size_t> dimsTime;
     std::vector<size_t> dimsSeis;
+	std::vector<size_t> dimsGLL;
     dimsTime.push_back(mCurrentRow);
     dimsSeis.push_back(mCurrentRow);
     dimsSeis.push_back(0);
+	dimsGLL.push_back(nPntEdge);
     
     // create file 
     if (XMPI::rank() == mMinRankWithEle) {
@@ -218,10 +235,14 @@ void SurfaceIO::finalize() {
         nw.defModeOn();
         nw.defineVariable<Real>("time_points", dimsTime);
 		nw.defineVariable<double>("theta", dimsTheta);
+		nw.defineVariable<double>("GLL", dimsGLL);
+		nw.defineVariable<double>("GLJ", dimsGLL);
         nw.defModeOff();
         nw.writeVariableWhole("time_points", times);
 		nw.writeVariableWhole("theta", theta);
-		
+		// GLL and GLJ
+		nw.writeVariableWhole("GLL", SpectralConstants::getP_GLL());
+		nw.writeVariableWhole("GLJ", SpectralConstants::getP_GLJ());
 		// source location
 		nw.addAttribute("", "source_latitude", mSrcLat);
 		nw.addAttribute("", "source_longitude", mSrcLon);
