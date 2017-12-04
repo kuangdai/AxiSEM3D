@@ -40,7 +40,7 @@ private:
     int mTotalRecordSteps = 0;
     int mRecordInterval = 1;
     int mBufferSize = 1000;
-    bool mENZ = false;
+    std::string mComponents = "RTZ";
     
     // IO
     std::vector<PointwiseIO *> mPointwiseIO;

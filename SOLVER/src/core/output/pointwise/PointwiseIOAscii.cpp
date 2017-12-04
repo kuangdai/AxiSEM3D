@@ -6,8 +6,8 @@
 #include "Parameters.h"
 #include "PointwiseRecorder.h"
 
-void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
-    const std::vector<PointwiseInfo> &receivers,
+void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize, 
+	const std::string &components, const std::vector<PointwiseInfo> &receivers,
 	double srcLat, double srcLon, double srcDep) {
     // number
     int numRec = receivers.size();
@@ -19,7 +19,7 @@ void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize, bool ENZ
     std::string outdir = Parameters::sOutputDirectory + "/stations/";
     for (int irec = 0; irec < numRec; irec++) {
         mFileNames[irec] = outdir + receivers[irec].mNetwork + "." + receivers[irec].mName;
-        mFileNames[irec] += ENZ ? ".ENZ.ascii" : ".RTZ.ascii";
+        mFileNames[irec] += "." + components + ".ascii";
         std::fstream *fs = new std::fstream(mFileNames[irec], std::fstream::out);
         if (!(*fs)) {
             throw std::runtime_error("PointwiseIOAscii::initialize || "

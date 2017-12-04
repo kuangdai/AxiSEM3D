@@ -11,8 +11,8 @@
 #include <cstdio>
 #include "PointwiseRecorder.h"
 
-void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
-    const std::vector<PointwiseInfo> &receivers,
+void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, 
+	const std::string &components, const std::vector<PointwiseInfo> &receivers,
 	double srcLat, double srcLon, double srcDep) {
 	mReceivers = &receivers;
 	// source location
@@ -43,7 +43,7 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, bool EN
 	std::vector<double> mylats, mylons, mydeps;
     for (int irec = 0; irec < numRec; irec++) {
         mVarNames[irec] = receivers[irec].mNetwork + "." + receivers[irec].mName;
-        mVarNames[irec] += ENZ ? ".ENZ" : ".RTZ";
+        mVarNames[irec] += "." + components;
 		mylats.push_back(receivers[irec].mLat);
 		mylons.push_back(receivers[irec].mLon);
 		mydeps.push_back(receivers[irec].mDep);

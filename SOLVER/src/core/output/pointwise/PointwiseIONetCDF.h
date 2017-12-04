@@ -10,8 +10,8 @@ class NetCDF_Writer;
 class PointwiseIONetCDF: public PointwiseIO {
 public:
     // before time loop
-    void initialize(int totalRecordSteps, int bufferSize, bool ENZ, 
-        const std::vector<PointwiseInfo> &receivers, 
+    void initialize(int totalRecordSteps, int bufferSize, 
+		const std::string &components, const std::vector<PointwiseInfo> &receivers, 
 		double srcLat, double srcLon, double srcDep);
     
     // after time loop

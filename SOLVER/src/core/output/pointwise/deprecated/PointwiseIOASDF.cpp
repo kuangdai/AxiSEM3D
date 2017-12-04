@@ -16,8 +16,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
-void PointwiseIOASDF::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
-    const std::vector<PointwiseInfo> &receivers) {
+void PointwiseIOASDF::initialize(int totalRecordSteps, int bufferSize, 
+	const std::string &components, const std::vector<PointwiseInfo> &receivers) {
     // number
     int numRec = receivers.size();
     if (numRec == 0) {
@@ -42,7 +42,7 @@ void PointwiseIOASDF::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
     mVarNames.resize(numRec);
     for (int irec = 0; irec < numRec; irec++) {
         mVarNames[irec] = receivers[irec].mNetwork + "." + receivers[irec].mName;
-        mVarNames[irec] += ENZ ? ".ENZ" : ".RTZ";
+        mVarNames[irec] += "." + components;
         mNetCDF->defineVariable(mVarNames[irec], dims, (Real)-1.2345);
         // get info for station XML
         mNetworks.push_back(receivers[irec].mNetwork);
@@ -51,7 +51,7 @@ void PointwiseIOASDF::initialize(int totalRecordSteps, int bufferSize, bool ENZ,
         mLons.push_back(receivers[irec].mLon);
         mDeps.push_back(receivers[irec].mDep);
     }
-    mENZ = ENZ;
+    mComponents = components;
     
     // record postion in nc file
     mCurrentRow = 0;
@@ -160,9 +160,8 @@ void PointwiseIOASDF::finalize() {
                 // write seis
                 std::vector<size_t> dims;
                 dims.push_back(seis.rows());
-                std::string comp = mENZ? "ENZ" : "RTZ";
                 for (int i = 0; i < 3; i++) {
-                    std::string varName = key + ".." + comp.c_str()[i];
+                    std::string varName = key + ".." + mComponents.c_str()[i];
                     varName += "__" + tFirstStr + "__" + tLasttStr + "__synthetic";
                     nw.defineVariable(varName, dims, (Real)-1.2345);
                     nw.writeVariableWhole(varName, seis.col(i).eval());

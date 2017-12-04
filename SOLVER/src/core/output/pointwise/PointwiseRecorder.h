@@ -40,7 +40,7 @@ struct PointwiseInfo {
 class PointwiseRecorder {
 public:
     PointwiseRecorder(int totalRecordSteps, int recordInterval, 
-        int bufferSize, bool ENZ, 
+        int bufferSize, const std::string &components, 
 		double srcLat, double srcLon, double srcDep);
     ~PointwiseRecorder();
     
@@ -79,7 +79,7 @@ private:
     RColX mBufferTime;
     
     // components
-    bool mENZ;
+    std::string mComponents;
     
     // IO
     std::vector<PointwiseIO *> mIOs;    

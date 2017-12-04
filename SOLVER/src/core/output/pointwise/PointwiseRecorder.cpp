@@ -7,9 +7,10 @@
 #include "PointwiseIO.h"
 
 PointwiseRecorder::PointwiseRecorder(int totalRecordSteps, int recordInterval, 
-    int bufferSize, bool ENZ, double srcLat, double srcLon, double srcDep): 
+    int bufferSize, const std::string &components, 
+	double srcLat, double srcLon, double srcDep): 
 mTotalRecordSteps(totalRecordSteps),
-mRecordInterval(recordInterval), mBufferSize(bufferSize), mENZ(ENZ),
+mRecordInterval(recordInterval), mBufferSize(bufferSize), mComponents(components),
 mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
     mBufferLine = 0;
 }
@@ -37,7 +38,7 @@ void PointwiseRecorder::initialize() {
         networks.push_back(rec.mNetwork);
     }
     for (const auto &io: mIOs) {
-        io->initialize(mTotalRecordSteps, mBufferSize, mENZ, mPointwiseInfo,
+        io->initialize(mTotalRecordSteps, mBufferSize, mComponents, mPointwiseInfo,
 			mSrcLat, mSrcLon, mSrcDep);
     }
 }
@@ -62,21 +63,24 @@ void PointwiseRecorder::record(int tstep, Real t) {
         // compute from element
         mPointwiseInfo[irec].mElement->computeGroundMotion(mPointwiseInfo[irec].mPhi, 
             mPointwiseInfo[irec].mWeights, gm);
-        // transform
-        Real cost = cos(mPointwiseInfo[irec].mTheta);
-        Real sint = sin(mPointwiseInfo[irec].mTheta);
-        Real ur = gm(0) * sint + gm(2) * cost; 
-        Real ut = gm(0) * cost - gm(2) * sint;
-        if (mENZ) {
-            Real cosbaz = cos(mPointwiseInfo[irec].mBAz);
-            Real sinbaz = sin(mPointwiseInfo[irec].mBAz);
-            gm(0) = -ut * sinbaz + gm(1) * cosbaz;
-            gm(1) = -ut * cosbaz - gm(1) * sinbaz;
-            gm(2) = ur;
-        } else {
-            gm(0) = ut;
-            gm(2) = ur;
-        }
+		if (mComponents != "SPZ") {
+			// transform
+	        Real cost = cos(mPointwiseInfo[irec].mTheta);
+	        Real sint = sin(mPointwiseInfo[irec].mTheta);
+	        Real ur = gm(0) * sint + gm(2) * cost; 
+	        Real ut = gm(0) * cost - gm(2) * sint;
+	        if (mComponents == "ENZ") {
+	            Real cosbaz = cos(mPointwiseInfo[irec].mBAz);
+	            Real sinbaz = sin(mPointwiseInfo[irec].mBAz);
+	            gm(0) = -ut * sinbaz + gm(1) * cosbaz;
+	            gm(1) = -ut * cosbaz - gm(1) * sinbaz;
+	            gm(2) = ur;
+	        } else { 
+				// RTZ
+	            gm(0) = ut;
+	            gm(2) = ur;
+	        }
+		}	
         // write to buffer
         mBufferDisp.block(mBufferLine, irec * 3, 1, 3) = gm;
     }

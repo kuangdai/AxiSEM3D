@@ -118,7 +118,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     // release to domain
     MultilevelTimer::begin("Release to Domain", 2);
     PointwiseRecorder *recorderPW = new PointwiseRecorder(
-        mTotalRecordSteps, mRecordInterval, mBufferSize, mENZ,
+        mTotalRecordSteps, mRecordInterval, mBufferSize, mComponents,
 		mSrcLat, mSrcLon, mSrcDep);
     for (int irec = 0; irec < mReceivers.size(); irec++) {
         int recRankMin = XMPI::min(recRank[irec]);
@@ -230,9 +230,11 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
     }
     std::string strcomp = par.getValue<std::string>("OUT_STATIONS_COMPONENTS");
     if (boost::iequals(strcomp, "RTZ")) {
-        rec->mENZ = false;
+        rec->mComponents = "RTZ";
     } else if (boost::iequals(strcomp, "ENZ")) {
-        rec->mENZ = true;
+        rec->mComponents = "ENZ";
+    } else if (boost::iequals(strcomp, "SPZ")) {
+        rec->mComponents = "SPZ";
     } else {
         throw std::runtime_error("ReceiverCollection::buildInparam || "
             "Invalid parameter, keyword = OUT_STATIONS_COMPONENTS.");

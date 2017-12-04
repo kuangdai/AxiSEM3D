@@ -94,9 +94,10 @@ OUT_STATIONS_DUPLICATED                     rename
 OUT_STATIONS_FORMAT                         ascii
 
 # WHAT: seismogram components
-# TYPE: RTZ / ENZ
+# TYPE: RTZ / ENZ / SPZ
 # NOTE: RTZ -- radial, transverse, vertical (source-centered)
 #       ENZ -- east, north, vertical (geographic)
+#       SPZ -- s, phi, z (cylindrical, solver-inherent)
 OUT_STATIONS_COMPONENTS                     RTZ
 
 # WHAT: interval for seismogram sampling

@@ -13,8 +13,8 @@ public:
     virtual ~PointwiseIO() {};
     
     // before time loop
-    virtual void initialize(int totalRecordSteps, int bufferSize, bool ENZ,
-        const std::vector<PointwiseInfo> &receivers,
+    virtual void initialize(int totalRecordSteps, int bufferSize, 
+		const std::string &components, const std::vector<PointwiseInfo> &receivers,
 		double srcLat, double srcLon, double srcDep) = 0;
     
     // after time loop

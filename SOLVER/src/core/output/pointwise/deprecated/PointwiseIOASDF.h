@@ -16,8 +16,8 @@ public:
         mSourceFile(sourceFile) {};
     
     // before time loop
-    void initialize(int totalRecordSteps, int bufferSize, bool ENZ, 
-        const std::vector<PointwiseInfo> &receivers);
+    void initialize(int totalRecordSteps, int bufferSize, 
+		const std::string &components, const std::vector<PointwiseInfo> &receivers);
     
     // after time loop
     void finalize();
@@ -42,7 +42,7 @@ private:
     int mCurrentRow = 0;
     
     // header info
-    bool mENZ;
+    std::string mComponents;
     double mSrcLat;
     double mSrcLon;
     double mSrcDep;

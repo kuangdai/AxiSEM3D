@@ -46,7 +46,7 @@ parser.add_argument('-s', '--stations', dest='stations', action='store',
                          'list of regexes of "Network.Station";\n' + 
                          'default = *.* (all stations)')
 parser.add_argument('-c', '--channels', dest='channels', action='store', 
-                    type=str, default='ENZRT',
+                    type=str, default='ENZRTSP',
                     help='channels to be extracted, depending on\n' + 
                          'OUT_STATIONS_COMPONENTS in inparam.time_src_recv;\n' +  
                          'default = ENZRT (all channels)')
