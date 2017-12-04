@@ -239,7 +239,11 @@ void SolidElement::feedDispOnSide(int side, CMatXX_RM &buffer, int row) const {
 			int ipnt = ipol * nPntEdge + jpol;
 			const CMatX3 &disp = mPoints[ipnt]->getDispFourierSolid();
 			for (int idim = 0; idim < 3; idim++) {
-				buffer.block(row, ipntedge * 3 * (mMaxNu + 1) + idim * (mMaxNu + 1), 
+				// // fast dim: seismogram components
+				// buffer.block(row, ipntedge * 3 * (mMaxNu + 1) + idim * (mMaxNu + 1), 
+				// 	1, disp.rows()) = disp.col(idim).transpose();
+				// fast dim: points
+				buffer.block(row, idim * nPntEdge * (mMaxNu + 1) + ipntedge * (mMaxNu + 1), 
 					1, disp.rows()) = disp.col(idim).transpose();
 			}
 			ipntedge++;
