@@ -84,9 +84,9 @@ if __name__=="__main__":
 	
 	################### PARSER ###################
 	aim = '''Extract synthetics at given stations from a NetCDF database of surface
-	wavefield created by AxiSEM3D (named axisem3d_surface.nc by the solver)
-	and save them into a NetCDF waveform database (same as the built-in
-	NetCDF output axisem3d_synthetics.nc).'''
+wavefield created by AxiSEM3D (named axisem3d_surface.nc by the solver)
+and save them into a NetCDF waveform database (same as the built-in
+NetCDF output axisem3d_synthetics.nc).'''
 
 	notes = '''One may further use nc2ascii.py to convert the output into ascii format.
 	  
