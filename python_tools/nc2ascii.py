@@ -68,6 +68,8 @@ parser.add_argument('-F', '--footerfmt', dest='footer_format', action='store',
                     help='format of the footer to be placed\n' +  
                          'at the end of each ascii file;\n' + 
                          'default = ""')
+parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', 
+                    help='verbose mode')						 
 args = parser.parse_args()
 
 ################### PARSER ###################
@@ -89,13 +91,14 @@ sampling_rate = str(1. / (vartime[1] - vartime[0]))
 tstart = str(vartime[0])
 tend = str(vartime[-1])
 
-print('--- Time info ---')
-print('Number of steps: ' + strnsteps)
-print('Time step: ' + dt)
-print('Sampling rate: ' + sampling_rate)
-print('Start time: ' + tstart)
-print('End time: ' + tend)
-print()
+if args.verbose:
+    print('--- Time info ---')
+    print('Number of steps: ' + strnsteps)
+    print('Time step: ' + dt)
+    print('Sampling rate: ' + sampling_rate)
+    print('Start time: ' + tstart)
+    print('End time: ' + tend)
+    print()
 
 # create output directory
 try:
@@ -104,7 +107,8 @@ except OSError:
     pass
 
 # extract waveforms
-print('--- Extracting Waveforms ---')
+if args.verbose:
+    print('--- Extracting Waveforms ---')
 for var in ncdf.variables:
     if var == 'time_points':
         continue
@@ -163,7 +167,8 @@ for var in ncdf.variables:
         footer = footer.replace('@T1@', tend)
         # save to ascii    
         np.savetxt(fname, wave, fmt=args.number_format, header=header, footer=footer, comments='')
-        print('Done with ascii output: ' + fname)
+        if args.verbose:
+            print('Done with ascii output: ' + fname)
 
 # close
 ncdf.close()
