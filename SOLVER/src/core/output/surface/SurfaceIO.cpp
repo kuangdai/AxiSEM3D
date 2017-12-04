@@ -116,6 +116,7 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
 		mNetCDF->addAttribute("", "source_flattening",
 			Geodesy::getFlattening(Geodesy::getROuter() - mSrcDep));
 		mNetCDF->addAttribute("", "surface_flattening", Geodesy::getFlattening());
+		mNetCDF->addAttribute("", "radius", Geodesy::getROuter());
         mNetCDF->flush();
     #else
         // gather all variable names 
@@ -167,6 +168,7 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
 			mNetCDF->addAttribute("", "source_flattening",
 				Geodesy::getFlattening(Geodesy::getROuter() - mSrcDep));
 			mNetCDF->addAttribute("", "surface_flattening", Geodesy::getFlattening());
+			mNetCDF->addAttribute("", "radius", Geodesy::getROuter());
 			mNetCDF->close();
         }
         XMPI::barrier();
@@ -250,6 +252,7 @@ void SurfaceIO::finalize() {
 		nw.addAttribute("", "source_flattening",
 			Geodesy::getFlattening(Geodesy::getROuter() - mSrcDep));
 		nw.addAttribute("", "surface_flattening", Geodesy::getFlattening());
+		nw.addAttribute("", "radius", Geodesy::getROuter());
         nw.close();
     }
     XMPI::barrier();
