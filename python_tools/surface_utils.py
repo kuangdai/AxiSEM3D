@@ -18,7 +18,7 @@ def latlon2thetaphi(lat, lon, flattening):
 
 def thetaphi2latlon(theta, phi, flattening):
 	temp = (1. - flattening) * (1. - flattening)
-	return np.degrees(atan(temp * np.tan(np.pi / 2. - theta))), np.degrees(phi)
+	return np.degrees(np.arctan(temp * np.tan(np.pi / 2. - theta))), np.degrees(phi)
 		   
 def thetaphi2xyz(theta, phi):
 	return np.array([np.sin(theta) * np.cos(phi),
@@ -64,6 +64,8 @@ class SurfaceStation:
 		srctheta, srcphi = latlon2thetaphi(srclat, srclon, srcflattening)
 		rmat = rotation_matrix(srctheta, srcphi)
 		xsrc = thetaphi2xyz(dist, azimuth)
-		xglb = rmat.dot(src)
+		xglb = rmat.dot(xsrc)
 		theta, phi = xyz2thetaphi(xglb)
 		self.lat, self.lon = thetaphi2latlon(theta, phi, flattening)
+		
+		
