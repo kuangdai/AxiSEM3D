@@ -1,0 +1,237 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+'''
+surface_animate.py
+
+Generate VTK animations from a NetCDF database of surface wavefield 
+created by AxiSEM3D (named axisem3d_surface.nc by the solver).
+
+To see usage, type
+python surface_animate.py -h
+'''
+	
+################### PARSER ###################
+aim = '''Generate VTK animations from a NetCDF database of surface wavefield 
+created by AxiSEM3D (named axisem3d_surface.nc by the solver).'''
+
+notes = '''Animate the VKT files with Paraview.
+'''
+
+import argparse
+from argparse import RawTextHelpFormatter
+parser = argparse.ArgumentParser(description=aim, epilog=notes, 
+								 formatter_class=RawTextHelpFormatter)
+parser.add_argument('-i', '--input', dest='in_surface_nc', 
+					action='store', type=str, required=True,
+					help='NetCDF database of surface wavefield\n' + 
+						 'created by AxiSEM3D <required>')
+parser.add_argument('-o', '--output', dest='out_vtk', 
+					action='store', type=str, required=True,
+					help='directory to store the vtk files\n' +
+						 '<required>') 
+parser.add_argument('-s', '--spatial_sampling', dest='spatial_sampling', 
+					action='store', type=float, required=True,
+					help='spatial sampling on surface (km)\n' +
+						 '<required>') 
+parser.add_argument('-t', '--tstart', dest='tstart', 
+					action='store', type=float, required=True,
+					help='start time of animation (sec)\n' +
+						 '<required>') 
+parser.add_argument('-d', '--time_interval', dest='time_interval', 
+					action='store', type=float, required=True,
+					help='time interval between snapshots (sec)\n' +
+						 '<required>') 
+parser.add_argument('-n', '--nsnapshots', dest='nsnapshots',
+					action='store', type=int, required=True,
+					help='number of snapshots <required>')
+parser.add_argument('-c', '--channel', dest='channel', action='store', 
+					type=str, default='Z', choices=['R', 'T', 'Z', 'norm'],
+					help='channel to be animated; default = Z')
+parser.add_argument('-p', '--nproc', dest='nproc', action='store', 
+					type=int, default=1, 
+					help='number of processors; default = 1')
+parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', 
+					help='verbose mode')		
+args = parser.parse_args()
+
+################### PARSER ###################
+
+import numpy as np
+from netCDF4 import Dataset
+from surface_utils import interpLagrange
+from surface_utils import SurfaceStation, latlon2thetaphi, thetaphi2xyz
+from obspy.geodetics.base import gps2dist_azimuth
+import pyvtk, os, shutil
+from multiprocessing import Pool
+
+###### read surface database
+nc_surf = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
+# global attribute
+srclat = nc_surf.source_latitude
+srclon = nc_surf.source_longitude
+srcdep = nc_surf.source_depth
+srcflat = nc_surf.source_flattening
+surfflat = nc_surf.surface_flattening
+r_outer = nc_surf.radius
+# time
+var_time = nc_surf.variables['time_points']
+nstep = len(var_time)
+assert nstep > 0, 'Zero time steps'
+t0 = var_time[0]
+solver_dtype = var_time.datatype
+# theta
+var_theta = nc_surf.variables['theta']
+nele = len(var_theta)
+# GLL and GLJ
+var_GLL = nc_surf.variables['GLL']
+var_GLJ = nc_surf.variables['GLJ']
+nPntEdge = len(var_GLL)
+
+###### create stations
+ndist = int(np.pi * r_outer / (args.spatial_sampling * 1e3)) + 1
+dists = np.linspace(0, np.pi, num=ndist, endpoint=True)
+stations = []
+for dist in dists:
+	r = r_outer * np.sin(dist)
+	nazi = int(2. * np.pi * r / (args.spatial_sampling * 1e3))
+	azis = np.linspace(0, 2. * np.pi, num=nazi, endpoint=False)
+	for azi in azis:
+		st = SurfaceStation('', '')
+		st.setloc_source_centered(dist, azi, surfflat, 
+			srclat, srclon, srcflat)
+		stations.append(st)
+
+if args.verbose:
+	print('Number of sampling points on surface: %d' % (len(stations)))
+	
+###### prepare theta
+nstation = len(stations)
+eleTags = np.zeros(nstation, dtype=int)
+weights = np.zeros((nstation, nPntEdge))
+distLast = -1.
+x = np.zeros(nstation)
+y = np.zeros(nstation)
+z = np.zeros(nstation)
+for ist, station in enumerate(stations):
+	# coordinates
+	theta, phi = latlon2thetaphi(station.lat, station.lon, surfflat)
+	xyz = thetaphi2xyz(theta, phi)
+	x[ist] = xyz[0]
+	y[ist] = xyz[1]
+	z[ist] = xyz[2]
+	# ele and weights
+	if np.isclose(station.dist, distLast):
+		weights[ist, :] = weights[ist - 1, :]
+		eleTags[ist] = eleTags[ist - 1]
+		continue
+	# locate station
+	eleTag = -1
+	for iele in np.arange(0, nele):
+		if station.dist <= max(var_theta[iele, 0:1]):
+			eleTag = iele
+			break
+	assert eleTag >= 0, 'Fail to locate point, dist = %f' \
+		% (station.dist)
+	theta0 = var_theta[eleTag, 0]
+	theta1 = var_theta[eleTag, 1]
+	eta = (station.dist - theta0) / (theta1 - theta0) * 2. - 1.
+	# weights considering axial condition
+	if eleTag == 0 or eleTag == nele - 1:
+		weights[ist, :] = interpLagrange(eta, var_GLJ)
+	else:
+		weights[ist, :] = interpLagrange(eta, var_GLL)
+	eleTags[ist] = eleTag
+	distLast = station.dist
+	
+###### prepare time steps
+if nstep == 1:
+	steps = np.array([0])
+else:
+	dt = var_time[1] - t0
+	istart = int(round((args.tstart - t0) / dt))
+	dtsteps = max(int(round(args.time_interval / dt)), 1)
+	iend = min(istart + dtsteps * (args.nsnapshots - 1) + 1, nstep)
+	steps = np.arange(istart, iend, dtsteps)
+		
+if args.verbose:
+	print('Number of snapshots: %d' % (len(steps)))
+nc_surf.close()
+	
+###### IO
+# create output directory
+try:
+	os.makedirs(args.out_vtk)
+except OSError:
+	pass
+
+def write_vtk(iproc):
+	if args.nproc == 1:
+		nc_surf_local = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
+	else:
+		# copy netcdf file for parallel access
+		tempnc = args.out_vtk + '/surface_temp.nc' + str(iproc)
+		shutil.copy(args.in_surface_nc, tempnc)
+		nc_surf_local = Dataset(tempnc, 'r', format='NETCDF4')
+
+	# write vtk
+	for it, istep in enumerate(steps):
+		if (it % args.nproc != iproc): 
+			continue
+		disp = np.zeros(nstation)
+		for ist, station in enumerate(stations):
+			# Fourier
+			fourier_r = nc_surf_local.variables['edge_' + str(eleTags[ist]) + 'r'][istep, :]
+			fourier_i = nc_surf_local.variables['edge_' + str(eleTags[ist]) + 'i'][istep, :]
+			fourier = fourier_r[:] + fourier_i[:] * 1j
+			nu_p_1 = int(len(fourier_r) / nPntEdge / 3)
+			exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * station.azimuth)
+			exparray[0] = 1.
+			# compute disp
+			def compute_disp(idim):
+				start = idim * nPntEdge * nu_p_1
+				end = idim * nPntEdge * nu_p_1 + nPntEdge * nu_p_1
+				fmat = fourier[start:end].reshape(nPntEdge, nu_p_1)
+				return weights[ist].dot(fmat.dot(exparray).real)
+			if args.channel == 'norm':
+				us = compute_disp(0)
+				up = compute_disp(1)
+				uz = compute_disp(2)
+				disp[ist] = np.sqrt(us * us + up * up + uz * uz)
+			if args.channel == 'T':
+				disp[ist] = compute_disp(1)
+			else:
+				us = compute_disp(0)
+				uz = compute_disp(2)
+				if args.channel == 'R':
+					disp[ist] = us * np.cos(station.dist) - uz * np.sin(station.dist)
+				else:
+					disp[ist] = us * np.sin(station.dist) + uz * np.cos(station.dist)
+		points = list(zip(x, y, z))
+		vtk = pyvtk.VtkData(pyvtk.UnstructuredGrid(points, range(len(points))),
+			pyvtk.PointData(pyvtk.Scalars(disp, name='disp_'+args.channel)),
+			'surface animation')
+		vtk.tofile(args.out_vtk + '/surface_animate.' + str(it) + '.vtk', 'binary')
+		if args.verbose:
+			if nstep == 1:
+				t = t0
+			else:
+				t = istep * dt + t0
+			print('Done with snapshot t = %f s; tstep = %d / %d; iproc = %d' \
+				% (t, it + 1, len(steps), iproc))
+	# close
+	nc_surf_local.close()
+	
+	# remove temp nc
+	if args.nproc > 1:
+		os.remove(tempnc)
+
+# write_vtk in parallel
+args.nproc = max(args.nproc, 1)
+if args.nproc == 1:
+	write_vtk(0)
+else:
+	with Pool(args.nproc) as p:
+		p.map(write_vtk, range(0, args.nproc))
+		
+
