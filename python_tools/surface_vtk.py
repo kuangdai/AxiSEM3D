@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 '''
-surface_animate.py
+surface_vtk.py
 
 Generate VTK animations from a NetCDF database of surface wavefield 
 created by AxiSEM3D (named axisem3d_surface.nc by the solver).
 
 To see usage, type
-python surface_animate.py -h
+python surface_vtk.py -h
 '''
 	
 ################### PARSER ###################
@@ -220,7 +220,7 @@ def write_vtk(iproc):
 		vtk = pyvtk.VtkData(vtk_points,
 			pyvtk.PointData(pyvtk.Scalars(disp, name='disp_'+args.channel)),
 			'surface animation')
-		vtk.tofile(args.out_vtk + '/surface_animate.' + str(it) + '.vtk', 'binary')
+		vtk.tofile(args.out_vtk + '/surface_vtk.' + str(it) + '.vtk', 'binary')
 		if args.verbose:
 			print('Done with snapshot t = %f s; tstep = %d / %d; iproc = %d' \
 				% (istep * dt + t0, it + 1, len(steps), iproc))
