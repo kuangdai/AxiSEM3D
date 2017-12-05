@@ -185,7 +185,7 @@ for ist, station in enumerate(stations.values()):
 	exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * station.azimuth)
 	exparray[0] = 1.
 	# back azimuth
-	if args.components == "ENZ":
+	if args.components == 'ENZ':
 		d, az, baz = gps2dist_azimuth(srclat, srclon, 
 			station.lat, station.lon, a=1., f=surfflat)
 		baz = np.radians(baz)
@@ -198,12 +198,12 @@ for ist, station in enumerate(stations.values()):
 			end = idim * nPntEdge * nu_p_1 + nPntEdge * nu_p_1
 			fmat = fourier[istep, start:end].reshape(nPntEdge, nu_p_1)
 			spz[idim] = weights.dot(fmat.dot(exparray).real)
-		if args.components == "SPZ":
+		if args.components == 'SPZ':
 			disp[istep, :] = spz
 		else:	
 			ur = spz[0] * np.sin(station.dist) + spz[2] * np.cos(station.dist)
 			ut = spz[0] * np.cos(station.dist) - spz[2] * np.sin(station.dist)	
-			if args.components == "ENZ":
+			if args.components == 'ENZ':
 				disp[istep, 0] = -ut * np.sin(baz) + spz[1] * np.cos(baz)
 				disp[istep, 1] = -ut * np.cos(baz) - spz[1] * np.sin(baz)
 				disp[istep, 2] = ur	
