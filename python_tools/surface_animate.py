@@ -145,10 +145,12 @@ for ist, station in enumerate(stations):
 		weights[ist, :] = interpLagrange(eta, var_GLL)
 	eleTags[ist] = eleTag
 	distLast = station.dist
+vtk_points = pyvtk.UnstructuredGrid(list(zip(x, y, z)), range(len(stations)))
 	
 ###### prepare time steps
 if nstep == 1:
 	steps = np.array([0])
+	dt = 0.
 else:
 	dt = var_time[1] - t0
 	istart = max(int(round((args.tstart - t0) / dt)), 0)
@@ -181,12 +183,18 @@ def write_vtk(iproc):
 		if (it % args.nproc != iproc): 
 			continue
 		disp = np.zeros(nstation)
+		eleTagLast = -1
 		for ist, station in enumerate(stations):
 			# Fourier
-			fourier_r = nc_surf_local.variables['edge_' + str(eleTags[ist]) + 'r'][istep, :]
-			fourier_i = nc_surf_local.variables['edge_' + str(eleTags[ist]) + 'i'][istep, :]
-			fourier = fourier_r[:] + fourier_i[:] * 1j
-			nu_p_1 = int(len(fourier_r) / nPntEdge / 3)
+			if eleTags[ist] == eleTagLast:
+				fourier = fourierLast
+			else: 
+				fourier_r = nc_surf_local.variables['edge_' + str(eleTags[ist]) + 'r'][istep, :]
+				fourier_i = nc_surf_local.variables['edge_' + str(eleTags[ist]) + 'i'][istep, :]
+				fourier = fourier_r[:] + fourier_i[:] * 1j
+				fourierLast = fourier
+				eleTagLast = eleTags[ist]
+			nu_p_1 = int(len(fourier) / nPntEdge / 3)
 			exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * station.azimuth)
 			exparray[0] = 1.
 			# compute disp
@@ -209,18 +217,13 @@ def write_vtk(iproc):
 					disp[ist] = us * np.cos(station.dist) - uz * np.sin(station.dist)
 				else:
 					disp[ist] = us * np.sin(station.dist) + uz * np.cos(station.dist)
-		points = list(zip(x, y, z))
-		vtk = pyvtk.VtkData(pyvtk.UnstructuredGrid(points, range(len(points))),
+		vtk = pyvtk.VtkData(vtk_points,
 			pyvtk.PointData(pyvtk.Scalars(disp, name='disp_'+args.channel)),
 			'surface animation')
 		vtk.tofile(args.out_vtk + '/surface_animate.' + str(it) + '.vtk', 'binary')
 		if args.verbose:
-			if nstep == 1:
-				t = t0
-			else:
-				t = istep * dt + t0
 			print('Done with snapshot t = %f s; tstep = %d / %d; iproc = %d' \
-				% (t, it + 1, len(steps), iproc))
+				% (istep * dt + t0, it + 1, len(steps), iproc))
 	# close
 	nc_surf_local.close()
 	
