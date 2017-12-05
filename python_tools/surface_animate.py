@@ -15,7 +15,9 @@ python surface_animate.py -h
 aim = '''Generate VTK animations from a NetCDF database of surface wavefield 
 created by AxiSEM3D (named axisem3d_surface.nc by the solver).'''
 
-notes = '''Animate the VKT files with Paraview.
+notes = '''Parallelise data processing using --nporc option.
+Animate the VKT files with Paraview.
+ 
 '''
 
 import argparse
@@ -149,7 +151,7 @@ if nstep == 1:
 	steps = np.array([0])
 else:
 	dt = var_time[1] - t0
-	istart = int(round((args.tstart - t0) / dt))
+	istart = max(int(round((args.tstart - t0) / dt)), 0)
 	dtsteps = max(int(round(args.time_interval / dt)), 1)
 	iend = min(istart + dtsteps * (args.nsnapshots - 1) + 1, nstep)
 	steps = np.arange(istart, iend, dtsteps)
