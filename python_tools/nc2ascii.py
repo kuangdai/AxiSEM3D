@@ -49,7 +49,7 @@ parser.add_argument('-c', '--channels', dest='channels', action='store',
                     type=str, default='ENZRTSP',
                     help='channels to be extracted, depending on\n' + 
                          'OUT_STATIONS_COMPONENTS in inparam.time_src_recv;\n' +  
-                         'default = ENZRT (all channels)')
+                         'default = ENZRTSP (all channels)')
 parser.add_argument('-e', '--numfmt', dest='number_format', action='store', 
                     type=str, default='%.6e',
                     help='output number format;\n' +
