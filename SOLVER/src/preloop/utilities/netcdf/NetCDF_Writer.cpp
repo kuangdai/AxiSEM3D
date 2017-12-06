@@ -49,20 +49,21 @@ void NetCDF_Writer::close() {
     }
 }
 
-// void NetCDF_Writer::writeString(const std::string &vname, const std::string &data) const {
-//     std::vector<size_t> dims;
-//     dims.push_back(data.length());
-//     defModeOn();
-//     int varid = defineVariable<char>(vname, dims);
-//     defModeOff();
-//     if (data.length() > 0) {
-//         if (nc_put_var(mPWD, varid, data.c_str()) != NC_NOERR) {
-//             throw std::runtime_error("NetCDF_Writer::writeString || "
-//                 "Error writing variable, variable: " + vname + " || NetCDF file: " + mFileName);
-//         }
-//     }
-// }
-// 
+void NetCDF_Writer::writeString(const std::string &vname, const std::string &data) const {
+    std::vector<size_t> dims;
+    dims.push_back(data.length());
+    defModeOn();
+    defineVariable<char>(vname, dims);
+    defModeOff();
+    if (data.length() > 0) {
+		int varid = inquireVariable(vname);
+        if (nc_put_var(mPWD, varid, data.c_str()) != NC_NOERR) {
+            throw std::runtime_error("NetCDF_Writer::writeString || "
+                "Error writing variable, variable: " + vname + " || NetCDF file: " + mFileName);
+        }
+    }
+}
+
 // void NetCDF_Writer::writeStringInByte(const std::string &vname, const std::string &data) const {
 //     std::vector<size_t> dims;
 //     dims.push_back(data.length());
@@ -81,22 +82,22 @@ void NetCDF_Writer::close() {
 //     }
 // }
 
-// void NetCDF_Writer::createGroup(const std::string &gname) const {
-//     int grpid = -1;
-//     if (nc_def_grp(mPWD, gname.c_str(), &grpid) != NC_NOERR) {
-//         throw std::runtime_error("NetCDF_Writer::createGroup || "
-//             "Error defining group: " + gname + " || NetCDF file: " + mFileName);
-//     }
-// }
+void NetCDF_Writer::createGroup(const std::string &gname) const {
+    int grpid = -1;
+    if (nc_def_grp(mPWD, gname.c_str(), &grpid) != NC_NOERR) {
+        throw std::runtime_error("NetCDF_Writer::createGroup || "
+            "Error defining group: " + gname + " || NetCDF file: " + mFileName);
+    }
+}
 
-// void NetCDF_Writer::goToGroup(const std::string &gname) {
-//     int grpid = -1;
-//     if (nc_inq_grp_ncid(mPWD, gname.c_str(), &grpid) != NC_NOERR) {
-//         throw std::runtime_error("NetCDF_Writer::goToGroup || "
-//             "Error finding group: " + gname + " || NetCDF file: " + mFileName);
-//     }
-//     mPWD = grpid;
-// }
+void NetCDF_Writer::goToGroup(const std::string &gname) {
+    int grpid = -1;
+    if (nc_inq_grp_ncid(mPWD, gname.c_str(), &grpid) != NC_NOERR) {
+        throw std::runtime_error("NetCDF_Writer::goToGroup || "
+            "Error finding group: " + gname + " || NetCDF file: " + mFileName);
+    }
+    mPWD = grpid;
+}
 
 void NetCDF_Writer::addAttributeString(const std::string &vname, 
     const std::string &attname, const std::string &attvalue) const {

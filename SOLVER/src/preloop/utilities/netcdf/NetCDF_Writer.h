@@ -100,13 +100,13 @@ public:
     };
     
     // string
-    // void writeString(const std::string &vname, const std::string &data) const;
+    void writeString(const std::string &vname, const std::string &data) const;
     // void writeStringInByte(const std::string &vname, const std::string &data) const;
     
     // create group
-    // void createGroup(const std::string &gname) const;
-    // void goToGroup(const std::string &gname);
-    // void goToFileRoot() {mPWD = mFileID;};
+    void createGroup(const std::string &gname) const;
+    void goToGroup(const std::string &gname);
+    void goToFileRoot() {mPWD = mFileID;};
     
     // add attribute
     void addAttributeString(const std::string &vname, 
