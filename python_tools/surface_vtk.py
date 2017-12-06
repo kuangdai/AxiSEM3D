@@ -47,9 +47,9 @@ parser.add_argument('-d', '--time_interval', dest='time_interval',
 parser.add_argument('-n', '--nsnapshots', dest='nsnapshots',
 					action='store', type=int, required=True,
 					help='number of snapshots <required>')
-parser.add_argument('-c', '--channel', dest='channel', action='store', 
-					type=str, default='Z', choices=['R', 'T', 'Z', 'norm'],
-					help='channel to be animated; default = Z')
+parser.add_argument('-c', '--channels', dest='channels', action='store', 
+					type=str, default='RTZ', choices=['RTZ', 'ENZ', 'SPZ'],
+					help='channels to be animated; default = RTZ')
 parser.add_argument('-p', '--nproc', dest='nproc', action='store', 
 					type=int, default=1, 
 					help='number of processors; default = 1')
@@ -63,7 +63,6 @@ import numpy as np
 from netCDF4 import Dataset
 from surface_utils import interpLagrange
 from surface_utils import SurfaceStation, latlon2thetaphi, thetaphi2xyz
-from obspy.geodetics.base import gps2dist_azimuth
 import pyvtk, os, shutil
 from multiprocessing import Pool
 
@@ -182,7 +181,7 @@ def write_vtk(iproc):
 	for it, istep in enumerate(steps):
 		if (it % args.nproc != iproc): 
 			continue
-		disp = np.zeros(nstation)
+		disp = np.zeros((nstation, 3))
 		eleTagLast = -1
 		for ist, station in enumerate(stations):
 			# Fourier
@@ -198,27 +197,27 @@ def write_vtk(iproc):
 			exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * station.azimuth)
 			exparray[0] = 1.
 			# compute disp
-			def compute_disp(idim):
+			spz = np.zeros(3)
+			for idim in np.arange(0, 3):
 				start = idim * nPntEdge * nu_p_1
 				end = idim * nPntEdge * nu_p_1 + nPntEdge * nu_p_1
 				fmat = fourier[start:end].reshape(nPntEdge, nu_p_1)
-				return weights[ist].dot(fmat.dot(exparray).real)
-			if args.channel == 'norm':
-				us = compute_disp(0)
-				up = compute_disp(1)
-				uz = compute_disp(2)
-				disp[ist] = np.sqrt(us * us + up * up + uz * uz)
-			if args.channel == 'T':
-				disp[ist] = compute_disp(1)
-			else:
-				us = compute_disp(0)
-				uz = compute_disp(2)
-				if args.channel == 'R':
-					disp[ist] = us * np.cos(station.dist) - uz * np.sin(station.dist)
+				spz[idim] = weights[ist].dot(fmat.dot(exparray).real)
+			if args.channels == 'SPZ':
+				disp[ist, :] = spz
+			else:	
+				ur = spz[0] * np.sin(station.dist) + spz[2] * np.cos(station.dist)
+				ut = spz[0] * np.cos(station.dist) - spz[2] * np.sin(station.dist)	
+				if args.channels == 'ENZ':
+					disp[ist, 0] = -ut * np.sin(self.baz) + spz[1] * np.cos(self.baz)
+					disp[ist, 1] = -ut * np.cos(self.baz) - spz[1] * np.sin(self.baz)
+					disp[ist, 2] = ur	
 				else:
-					disp[ist] = us * np.sin(station.dist) + uz * np.cos(station.dist)
+					disp[ist, 0] = ut
+					disp[ist, 1] = spz[1]
+					disp[ist, 2] = ur
 		vtk = pyvtk.VtkData(vtk_points,
-			pyvtk.PointData(pyvtk.Scalars(disp, name='disp_'+args.channel)),
+			pyvtk.PointData(pyvtk.Vectors(disp, name='disp_'+args.channels)),
 			'surface animation')
 		vtk.tofile(args.out_vtk + '/surface_vtk.' + str(it) + '.vtk', 'binary')
 		if args.verbose:
