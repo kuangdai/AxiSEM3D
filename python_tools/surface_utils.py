@@ -6,6 +6,7 @@ surface_utils.py
 '''
 
 import numpy as np
+from obspy.geodetics.base import gps2dist_azimuth
 
 def rotation_matrix(theta, phi):
 	return np.array([[np.cos(theta) * np.cos(phi), -np.sin(phi), np.sin(theta) * np.cos(phi)],
@@ -17,7 +18,7 @@ def latlon2thetaphi(lat, lon, flattening):
 	return np.pi / 2. - np.arctan(temp * np.tan(np.radians(lat))), np.radians(lon)
 
 def thetaphi2latlon(theta, phi, flattening):
-	temp = (1. - flattening) * (1. - flattening)
+	temp = 1. / (1. - flattening) / (1. - flattening)
 	return np.degrees(np.arctan(temp * np.tan(np.pi / 2. - theta))), np.degrees(phi)
 		   
 def thetaphi2xyz(theta, phi):
@@ -57,6 +58,9 @@ class SurfaceStation:
 		xglb = thetaphi2xyz(theta, phi)
 		xsrc = rmat.T.dot(xglb)
 		self.dist, self.azimuth = xyz2thetaphi(xsrc)
+		d, az, baz = gps2dist_azimuth(srclat, srclon, 
+			self.lat, self.lon, a=1., f=flattening)
+		self.baz = np.radians(baz)
 	
 	def setloc_source_centered(self, dist, azimuth, flattening, srclat, srclon, srcflattening):
 		self.dist = dist
@@ -67,5 +71,8 @@ class SurfaceStation:
 		xglb = rmat.dot(xsrc)
 		theta, phi = xyz2thetaphi(xglb)
 		self.lat, self.lon = thetaphi2latlon(theta, phi, flattening)
+		d, az, baz = gps2dist_azimuth(srclat, srclon, 
+			self.lat, self.lon, a=1., f=flattening)
+		self.baz = np.radians(baz)
 		
 		

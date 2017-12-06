@@ -64,7 +64,6 @@ import numpy as np
 from netCDF4 import Dataset
 from surface_utils import interpLagrange
 from surface_utils import SurfaceStation
-from obspy.geodetics.base import gps2dist_azimuth
 
 ###### read surface database
 nc_surf = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
@@ -184,11 +183,6 @@ for ist, station in enumerate(stations.values()):
 	nu_p_1 = int(fourier_r[:, :].shape[1] / nPntEdge / 3)
 	exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * station.azimuth)
 	exparray[0] = 1.
-	# back azimuth
-	if args.components == 'ENZ':
-		d, az, baz = gps2dist_azimuth(srclat, srclon, 
-			station.lat, station.lon, a=1., f=surfflat)
-		baz = np.radians(baz)
 	# compute disp
 	disp = np.zeros((nstep, 3), dtype=solver_dtype)
 	for istep in np.arange(0, nstep):
@@ -204,8 +198,8 @@ for ist, station in enumerate(stations.values()):
 			ur = spz[0] * np.sin(station.dist) + spz[2] * np.cos(station.dist)
 			ut = spz[0] * np.cos(station.dist) - spz[2] * np.sin(station.dist)	
 			if args.components == 'ENZ':
-				disp[istep, 0] = -ut * np.sin(baz) + spz[1] * np.cos(baz)
-				disp[istep, 1] = -ut * np.cos(baz) - spz[1] * np.sin(baz)
+				disp[istep, 0] = -ut * np.sin(self.baz) + spz[1] * np.cos(self.baz)
+				disp[istep, 1] = -ut * np.cos(self.baz) - spz[1] * np.sin(self.baz)
 				disp[istep, 2] = ur	
 			else:
 				disp[istep, 0] = ut
