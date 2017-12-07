@@ -6,6 +6,10 @@ cmake_minimum_required(VERSION 3.0.0)
 project(AxiSEM3D)
 enable_language(Fortran)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+      "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
 
 ##################################### EDITABLE #####################################
 # Set all necessary variables here.
