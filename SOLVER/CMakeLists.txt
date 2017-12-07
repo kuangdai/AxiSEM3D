@@ -28,6 +28,7 @@ SET(CMAKE_Fortran_COMPILER     gfortran)
 # SET(BOOST_ROOT            edit_here)
 # SET(METIS_ROOT            edit_here)
 # SET(NETCDF_ROOT           edit_here)
+# SET(HDF5_ROOT           	edit_here)
 
 # polynomial order of spectral elements (from 1 to 8)
 SET(NPOL 4)
@@ -41,9 +42,14 @@ SET(USE_DOUBLE FALSE)
 # * wavefield and model visualisation
 SET(USE_PARALLEL_NETCDF FALSE)
 
+# add dynamic link to HDF5 libraries, depending on your netcdf build
+# if you have netcdf installed from anaconda, you won't need this usually
+# if linking of axisem3d fails, set this to TRUE and specify HDF5_ROOT
+# NOTE: HDF5_ROOT should point to the hdf5 library you used to build netcdf
+SET(NEED_HDF5_LINK FALSE)
+
 # additional libraries to link with
-# such as HDF5 when NetCDF is built with --disable-shared (e.g., the parallel build)
-# SET(ADDITIONAL_LIBS "-L$ENV{HOME}/axisem3d_depends/parhdf5/lib -lhdf5 -lhdf5_hl -lcurl")
+# SET(ADDITIONAL_LIBS "-lcurl")
 
 # directory to store FFTW wisdom files
 # Specify any directory that does not require a `sudo` to write.
@@ -103,6 +109,13 @@ include_directories(${METIS_INCLUDE_DIR})
 # netcdf
 find_package(NETCDF REQUIRED)
 include_directories(${NETCDF_INCLUDE_DIR})
+# hdf5
+if (NEED_HDF5_LINK)
+	if (HDF5_ROOT)
+    	set(ENV{HDF5_ROOT} ${HDF5_ROOT})
+	endif ()
+	find_package(HDF5 COMPONENTS C COMPONENTS HL REQUIRED)
+endif ()
 
 ############# local includes #############
 include_directories(
@@ -320,5 +333,7 @@ target_link_libraries(
     ${FFTW_LIBRARIES}
     ${METIS_LIBRARIES}
     ${NETCDF_LIBRARIES}
+	${HDF5_LIBRARIES}
+	${HDF5_HL_LIBRARIES}
     ${ADDITIONAL_LIBS}
 )
