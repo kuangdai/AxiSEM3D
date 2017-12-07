@@ -20,14 +20,6 @@
 #                       SOLVER/src/preloop/nrfield/UserNrField.cpp 
 NU_TYPE                                     constant
 
-# WHAT: whether to use fftw "lucky" numbers
-# TYPE: bool
-# NOTE: FFTW is best at handling logical sizes of the form 2^a 3^b 5^c 7^d 11^e 13^f, 
-#       where e+f is either 0 or 1, and the other exponents are arbitrary.
-#       We call numbers of this form lucky numbers.
-#       http://www.fftw.org/fftw2_doc/fftw_3.html
-NU_FFTW_LUCKY_NUMBER                        true
-
 
 
 # =================================== constant ===================================

@@ -41,7 +41,6 @@ void Parameters::registerAll() {
     
     // inparam.nu
     registerPar("NU_TYPE");
-    registerPar("NU_FFTW_LUCKY_NUMBER");
     registerPar("NU_CONST");
     registerPar("NU_EMP_REF");
     registerPar("NU_EMP_MIN");
@@ -93,7 +92,8 @@ void Parameters::registerAll() {
     registerPar("DEVELOP_NON_SOURCE_MODE");
     registerPar("DEVELOP_DIAGNOSE_PRELOOP");
     registerPar("DEVELOP_MEASURED_COSTS");
-    registerPar("DEVELOP_DISABLE_FFTW_WISDOM");
+	registerPar("FFTW_LUCKY_NUMBER");
+    registerPar("FFTW_DISABLE_WISDOM");
     
 }
 

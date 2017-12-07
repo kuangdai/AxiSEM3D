@@ -18,7 +18,7 @@ void NrField::buildInparam(NrField *&nrf, const Parameters &par, int verbose) {
     }
     
     std::string type = par.getValue<std::string>("NU_TYPE");
-    bool useLucky = par.getValue<bool>("NU_FFTW_LUCKY_NUMBER");
+    bool useLucky = par.getValue<bool>("FFTW_LUCKY_NUMBER");
     
     if (boost::iequals(type, "constant")) {
         int nu = par.getValue<int>("NU_CONST");
