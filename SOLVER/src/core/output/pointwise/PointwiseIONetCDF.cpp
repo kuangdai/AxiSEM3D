@@ -242,9 +242,6 @@ void PointwiseIONetCDF::finalize() {
 void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp, 
     const RColX &bufferTime, int bufferLine) {
     int numRec = mVarNames.size();
-    if (numRec == 0) {
-        return;
-    }  
     if (bufferLine == 0) {
         return;
     }
@@ -254,7 +251,14 @@ void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp,
     std::vector<size_t> count;
     start.push_back(mCurrentRow);
     count.push_back(bufferLine);
+	
+	// update record postion in nc file
+    mCurrentRow += bufferLine;
+	
     #ifndef _USE_PARALLEL_NETCDF
+		if (numRec == 0) {
+			return;
+		}  
         mNetCDF->writeVariableChunk("time_points", 
             bufferTime.topRows(bufferLine), start, count);
     #else
@@ -281,8 +285,5 @@ void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp,
     
     // flush to disk
     mNetCDF->flush();
-    
-    // record postion in nc file
-    mCurrentRow += bufferLine;
 }
 

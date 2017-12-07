@@ -305,9 +305,6 @@ void SurfaceIO::finalize() {
 void SurfaceIO::dumpToFile(const std::vector<CMatXX_RM> &bufferDisp, 
     const RColX &bufferTime, int bufferLine) {
     int numEle = mVarNames.size();
-    if (numEle == 0) {
-        return;
-    }  
     if (bufferLine == 0) {
         return;
     }
@@ -317,7 +314,14 @@ void SurfaceIO::dumpToFile(const std::vector<CMatXX_RM> &bufferDisp,
     std::vector<size_t> count;
     start.push_back(mCurrentRow);
     count.push_back(bufferLine);
+	
+	// record postion in nc file
+    mCurrentRow += bufferLine;
+	
     #ifndef _USE_PARALLEL_NETCDF
+		if (numEle == 0) {
+	        return;
+	    }  
         mNetCDF->writeVariableChunk("time_points", 
             bufferTime.topRows(bufferLine), start, count);
     #else
@@ -346,8 +350,5 @@ void SurfaceIO::dumpToFile(const std::vector<CMatXX_RM> &bufferDisp,
     
     // flush to disk
     mNetCDF->flush();
-    
-    // record postion in nc file
-    mCurrentRow += bufferLine;
 }
 
