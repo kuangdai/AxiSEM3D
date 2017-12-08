@@ -171,6 +171,7 @@ except OSError:
 def write_vtk(iproc):
 	if args.nproc == 1:
 		nc_surf_local = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
+		iproc = 0
 	else:
 		# copy netcdf file for parallel access
 		tempnc = args.out_vtk + '/surface_temp.nc' + str(iproc)
