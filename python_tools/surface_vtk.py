@@ -61,8 +61,7 @@ args = parser.parse_args()
 
 import numpy as np
 from netCDF4 import Dataset
-from surface_utils import interpLagrange
-from surface_utils import SurfaceStation, latlon2thetaphi, thetaphi2xyz
+from surface_utils import interpLagrange, thetaphi2xyz
 import pyvtk, os, shutil
 from multiprocessing import Pool
 
@@ -98,10 +97,8 @@ for dist in dists:
 	nazi = int(2. * np.pi * r / (args.spatial_sampling * 1e3)) + 1
 	azis = np.linspace(0, 2. * np.pi, num=nazi, endpoint=False)
 	for azi in azis:
-		st = SurfaceStation('', '')
-		st.setloc_source_centered(dist, azi, surfflat, 
-			srclat, srclon, srcflat)
-		stations.append(st)
+		stations.append([dist, azi])
+stations = np.array(stations)
 
 if args.verbose:
 	print('Number of sampling points on surface: %d' % (len(stations)))
@@ -116,34 +113,33 @@ y = np.zeros(nstation)
 z = np.zeros(nstation)
 for ist, station in enumerate(stations):
 	# coordinates
-	theta, phi = latlon2thetaphi(station.lat, station.lon, surfflat)
-	xyz = thetaphi2xyz(theta, phi)
+	dist, azi = station[0], station[1]
+	xyz = thetaphi2xyz(dist, azi)
 	x[ist] = xyz[0]
 	y[ist] = xyz[1]
 	z[ist] = xyz[2]
 	# ele and weights
-	if np.isclose(station.dist, distLast):
+	if np.isclose(dist, distLast):
 		weights[ist, :] = weights[ist - 1, :]
 		eleTags[ist] = eleTags[ist - 1]
 		continue
 	# locate station
 	eleTag = -1
 	for iele in np.arange(0, nele):
-		if station.dist <= max(var_theta[iele, 0:1]):
+		if dist <= max(var_theta[iele, 0:1]):
 			eleTag = iele
 			break
-	assert eleTag >= 0, 'Fail to locate point, dist = %f' \
-		% (station.dist)
+	assert eleTag >= 0, 'Fail to locate point, dist = %f' % (dist)
 	theta0 = var_theta[eleTag, 0]
 	theta1 = var_theta[eleTag, 1]
-	eta = (station.dist - theta0) / (theta1 - theta0) * 2. - 1.
+	eta = (dist - theta0) / (theta1 - theta0) * 2. - 1.
 	# weights considering axial condition
 	if eleTag == 0 or eleTag == nele - 1:
 		weights[ist, :] = interpLagrange(eta, var_GLJ)
 	else:
 		weights[ist, :] = interpLagrange(eta, var_GLL)
 	eleTags[ist] = eleTag
-	distLast = station.dist
+	distLast = dist
 vtk_points = pyvtk.UnstructuredGrid(list(zip(x, y, z)), range(len(stations)))
 	
 ###### prepare time steps
@@ -185,6 +181,7 @@ def write_vtk(iproc):
 		disp = np.zeros((nstation, 3))
 		eleTagLast = -1
 		for ist, station in enumerate(stations):
+			dist, azi = station[0], station[1]
 			# Fourier
 			if eleTags[ist] == eleTagLast:
 				fourier = fourierLast
@@ -195,7 +192,7 @@ def write_vtk(iproc):
 				fourierLast = fourier
 				eleTagLast = eleTags[ist]
 			nu_p_1 = int(len(fourier) / nPntEdge / 3)
-			exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * station.azimuth)
+			exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * azi)
 			exparray[0] = 1.
 			# compute disp
 			spz = np.zeros(3)
@@ -207,8 +204,8 @@ def write_vtk(iproc):
 			if args.channels == 'SPZ':
 				disp[ist, :] = spz
 			else:	
-				ur = spz[0] * np.sin(station.dist) + spz[2] * np.cos(station.dist)
-				ut = spz[0] * np.cos(station.dist) - spz[2] * np.sin(station.dist)	
+				ur = spz[0] * np.sin(dist) + spz[2] * np.cos(dist)
+				ut = spz[0] * np.cos(dist) - spz[2] * np.sin(dist)	
 				if args.channels == 'ENZ':
 					disp[ist, 0] = -ut * np.sin(self.baz) + spz[1] * np.cos(self.baz)
 					disp[ist, 1] = -ut * np.cos(self.baz) - spz[1] * np.sin(self.baz)
