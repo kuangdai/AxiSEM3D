@@ -95,7 +95,7 @@ dists = np.linspace(0, np.pi, num=ndist, endpoint=True)
 stations = []
 for dist in dists:
 	r = r_outer * np.sin(dist)
-	nazi = int(2. * np.pi * r / (args.spatial_sampling * 1e3))
+	nazi = int(2. * np.pi * r / (args.spatial_sampling * 1e3)) + 1
 	azis = np.linspace(0, 2. * np.pi, num=nazi, endpoint=False)
 	for azi in azis:
 		st = SurfaceStation('', '')
