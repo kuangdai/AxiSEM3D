@@ -61,7 +61,6 @@ args = parser.parse_args()
 
 import numpy as np
 from netCDF4 import Dataset
-from surface_utils import interpLagrange, thetaphi2xyz
 import pyvtk, os, shutil
 from multiprocessing import Pool
 import time
