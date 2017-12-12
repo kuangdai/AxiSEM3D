@@ -36,6 +36,9 @@ parser.add_argument('-s', '--spatial_sampling', dest='spatial_sampling',
 					action='store', type=float, required=True,
 					help='spatial sampling on surface (km)\n' +
 						 '<required>') 
+parser.add_argument('-m', '--max_dist', dest='max_dist', 
+					action='store', type=float, default=180.,
+					help='maximum distance (deg); default = 180') 						 
 parser.add_argument('-t', '--tstart', dest='tstart', 
 					action='store', type=float, required=True,
 					help='start time of animation (sec)\n' +
@@ -47,9 +50,6 @@ parser.add_argument('-d', '--time_interval', dest='time_interval',
 parser.add_argument('-n', '--nsnapshots', dest='nsnapshots',
 					action='store', type=int, required=True,
 					help='number of snapshots <required>')
-parser.add_argument('-c', '--channels', dest='channels', action='store', 
-					type=str, default='RTZ', choices=['RTZ', 'ENZ', 'SPZ'],
-					help='channels to be animated; default = RTZ')
 parser.add_argument('-p', '--nproc', dest='nproc', action='store', 
 					type=int, default=1, 
 					help='number of processors; default = 1')
@@ -64,8 +64,12 @@ from netCDF4 import Dataset
 from surface_utils import interpLagrange, thetaphi2xyz
 import pyvtk, os, shutil
 from multiprocessing import Pool
+import time
 
 ###### read surface database
+if args.verbose:
+	clock0 = time.clock()
+	print('Reading global parameters...')
 nc_surf = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
 # global attribute
 srclat = nc_surf.source_latitude
@@ -87,62 +91,84 @@ nele = len(var_theta)
 var_GLL = nc_surf.variables['GLL']
 var_GLJ = nc_surf.variables['GLJ']
 nPntEdge = len(var_GLL)
+if args.verbose:
+	elapsed = time.clock() - clock0
+	print('Reading global parameters done, ' + 
+		  '%f sec elapsed.\n' % (elapsed))
 
-###### create stations
-ndist = int(np.pi * r_outer / (args.spatial_sampling * 1e3)) + 1
+###### surface sampling
+if args.verbose:
+	clock0 = time.clock()
+	print('Sampling surface...')
+ndist = int(np.radians(args.max_dist) * r_outer / (args.spatial_sampling * 1e3)) + 1
 dists = np.linspace(0, np.pi, num=ndist, endpoint=True)
-stations = []
-for dist in dists:
+azims = []
+nazim = np.zeros(ndist, dtype=int)
+for idist, dist in enumerate(dists):
 	r = r_outer * np.sin(dist)
-	nazi = int(2. * np.pi * r / (args.spatial_sampling * 1e3)) + 1
-	azis = np.linspace(0, 2. * np.pi, num=nazi, endpoint=False)
-	for azi in azis:
-		stations.append([dist, azi])
-stations = np.array(stations)
+	nazim[idist] = int(2. * np.pi * r / (args.spatial_sampling * 1e3)) + 1
+	azims.append(np.linspace(0, 2. * np.pi, num=nazim[idist], endpoint=False))
+nstation = np.sum(nazim)
+if args.verbose:
+	elapsed = time.clock() - clock0
+	print('    Number of distances: %d' % (ndist))
+	print('    Number of sampling points: %d' % (nstation))
+	print('Sampling surface done, ' + 
+		  '%f sec elapsed.\n' % (elapsed))
+	
+###### xyz
+if args.verbose:
+	print('Computing xyz of points...')	
+dist_azim = np.zeros((nstation, 2))
+istart = 0
+for idist, dist in enumerate(dists):
+	dist_azim[istart:(istart + nazim[idist]), 0] = dist
+	for iazim, azim in enumerate(azims[idist]):
+		dist_azim[istart + iazim, 1] = azim
+	istart += nazim[idist]
+x = np.sin(dist_azim[:, 0]) * np.cos(dist_azim[:, 1])
+y = np.sin(dist_azim[:, 0]) * np.sin(dist_azim[:, 1])
+z = np.cos(dist_azim[:, 0])
+vtk_points = pyvtk.UnstructuredGrid(list(zip(x, y, z)), range(nstation))
+if args.verbose:
+	elapsed = time.clock() - clock0
+	print('Computing xyz of points done, ' + 
+		  '%f sec elapsed.\n' % (elapsed))
+
+###### prepare theta
+def interpLagrange(target, lbases):
+	nrow, ncol = lbases.shape
+	results = np.zeros((nrow, ncol))
+	target_dgr = np.tile(np.array([target]).T, (1, ncol - 1))
+	for dgr in np.arange(0, ncol):
+		lbases_dgr = np.tile(lbases[:, [dgr]], (1, ncol - 1))
+		lbases_sub = np.delete(lbases, dgr, axis=1)
+		results[:, dgr] = np.prod(target_dgr - lbases_sub, axis=1) / \
+				          np.prod(lbases_dgr - lbases_sub, axis=1)
+	return results
 
 if args.verbose:
-	print('Number of sampling points on surface: %d' % (len(stations)))
-	
-###### prepare theta
-nstation = len(stations)
-eleTags = np.zeros(nstation, dtype=int)
-weights = np.zeros((nstation, nPntEdge))
-distLast = -1.
-x = np.zeros(nstation)
-y = np.zeros(nstation)
-z = np.zeros(nstation)
-for ist, station in enumerate(stations):
-	# coordinates
-	dist, azi = station[0], station[1]
-	xyz = thetaphi2xyz(dist, azi)
-	x[ist] = xyz[0]
-	y[ist] = xyz[1]
-	z[ist] = xyz[2]
-	# ele and weights
-	if np.isclose(dist, distLast):
-		weights[ist, :] = weights[ist - 1, :]
-		eleTags[ist] = eleTags[ist - 1]
-		continue
-	# locate station
-	eleTag = -1
-	for iele in np.arange(0, nele):
-		if dist <= max(var_theta[iele, 0:1]):
-			eleTag = iele
-			break
-	assert eleTag >= 0, 'Fail to locate point, dist = %f' % (dist)
-	theta0 = var_theta[eleTag, 0]
-	theta1 = var_theta[eleTag, 1]
-	eta = (dist - theta0) / (theta1 - theta0) * 2. - 1.
-	# weights considering axial condition
-	if eleTag == 0 or eleTag == nele - 1:
-		weights[ist, :] = interpLagrange(eta, var_GLJ)
-	else:
-		weights[ist, :] = interpLagrange(eta, var_GLL)
-	eleTags[ist] = eleTag
-	distLast = dist
-vtk_points = pyvtk.UnstructuredGrid(list(zip(x, y, z)), range(len(stations)))
-	
+	clock0 = time.clock()
+	print('Locating points in distance...')
+# locate element
+max_theta = np.amax(var_theta, axis=1)
+eleTags = np.searchsorted(max_theta, dists)
+# compute weights
+lbases = np.tile(var_GLL, (ndist, 1))
+lbases[0, :] = var_GLJ[:]
+lbases[-1, :] = var_GLJ[:]
+theta_bounds = var_theta[eleTags, :]
+etas = (dists - theta_bounds[:, 0]) / (theta_bounds[:, 1] - theta_bounds[:, 0]) * 2. - 1.
+weights = interpLagrange(etas, lbases)
+if args.verbose:
+	elapsed = time.clock() - clock0
+	print('Locating points in distance done, ' + 
+		  '%f sec elapsed.\n' % (elapsed))	
+
 ###### prepare time steps
+if args.verbose:
+	clock0 = time.clock()
+	print('Preparing timesteps...')
 if nstep == 1:
 	steps = np.array([0])
 	dt = 0.
@@ -152,12 +178,15 @@ else:
 	dtsteps = max(int(round(args.time_interval / dt)), 1)
 	iend = min(istart + dtsteps * (args.nsnapshots - 1) + 1, nstep)
 	steps = np.arange(istart, iend, dtsteps)
-		
 if args.verbose:
-	print('Number of snapshots: %d' % (len(steps)))
-nc_surf.close()
-	
+	elapsed = time.clock() - clock0
+	print('    Number of snapshots: %d' % (len(steps)))
+	print('Preparing timesteps done, ' + 
+		  '%f sec elapsed.\n' % (elapsed))
+
 ###### IO
+# close input	
+nc_surf.close()
 # create output directory
 try:
 	os.makedirs(args.out_vtk)
@@ -175,51 +204,39 @@ def write_vtk(iproc):
 		nc_surf_local = Dataset(tempnc, 'r', format='NETCDF4')
 
 	# write vtk
+	if args.verbose and iproc == 0:
+		clock0 = time.clock()
+		print('Generating snapshot...')
 	for it, istep in enumerate(steps):
 		if (it % args.nproc != iproc): 
 			continue
 		disp = np.zeros((nstation, 3))
-		eleTagLast = -1
-		for ist, station in enumerate(stations):
-			dist, azi = station[0], station[1]
-			# Fourier
-			if eleTags[ist] == eleTagLast:
-				fourier = fourierLast
-			else: 
-				fourier_r = nc_surf_local.variables['edge_' + str(eleTags[ist]) + 'r'][istep, :]
-				fourier_i = nc_surf_local.variables['edge_' + str(eleTags[ist]) + 'i'][istep, :]
-				fourier = fourier_r[:] + fourier_i[:] * 1j
-				fourierLast = fourier
-				eleTagLast = eleTags[ist]
+		istation = 0
+		for idist, dist in enumerate(dists):
+			fourier_r = nc_surf_local.variables['edge_' + str(eleTags[idist]) + 'r'][istep, :]
+			fourier_i = nc_surf_local.variables['edge_' + str(eleTags[idist]) + 'i'][istep, :]
+			fourier = fourier_r[:] + fourier_i[:] * 1j
 			nu_p_1 = int(len(fourier) / nPntEdge / 3)
-			exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * azi)
-			exparray[0] = 1.
-			# compute disp
-			spz = np.zeros(3)
+			wdotf = np.zeros((3, nu_p_1), dtype=fourier.dtype)
 			for idim in np.arange(0, 3):
 				start = idim * nPntEdge * nu_p_1
 				end = idim * nPntEdge * nu_p_1 + nPntEdge * nu_p_1
 				fmat = fourier[start:end].reshape(nPntEdge, nu_p_1)
-				spz[idim] = weights[ist].dot(fmat.dot(exparray).real)
-			if args.channels == 'SPZ':
-				disp[ist, :] = spz
-			else:	
-				ur = spz[0] * np.sin(dist) + spz[2] * np.cos(dist)
-				ut = spz[0] * np.cos(dist) - spz[2] * np.sin(dist)	
-				if args.channels == 'ENZ':
-					disp[ist, 0] = -ut * np.sin(self.baz) + spz[1] * np.cos(self.baz)
-					disp[ist, 1] = -ut * np.cos(self.baz) - spz[1] * np.sin(self.baz)
-					disp[ist, 2] = ur	
-				else:
-					disp[ist, 0] = ut
-					disp[ist, 1] = spz[1]
-					disp[ist, 2] = ur
+				wdotf[idim] = weights[idist].dot(fmat)
+			for iazim, azim in enumerate(azims[idist]):
+				exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * azim)
+				exparray[0] = 1.
+				spz = wdotf.dot(exparray).real
+				disp[istation, 0] = spz[0] * np.cos(dist) - spz[2] * np.sin(dist)
+				disp[istation, 1] = spz[1]
+				disp[istation, 2] = spz[0] * np.sin(dist) + spz[2] * np.cos(dist)
+				istation += 1
 		vtk = pyvtk.VtkData(vtk_points,
-			pyvtk.PointData(pyvtk.Vectors(disp, name='disp_'+args.channels)),
+			pyvtk.PointData(pyvtk.Vectors(disp, name='disp_RTZ')),
 			'surface animation')
 		vtk.tofile(args.out_vtk + '/surface_vtk.' + str(it) + '.vtk', 'binary')
 		if args.verbose:
-			print('Done with snapshot t = %f s; tstep = %d / %d; iproc = %d' \
+			print('    Done with snapshot t = %f s; tstep = %d / %d; iproc = %d' \
 				% (istep * dt + t0, it + 1, len(steps), iproc))
 	# close
 	nc_surf_local.close()
@@ -227,6 +244,11 @@ def write_vtk(iproc):
 	# remove temp nc
 	if args.nproc > 1:
 		os.remove(tempnc)
+	
+	if args.verbose and iproc == 0:
+		elapsed = time.clock() - clock0
+		print('Generating snapshots done, ' + 
+			  '%f sec elapsed.' % (elapsed))
 
 # write_vtk in parallel
 args.nproc = max(args.nproc, 1)
