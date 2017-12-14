@@ -99,6 +99,24 @@ bool Source::locate(const Mesh &mesh, int &locTag, RDColP &interpFactZ) const {
 #include "NullSource.h"
 #include <fstream>
 #include <boost/algorithm/string.hpp>
+#include <cfloat>
+
+void Source::parseLine(const std::string &line, const std::string &key, double &res) {
+	std::stringstream ss;
+	std::string keylong;
+	ss << line;
+	ss >> keylong;
+	if (boost::icontains(keylong, key)) {
+		ss >> res;
+	}
+}
+
+void Source::checkValue(const std::string &key, double res) {
+	if (res > DBL_MAX * .99) {
+		throw std::runtime_error("Source::checkValue || "
+			"Error initializing source parameter: " + key);
+	}
+}
 
 void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
     if (src) {
@@ -119,28 +137,37 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
 
     if (boost::iequals(src_type, "earthquake")) {
         std::string cmtfile = Parameters::sInputDirectory + "/" + src_file;
-        double depth, lat, lon;
-        double Mrr, Mtt, Mpp, Mrt, Mrp, Mtp;
+        double depth = DBL_MAX, lat = DBL_MAX, lon = DBL_MAX;
+        double Mrr = DBL_MAX, Mtt = DBL_MAX, Mpp = DBL_MAX; 
+		double Mrt = DBL_MAX, Mrp = DBL_MAX, Mtp = DBL_MAX;
         if (XMPI::root()) {
             std::fstream fs(cmtfile, std::fstream::in);
             if (!fs) {
                 throw std::runtime_error("Source::buildInparam || "
                     "Error opening CMT data file: ||" + cmtfile);
             }
-            std::string junk;
-            std::getline(fs, junk);
-            std::getline(fs, junk);
-            std::getline(fs, junk);
-            std::getline(fs, junk);
-            fs >> junk >> lat;
-            fs >> junk >> lon;
-            fs >> junk >> depth;
-            fs >> junk >> Mrr;
-            fs >> junk >> Mtt;
-            fs >> junk >> Mpp;
-            fs >> junk >> Mrt;
-            fs >> junk >> Mrp;
-            fs >> junk >> Mtp;
+            std::string line;
+			while (std::getline(fs, line)) {
+				parseLine(line, "latitude", lat);
+				parseLine(line, "longitude", lon);
+				parseLine(line, "depth", depth);
+				parseLine(line, "Mrr", Mrr);
+				parseLine(line, "Mtt", Mtt);
+				parseLine(line, "Mpp", Mpp);
+				parseLine(line, "Mrt", Mrt);
+				parseLine(line, "Mrp", Mrp);
+				parseLine(line, "Mtp", Mtp);
+	        }
+			checkValue("latitude", lat);
+			checkValue("longitude", lon);
+			checkValue("depth", depth);
+			checkValue("Mrr", Mrr);
+			checkValue("Mtt", Mtt);
+			checkValue("Mpp", Mpp);
+			checkValue("Mrt", Mrt);
+			checkValue("Mrp", Mrp);
+			checkValue("Mtp", Mtp);
+			// unit
             depth *= 1e3;
             Mrr *= 1e-7;
             Mtt *= 1e-7;
@@ -163,25 +190,30 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
     } else if (boost::iequals(src_type, "point_force")) {
         // point force
         std::string pointffile = Parameters::sInputDirectory + "/" + src_file;
-        double depth, lat, lon;
-        double f1, f2, f3;
+        double depth = DBL_MAX, lat = DBL_MAX, lon = DBL_MAX;
+        double f1 = DBL_MAX, f2 = DBL_MAX, f3 = DBL_MAX;
         if (XMPI::root()) {
             std::fstream fs(pointffile, std::fstream::in);
             if (!fs) {
                 throw std::runtime_error("Source::buildInparam || "
                     "Error opening point force data file: ||" + pointffile);
             }
-            std::string junk;
-            std::getline(fs, junk);
-            std::getline(fs, junk);
-            std::getline(fs, junk);
-            std::getline(fs, junk);
-            fs >> junk >> lat;
-            fs >> junk >> lon;
-            fs >> junk >> depth;
-            fs >> junk >> f1;
-            fs >> junk >> f2;
-            fs >> junk >> f3;
+            std::string line;
+			while (std::getline(fs, line)) {
+				parseLine(line, "latitude", lat);
+				parseLine(line, "longitude", lon);
+				parseLine(line, "depth", depth);
+				parseLine(line, "Ft", f1);
+				parseLine(line, "Fp", f2);
+				parseLine(line, "Fr", f3);
+	        }
+			checkValue("latitude", lat);
+			checkValue("longitude", lon);
+			checkValue("depth", depth);
+			checkValue("Ft", f1);
+			checkValue("Fp", f2);
+			checkValue("Fr", f3);
+			// unit
             depth *= 1e3;
             fs.close();
         }

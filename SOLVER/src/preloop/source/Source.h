@@ -27,6 +27,8 @@ public:
     double getLongitude() const {return mLongitude;};
     double getDepth() const {return mDepth;};
     
+	static void parseLine(const std::string &line, const std::string &key, double &res);
+	static void checkValue(const std::string &key, double res);
     static void buildInparam(Source *&src, const Parameters &par, int verbose);
     
 protected:
