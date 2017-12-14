@@ -104,7 +104,8 @@ if args.verbose:
 	print('Sampling surface...')
 ndist = int(np.radians(args.max_dist - args.min_dist) * r_outer / \
  		(args.spatial_sampling * 1e3)) + 1
-dists = np.linspace(args.min_dist, args.max_dist, num=ndist, endpoint=True)
+dists = np.linspace(np.radians(args.min_dist), np.radians(args.max_dist), 
+				    num=ndist, endpoint=True)
 azims = []
 nazim = np.zeros(ndist, dtype=int)
 for idist, dist in enumerate(dists):
