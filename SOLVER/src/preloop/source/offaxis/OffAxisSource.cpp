@@ -16,7 +16,7 @@
 #include "MultilevelTimer.h"
 
 OffAxisSource::OffAxisSource(double depth, double lat, double lon,
-	double srcLat, double srcLon, double srcDep):
+    double srcLat, double srcLon, double srcDep):
 mDepth(depth), mLatitude(lat), mLongitude(lon) {
     // handle singularity at poles
     if (std::abs(mLatitude - 90.) < tinyDouble) {
@@ -27,12 +27,12 @@ mDepth(depth), mLatitude(lat), mLongitude(lon) {
         mLatitude = -90.;
         mLongitude = 0.;
     }
-	// compute theta and phi in source-centered coordinate system
-	RDCol3 rtpG, rtpS;
-	rtpG(0) = 1.;
-	rtpG(1) = Geodesy::lat2Theta_d(mLatitude, mDepth);
-	rtpG(2) = Geodesy::lon2Phi(mLongitude);
-	rtpS = Geodesy::rotateGlob2Src(rtpG, srcLat, srcLon, srcDep);
+    // compute theta and phi in source-centered coordinate system
+    RDCol3 rtpG, rtpS;
+    rtpG(0) = 1.;
+    rtpG(1) = Geodesy::lat2Theta_d(mLatitude, mDepth);
+    rtpG(2) = Geodesy::lon2Phi(mLongitude);
+    rtpS = Geodesy::rotateGlob2Src(rtpG, srcLat, srcLon, srcDep);
     mThetaSrc = rtpS(1);
     mPhiSrc = rtpS(2);
 }
@@ -63,21 +63,21 @@ void OffAxisSource::release(Domain &domain, const Mesh &mesh) const {
         computeSourceFourier(*myQuad, interpFactXii, interpFactEta, mPhiSrc, fouriers);
         // add to domain
         Element *myElem = domain.getElement(myQuad->getElementTag());
-		// TODO: implement this in core
-		//       the existing class SourceTerm is not general enough
-		//       because the source time funciton varies for each source
+        // TODO: implement this in core
+        //       the existing class SourceTerm is not general enough
+        //       because the source time funciton varies for each source
         // domain.addOffAxisSourceTerm(new OffAxisSourceTerm(myElem, fouriers));
     }
     MultilevelTimer::end("Compute Off-axis Source", 2);
 }
 
 bool OffAxisSource::locate(const Mesh &mesh, int &locTag, 
-	RDColP &interpFactXii, RDColP &interpFactEta) const {
+    RDColP &interpFactXii, RDColP &interpFactEta) const {
     MultilevelTimer::begin("R OffAxisSource", 3);
     RDCol2 srcCrds = RDCol2::Zero();
     double r = mesh.computeRadiusRef(mDepth, mLatitude, mLongitude);
-	srcCrds(0) = r * sin(mThetaSrc);
-	srcCrds(1) = r * cos(mThetaSrc);
+    srcCrds(0) = r * sin(mThetaSrc);
+    srcCrds(1) = r * cos(mThetaSrc);
     MultilevelTimer::end("R OffAxisSource", 3);
 
     // check range of subdomain
@@ -97,10 +97,10 @@ bool OffAxisSource::locate(const Mesh &mesh, int &locTag,
         if (quad->invMapping(srcCrds, srcXiEta)) {
             if (std::abs(srcXiEta(0)) <= 1.000001 && std::abs(srcXiEta(1)) <= 1.000001) {
                 locTag = iloc;
-				XMath::interpLagrange(srcXiEta(0), nPntEdge,
+                XMath::interpLagrange(srcXiEta(0), nPntEdge,
                     (quad->isAxial() ? SpectralConstants::getP_GLJ().data()
-								     : SpectralConstants::getP_GLL().data()), 
-					interpFactXii.data());
+                                     : SpectralConstants::getP_GLL().data()), 
+                    interpFactXii.data());
                 XMath::interpLagrange(srcXiEta(1), nPntEdge,
                     SpectralConstants::getP_GLL().data(), interpFactEta.data());
                 return true;
@@ -116,9 +116,9 @@ bool OffAxisSource::locate(const Mesh &mesh, int &locTag,
 #include <boost/algorithm/string.hpp>
 
 void OffAxisSource::buildInparam(std::vector<OffAxisSource> *&offsrc, 
-	const Parameters &par, int verbose) {
+    const Parameters &par, int verbose) {
     // TODO: 
-	// read location of off-axis sources
-	// read source-time function
-	// build off-axis source objects
+    // read location of off-axis sources
+    // read source-time function
+    // build off-axis source objects
 }

@@ -23,7 +23,7 @@ public:
     
     // general
     bool isIsotropic() const {return mElementalVariables.find("VP_0") != mElementalVariables.end();};
-	bool hasAttenuation() const {return mGlobalVariables.find("nr_lin_solids") != mGlobalVariables.end();};
+    bool hasAttenuation() const {return mGlobalVariables.find("nr_lin_solids") != mGlobalVariables.end();};
     int getNumQuads() const {return mConnectivity.rows();};
     int getNumNodes() const {return mNodalS.rows();};
     double getROuter() const {return mGlobalVariables.at("radius");};

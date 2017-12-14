@@ -125,10 +125,10 @@ public:
             varloc = mPWD;
         }
         if (nc_put_att(varloc, varid, attname.c_str(), to_nc_type<base_type>(), 
-			1, &attvalue) != NC_NOERR) {
+            1, &attvalue) != NC_NOERR) {
             throw std::runtime_error("NetCDF_Writer::addAttribute || "
                 "Error adding attribute to variable, variable: " + vname 
-				+ ", attribute: " + attname  
+                + ", attribute: " + attname  
                 + " || NetCDF file: " + mFileName);
         }
     };

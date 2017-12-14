@@ -41,7 +41,7 @@ class PointwiseRecorder {
 public:
     PointwiseRecorder(int totalRecordSteps, int recordInterval, 
         int bufferSize, const std::string &components, 
-		double srcLat, double srcLon, double srcDep);
+        double srcLat, double srcLon, double srcDep);
     ~PointwiseRecorder();
     
     // add a receiver
@@ -83,9 +83,9 @@ private:
     
     // IO
     std::vector<PointwiseIO *> mIOs;    
-	
-	// source location
-	double mSrcLat, mSrcLon, mSrcDep;
+    
+    // source location
+    double mSrcLat, mSrcLon, mSrcDep;
 };
 
 

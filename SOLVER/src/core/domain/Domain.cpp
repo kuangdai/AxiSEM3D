@@ -29,7 +29,7 @@ Domain::~Domain() {
     for (const auto &e: mElements) {delete e;}
     for (const auto &e: mSourceTerms) {delete e;}
     if (mPointwiseRecorder) {delete mPointwiseRecorder;};
-	if (mSurfaceRecorder) {delete mSurfaceRecorder;};
+    if (mSurfaceRecorder) {delete mSurfaceRecorder;};
     if (mSTF) {delete mSTF;}
     if (mMsgInfo) {delete mMsgInfo;}
     if (mMsgBuffer) {delete mMsgBuffer;}
@@ -183,16 +183,16 @@ void Domain::coupleSolidFluid() const {
 
 void Domain::initializeRecorders() const {
     mPointwiseRecorder->initialize();
-	if (mSurfaceRecorder) {
-		mSurfaceRecorder->initialize();
-	}
+    if (mSurfaceRecorder) {
+        mSurfaceRecorder->initialize();
+    }
 }
 
 void Domain::finalizeRecorders() const {
     mPointwiseRecorder->finalize();
-	if (mSurfaceRecorder) {
-		mSurfaceRecorder->finalize();
-	}
+    if (mSurfaceRecorder) {
+        mSurfaceRecorder->finalize();
+    }
 }
 
 void Domain::record(int tstep, Real t) const {
@@ -201,8 +201,8 @@ void Domain::record(int tstep, Real t) const {
     #endif
     
     mPointwiseRecorder->record(tstep, t);
-	if (mSurfaceRecorder) {
-		mSurfaceRecorder->record(tstep, t);
+    if (mSurfaceRecorder) {
+        mSurfaceRecorder->record(tstep, t);
     }
     
     #ifdef _MEASURE_TIMELOOP
@@ -216,9 +216,9 @@ void Domain::dumpLeft() const {
     #endif
     
     mPointwiseRecorder->dumpToFile();
-	if (mSurfaceRecorder) {
-		mSurfaceRecorder->dumpToFile();
-	}
+    if (mSurfaceRecorder) {
+        mSurfaceRecorder->dumpToFile();
+    }
     
     #ifdef _MEASURE_TIMELOOP
         mTimerOthers->stop();

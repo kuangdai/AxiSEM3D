@@ -17,7 +17,7 @@ public:
     
     // before time loop
     void initialize(int totalRecordSteps, int bufferSize, 
-		const std::string &components, const std::vector<PointwiseInfo> &receivers);
+        const std::string &components, const std::vector<PointwiseInfo> &receivers);
     
     // after time loop
     void finalize();

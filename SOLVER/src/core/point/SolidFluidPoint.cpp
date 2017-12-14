@@ -131,9 +131,9 @@ int SolidFluidPoint::getNuWisdom() const {
 }
 
 const CMatX3 &SolidFluidPoint::getDispFourierSolid() const {
-	return mSolidPoint->getDispFourierSolid();
+    return mSolidPoint->getDispFourierSolid();
 }
 
 const CColX &SolidFluidPoint::getDispFourierFluid() const {
-	return mFluidPoint->getDispFourierFluid();
+    return mFluidPoint->getDispFourierFluid();
 }

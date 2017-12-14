@@ -13,7 +13,7 @@ class Element;
 class SurfaceRecorder {
 public:
     SurfaceRecorder(int totalRecordSteps, int recordInterval, int bufferSize,
-		double srcLat, double srcLon, double srcDep);
+        double srcLat, double srcLon, double srcDep);
     ~SurfaceRecorder();
 
     // add a surface element
@@ -32,9 +32,9 @@ public:
     void dumpToFile();
 
 private:
-	// surface elements
+    // surface elements
     std::vector<SurfaceInfo> mSurfaceInfo;
-	
+    
     // interval
     int mTotalRecordSteps;
     int mRecordInterval;
@@ -42,16 +42,16 @@ private:
     // buffer
     int mBufferSize;
     int mBufferLine;
-	
+    
     // buffer
-	RColX mBufferTime;
-	std::vector<CMatXX_RM> mBufferDisp;
-	
-	// IO
-	SurfaceIO *mIO;
-	
-	// source location
-	double mSrcLat, mSrcLon, mSrcDep;
+    RColX mBufferTime;
+    std::vector<CMatXX_RM> mBufferDisp;
+    
+    // IO
+    SurfaceIO *mIO;
+    
+    // source location
+    double mSrcLat, mSrcLon, mSrcDep;
 };
 
 

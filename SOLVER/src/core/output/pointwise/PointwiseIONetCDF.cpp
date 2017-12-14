@@ -12,13 +12,13 @@
 #include "PointwiseRecorder.h"
 
 void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, 
-	const std::string &components, const std::vector<PointwiseInfo> &receivers,
-	double srcLat, double srcLon, double srcDep) {
-	mReceivers = &receivers;
-	// source location
-	mSrcLat = srcLat;
-	mSrcLon = srcLon;
-	mSrcDep = srcDep;
+    const std::string &components, const std::vector<PointwiseInfo> &receivers,
+    double srcLat, double srcLon, double srcDep) {
+    mReceivers = &receivers;
+    // source location
+    mSrcLat = srcLat;
+    mSrcLon = srcLon;
+    mSrcDep = srcDep;
     // number
     int numRec = receivers.size();
     std::vector<int> allNumRec;
@@ -40,13 +40,13 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
     
     // station names
     mVarNames.resize(numRec);
-	std::vector<double> mylats, mylons, mydeps;
+    std::vector<double> mylats, mylons, mydeps;
     for (int irec = 0; irec < numRec; irec++) {
         mVarNames[irec] = receivers[irec].mNetwork + "." + receivers[irec].mName;
         mVarNames[irec] += "." + components;
-		mylats.push_back(receivers[irec].mLat);
-		mylons.push_back(receivers[irec].mLon);
-		mydeps.push_back(receivers[irec].mDep);
+        mylats.push_back(receivers[irec].mLat);
+        mylons.push_back(receivers[irec].mLon);
+        mydeps.push_back(receivers[irec].mDep);
     }
     
     // dims
@@ -72,9 +72,9 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
         // define seismograms
         for (int irec = 0; irec < numRec; irec++) {
             mNetCDF->defineVariable<Real>(mVarNames[irec], dimsSeis);
-			mNetCDF->addAttribute(mVarNames[irec], "latitude", mylats[irec]);
-			mNetCDF->addAttribute(mVarNames[irec], "longitude", mylons[irec]);
-			mNetCDF->addAttribute(mVarNames[irec], "depth", mydeps[irec]);
+            mNetCDF->addAttribute(mVarNames[irec], "latitude", mylats[irec]);
+            mNetCDF->addAttribute(mVarNames[irec], "longitude", mylons[irec]);
+            mNetCDF->addAttribute(mVarNames[irec], "depth", mydeps[irec]);
         }
         mNetCDF->defModeOff();
         // fill time with err values
@@ -83,22 +83,22 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
         for (int irec = 0; irec < numRec; irec++) {
             mNetCDF->fillConstant(mVarNames[irec], dimsSeis, (Real)NC_ERR_VALUE);
         }
-		// source location
-		mNetCDF->addAttribute("", "source_latitude", mSrcLat);
-		mNetCDF->addAttribute("", "source_longitude", mSrcLon);
-		mNetCDF->addAttribute("", "source_depth", mSrcDep);
+        // source location
+        mNetCDF->addAttribute("", "source_latitude", mSrcLat);
+        mNetCDF->addAttribute("", "source_longitude", mSrcLon);
+        mNetCDF->addAttribute("", "source_depth", mSrcDep);
         mNetCDF->flush();
     #else
         // gather all station names 
         std::vector<std::vector<std::string>> allNames; 
-		std::vector<std::vector<double>> allLats;
-		std::vector<std::vector<double>> allLons;
-		std::vector<std::vector<double>> allDeps;
+        std::vector<std::vector<double>> allLats;
+        std::vector<std::vector<double>> allLons;
+        std::vector<std::vector<double>> allDeps;
         XMPI::gather(mVarNames, allNames, true);
-		XMPI::gather(mylats, allLats, MPI_DOUBLE, true);
-		XMPI::gather(mylons, allLons, MPI_DOUBLE, true);
-		XMPI::gather(mydeps, allDeps, MPI_DOUBLE, true);
-		
+        XMPI::gather(mylats, allLats, MPI_DOUBLE, true);
+        XMPI::gather(mylons, allLons, MPI_DOUBLE, true);
+        XMPI::gather(mydeps, allDeps, MPI_DOUBLE, true);
+        
         // open file on min rank and define all variables
         std::string fname = Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc";
         if (XMPI::rank() == mMinRankWithRec) {
@@ -110,9 +110,9 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
             for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
                 for (int irec = 0; irec < allNames[iproc].size(); irec++) {
                     mNetCDF->defineVariable<Real>(allNames[iproc][irec], dimsSeis);
-					mNetCDF->addAttribute(allNames[iproc][irec], "latitude", allLats[iproc][irec]);
-					mNetCDF->addAttribute(allNames[iproc][irec], "longitude", allLons[iproc][irec]);
-					mNetCDF->addAttribute(allNames[iproc][irec], "depth", allDeps[iproc][irec]);
+                    mNetCDF->addAttribute(allNames[iproc][irec], "latitude", allLats[iproc][irec]);
+                    mNetCDF->addAttribute(allNames[iproc][irec], "longitude", allLons[iproc][irec]);
+                    mNetCDF->addAttribute(allNames[iproc][irec], "depth", allDeps[iproc][irec]);
                 }
             }
             mNetCDF->defModeOff();
@@ -124,10 +124,10 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
                     mNetCDF->fillConstant<Real>(allNames[iproc][irec], dimsSeis, (Real)NC_ERR_VALUE);
                 }
             }
-			// source location
-			mNetCDF->addAttribute("", "source_latitude", mSrcLat);
-			mNetCDF->addAttribute("", "source_longitude", mSrcLon);
-			mNetCDF->addAttribute("", "source_depth", mSrcDep);
+            // source location
+            mNetCDF->addAttribute("", "source_latitude", mSrcLat);
+            mNetCDF->addAttribute("", "source_longitude", mSrcLon);
+            mNetCDF->addAttribute("", "source_depth", mSrcDep);
             mNetCDF->close();
         }
         XMPI::barrier();
@@ -187,11 +187,11 @@ void PointwiseIONetCDF::finalize() {
         nw.defineVariable<Real>("time_points", dimsTime);
         nw.defModeOff();
         nw.writeVariableWhole("time_points", times);
-		
-		// source location
-		nw.addAttribute("", "source_latitude", mSrcLat);
-		nw.addAttribute("", "source_longitude", mSrcLon);
-		nw.addAttribute("", "source_depth", mSrcDep);
+        
+        // source location
+        nw.addAttribute("", "source_latitude", mSrcLat);
+        nw.addAttribute("", "source_longitude", mSrcLon);
+        nw.addAttribute("", "source_depth", mSrcDep);
         nw.close();
     }
     XMPI::barrier();
@@ -209,9 +209,9 @@ void PointwiseIONetCDF::finalize() {
             nw.defModeOn();
             for (int irec = 0; irec < numRec; irec++) {
                 nw.defineVariable<Real>(mVarNames[irec], dimsSeis);
-				nw.addAttribute(mVarNames[irec], "latitude", (*mReceivers)[irec].mLat);
-				nw.addAttribute(mVarNames[irec], "longitude", (*mReceivers)[irec].mLon);
-				nw.addAttribute(mVarNames[irec], "depth", (*mReceivers)[irec].mDep);
+                nw.addAttribute(mVarNames[irec], "latitude", (*mReceivers)[irec].mLat);
+                nw.addAttribute(mVarNames[irec], "longitude", (*mReceivers)[irec].mLon);
+                nw.addAttribute(mVarNames[irec], "depth", (*mReceivers)[irec].mDep);
             }
             nw.defModeOff();
             
@@ -222,7 +222,7 @@ void PointwiseIONetCDF::finalize() {
                 nw.writeVariableWhole(mVarNames[irec], seis);
             }
             
-			// close
+            // close
             nw.close();
             nr.close();
         }
@@ -251,14 +251,14 @@ void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp,
     std::vector<size_t> count;
     start.push_back(mCurrentRow);
     count.push_back(bufferLine);
-	
-	// update record postion in nc file
+    
+    // update record postion in nc file
     mCurrentRow += bufferLine;
-	
+    
     #ifndef _USE_PARALLEL_NETCDF
-		if (numRec == 0) {
-			return;
-		}  
+        if (numRec == 0) {
+            return;
+        }  
         mNetCDF->writeVariableChunk("time_points", 
             bufferTime.topRows(bufferLine), start, count);
     #else

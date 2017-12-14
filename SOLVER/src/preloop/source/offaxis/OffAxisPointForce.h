@@ -9,16 +9,16 @@ class OffAxisPointForce: public OffAxisSource {
 public:
     
     OffAxisPointForce(double depth, double lat, double lon,
-		double srcLat, double srcLon, double srcDep,
+        double srcLat, double srcLon, double srcDep,
         RDMatX3 q_sphiz);
 
     std::string verbose() const;
 
 protected:
-	void computeSourceFourier(const Quad &myQuad, 
-		const RDColP &interpFactXii,
-		const RDColP &interpFactEta,
-		double phi,
+    void computeSourceFourier(const Quad &myQuad, 
+        const RDColP &interpFactXii,
+        const RDColP &interpFactEta,
+        double phi,
         vec_arPP_CMatX3 &fouriers) const;
 
 private:

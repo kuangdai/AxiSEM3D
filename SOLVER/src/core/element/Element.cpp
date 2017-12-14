@@ -58,33 +58,33 @@ RDMatPP Element::formThetaMat() const {
 }
 
 RDMatXX Element::getCoordsOnSide(int side) const {
-	int ipol0 = 0, ipol1 = 0, jpol0 = 0, jpol1 = 0;
-	if (side == 0) {
-		ipol0 = 0;
-		ipol1 = nPol;
-		jpol0 = jpol1 = 0;
-	} else if (side == 1) {
-		ipol0 = ipol1 = nPol;
-		jpol0 = 0;
-		jpol1 = nPol;
-	} else if (side == 2) {
-		ipol0 = 0;
-		ipol1 = nPol;
-		jpol0 = jpol1 = nPol;
-	} else {
-		ipol0 = ipol1 = 0;
-		jpol0 = 0;
-		jpol1 = nPol;
-	}
-	RDMatXX sz = RDMatXX::Zero(2, nPntEdge);
-	int ipntedge = 0;
-	for (int ipol = ipol0; ipol <= ipol1; ipol++) {
-		for (int jpol = jpol0; jpol <= jpol1; jpol++) {
-			int ipnt = ipol * nPntEdge + jpol;
-			sz.col(ipntedge) = mPoints[ipnt]->getCoords();
-			ipntedge++;
-		}
-	}
-	return sz;
+    int ipol0 = 0, ipol1 = 0, jpol0 = 0, jpol1 = 0;
+    if (side == 0) {
+        ipol0 = 0;
+        ipol1 = nPol;
+        jpol0 = jpol1 = 0;
+    } else if (side == 1) {
+        ipol0 = ipol1 = nPol;
+        jpol0 = 0;
+        jpol1 = nPol;
+    } else if (side == 2) {
+        ipol0 = 0;
+        ipol1 = nPol;
+        jpol0 = jpol1 = nPol;
+    } else {
+        ipol0 = ipol1 = 0;
+        jpol0 = 0;
+        jpol1 = nPol;
+    }
+    RDMatXX sz = RDMatXX::Zero(2, nPntEdge);
+    int ipntedge = 0;
+    for (int ipol = ipol0; ipol <= ipol1; ipol++) {
+        for (int jpol = jpol0; jpol <= jpol1; jpol++) {
+            int ipnt = ipol * nPntEdge + jpol;
+            sz.col(ipntedge) = mPoints[ipnt]->getCoords();
+            ipntedge++;
+        }
+    }
+    return sz;
 }
 

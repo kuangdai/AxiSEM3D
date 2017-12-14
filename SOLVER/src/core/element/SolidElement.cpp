@@ -214,41 +214,41 @@ void SolidElement::computeGroundMotion(Real phi, const RMatPP &weights, RRow3 &u
 }
 
 void SolidElement::feedDispOnSide(int side, CMatXX_RM &buffer, int row) const {
-	int ipol0 = 0, ipol1 = 0, jpol0 = 0, jpol1 = 0;
-	if (side == 0) {
-		ipol0 = 0;
-		ipol1 = nPol;
-		jpol0 = jpol1 = 0;
-	} else if (side == 1) {
-		ipol0 = ipol1 = nPol;
-		jpol0 = 0;
-		jpol1 = nPol;
-	} else if (side == 2) {
-		ipol0 = 0;
-		ipol1 = nPol;
-		jpol0 = jpol1 = nPol;
-	} else {
-		ipol0 = ipol1 = 0;
-		jpol0 = 0;
-		jpol1 = nPol;
-	}
-	buffer.row(row).setZero();
-	int ipntedge = 0;
-	for (int ipol = ipol0; ipol <= ipol1; ipol++) {
-		for (int jpol = jpol0; jpol <= jpol1; jpol++) {
-			int ipnt = ipol * nPntEdge + jpol;
-			const CMatX3 &disp = mPoints[ipnt]->getDispFourierSolid();
-			for (int idim = 0; idim < 3; idim++) {
-				// // fast dim: seismogram components
-				// buffer.block(row, ipntedge * 3 * (mMaxNu + 1) + idim * (mMaxNu + 1), 
-				// 	1, disp.rows()) = disp.col(idim).transpose();
-				// fast dim: points
-				buffer.block(row, idim * nPntEdge * (mMaxNu + 1) + ipntedge * (mMaxNu + 1), 
-					1, disp.rows()) = disp.col(idim).transpose();
-			}
-			ipntedge++;
-		}
-	}
+    int ipol0 = 0, ipol1 = 0, jpol0 = 0, jpol1 = 0;
+    if (side == 0) {
+        ipol0 = 0;
+        ipol1 = nPol;
+        jpol0 = jpol1 = 0;
+    } else if (side == 1) {
+        ipol0 = ipol1 = nPol;
+        jpol0 = 0;
+        jpol1 = nPol;
+    } else if (side == 2) {
+        ipol0 = 0;
+        ipol1 = nPol;
+        jpol0 = jpol1 = nPol;
+    } else {
+        ipol0 = ipol1 = 0;
+        jpol0 = 0;
+        jpol1 = nPol;
+    }
+    buffer.row(row).setZero();
+    int ipntedge = 0;
+    for (int ipol = ipol0; ipol <= ipol1; ipol++) {
+        for (int jpol = jpol0; jpol <= jpol1; jpol++) {
+            int ipnt = ipol * nPntEdge + jpol;
+            const CMatX3 &disp = mPoints[ipnt]->getDispFourierSolid();
+            for (int idim = 0; idim < 3; idim++) {
+                // // fast dim: seismogram components
+                // buffer.block(row, ipntedge * 3 * (mMaxNu + 1) + idim * (mMaxNu + 1), 
+                //     1, disp.rows()) = disp.col(idim).transpose();
+                // fast dim: points
+                buffer.block(row, idim * nPntEdge * (mMaxNu + 1) + ipntedge * (mMaxNu + 1), 
+                    1, disp.rows()) = disp.col(idim).transpose();
+            }
+            ipntedge++;
+        }
+    }
 }
 
 std::string SolidElement::verbose() const {

@@ -36,9 +36,9 @@ std::string Point::costSignature() const {
 }
 
 const CMatX3 &Point::getDispFourierSolid() const {
-	throw std::runtime_error("Point::getDispFourier || Incompatible point type.");
+    throw std::runtime_error("Point::getDispFourier || Incompatible point type.");
 }
 
 const CColX &Point::getDispFourierFluid() const {
-	throw std::runtime_error("Point::getDispFourier || Incompatible point type.");
+    throw std::runtime_error("Point::getDispFourier || Incompatible point type.");
 }

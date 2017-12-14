@@ -56,9 +56,9 @@ public:
     // wisdom
     void learnWisdom(Real cutoff);
     int getNuWisdom() const;
-	
-	// get displacement
-	const CMatX3 &getDispFourierSolid() const {return mDispl;};
+    
+    // get displacement
+    const CMatX3 &getDispFourierSolid() const {return mDispl;};
     
 private:
     

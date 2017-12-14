@@ -212,7 +212,7 @@ def write_ascii(iproc):
 
     # close
     ncdf.close()
-	# remove temp nc
+    # remove temp nc
     if args.nproc > 1:
         os.remove(tempnc)
     

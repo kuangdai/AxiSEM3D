@@ -68,7 +68,7 @@ void Volumetric3D_EMC::initialize() {
             std::sort(fileDepth.begin(), fileDepth.end(), compareFunc);
             
             // read lat and lon
-			Eigen::Matrix<double, Eigen::Dynamic, 1> dlat, dlon;
+            Eigen::Matrix<double, Eigen::Dynamic, 1> dlat, dlon;
             if (NetCDF_Reader::checkNetCDF_isAscii(fileDepth[0].first)) {
                 NetCDF_ReaderAscii reader;
                 reader.open(fileDepth[0].first);
@@ -82,8 +82,8 @@ void Volumetric3D_EMC::initialize() {
                 reader.read1D("lon", dlon);
                 reader.close();
             }
-			flat = dlat.cast<float>();
-			flon = dlon.cast<float>();
+            flat = dlat.cast<float>();
+            flon = dlon.cast<float>();
             
             // depths and data
             size_t depthLen = flat.size() * flon.size();   

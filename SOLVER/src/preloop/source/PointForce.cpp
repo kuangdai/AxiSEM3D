@@ -21,15 +21,15 @@ void PointForce::computeSourceFourier(const Quad &myQuad, const RDColP &interpFa
     for (int ipnt = 0; ipnt < nPntElem; ipnt++) {
         fouriers[ipnt] = CMatX3::Zero(2, 3);
     }
-	// particle relabelling
+    // particle relabelling
     RDColP J_PRT;
     if (myQuad.hasRelabelling()) {
         const RDMatXN &JJ = myQuad.getRelabelling().getStiffJacobian();
         J_PRT = JJ.block(0, 0, 1, nPntEdge).transpose();
     }
     // compute source pointwise
-	int ipol_src = 0;
-	for (int ipol = 0; ipol <= nPol; ipol++) {
+    int ipol_src = 0;
+    for (int ipol = 0; ipol <= nPol; ipol++) {
         for (int jpol = 0; jpol <= nPol; jpol++) {
             int ipnt = ipol * nPntEdge + jpol;
             // spatial delta function

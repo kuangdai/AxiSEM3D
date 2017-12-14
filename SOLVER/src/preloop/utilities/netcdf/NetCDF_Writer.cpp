@@ -56,7 +56,7 @@ void NetCDF_Writer::writeString(const std::string &vname, const std::string &dat
     defineVariable<char>(vname, dims);
     defModeOff();
     if (data.length() > 0) {
-		int varid = inquireVariable(vname);
+        int varid = inquireVariable(vname);
         if (nc_put_var(mPWD, varid, data.c_str()) != NC_NOERR) {
             throw std::runtime_error("NetCDF_Writer::writeString || "
                 "Error writing variable, variable: " + vname + " || NetCDF file: " + mFileName);

@@ -53,9 +53,9 @@ public:
     // wisdom
     void learnWisdom(Real cutoff);
     int getNuWisdom() const {return mNuWisdom;};
-	
-	// get displacement
-	const CColX &getDispFourierFluid() const {return mDispl;};
+    
+    // get displacement
+    const CColX &getDispFourierFluid() const {return mDispl;};
     
 private:
     

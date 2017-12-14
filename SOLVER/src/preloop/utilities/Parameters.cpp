@@ -77,7 +77,7 @@ void Parameters::registerAll() {
     registerPar("OUT_STATIONS_COMPONENTS");
     registerPar("OUT_STATIONS_RECORD_INTERVAL");
     registerPar("OUT_STATIONS_DUMP_INTERVAL");
-	registerPar("OUT_STATIONS_WHOLE_SURFACE");
+    registerPar("OUT_STATIONS_WHOLE_SURFACE");
     
     // inparam.advanced
     registerPar("ATTENUATION_CG4");
@@ -92,7 +92,7 @@ void Parameters::registerAll() {
     registerPar("DEVELOP_NON_SOURCE_MODE");
     registerPar("DEVELOP_DIAGNOSE_PRELOOP");
     registerPar("DEVELOP_MEASURED_COSTS");
-	registerPar("FFTW_LUCKY_NUMBER");
+    registerPar("FFTW_LUCKY_NUMBER");
     registerPar("FFTW_DISABLE_WISDOM");
     
 }

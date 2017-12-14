@@ -406,8 +406,8 @@ void ExodusModel::buildInparam(ExodusModel *&exModel, const Parameters &par,
     }
     
     // form attenuation parameters
-	if (exModel->hasAttenuation()) {
-		int nr_lin_solids = (int)exModel->mGlobalVariables.at("nr_lin_solids");
+    if (exModel->hasAttenuation()) {
+        int nr_lin_solids = (int)exModel->mGlobalVariables.at("nr_lin_solids");
         double f_min = exModel->mGlobalVariables.at("f_min");
         double f_max = exModel->mGlobalVariables.at("f_max");
         double f_ref = exModel->mGlobalVariables.at("f_ref");
@@ -423,13 +423,13 @@ void ExodusModel::buildInparam(ExodusModel *&exModel, const Parameters &par,
             delete attPar;
         }
         attPar = new AttParameters(nr_lin_solids, f_min, f_max, f_ref, w, y);
-	} else {
-		if (attPar) {
+    } else {
+        if (attPar) {
             delete attPar;
-			attPar = 0;
+            attPar = 0;
         }
-	}
-	
+    }
+    
     // ellipticity
     if (exModel->isCartesian()) {
         return;

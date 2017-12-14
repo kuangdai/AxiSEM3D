@@ -12,20 +12,20 @@ class SurfaceIO {
 public:
     // before time loop
     void initialize(int totalRecordSteps, int bufferSize,
-		const std::vector<SurfaceInfo> &surfaceInfo,
-		double srcLat, double srcLon, double srcDep);
+        const std::vector<SurfaceInfo> &surfaceInfo,
+        double srcLat, double srcLon, double srcDep);
     
     // after time loop
     void finalize();
     
     // dump to netcdf
     void dumpToFile(const std::vector<CMatXX_RM> &bufferDisp, 
-		const RColX &bufferTime, int bufferLine);
+        const RColX &bufferTime, int bufferLine);
     
 private:
     // variable names
     std::vector<std::string> mVarNames;
-	std::vector<int> mNu;
+    std::vector<int> mNu;
     
     // file ID
     NetCDF_Writer *mNetCDF = 0;
@@ -35,8 +35,8 @@ private:
     
     // minimum MPI rank that has elements
     int mMinRankWithEle = -1;
-	
-	// source location
-	double mSrcLat, mSrcLon, mSrcDep;
+    
+    // source location
+    double mSrcLat, mSrcLon, mSrcDep;
 };
 

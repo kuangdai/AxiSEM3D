@@ -60,10 +60,10 @@ public:
     // wisdom
     void learnWisdom(Real cutoff);
     int getNuWisdom() const;
-	
-	// get displacement
-	const CMatX3 &getDispFourierSolid() const;
-	const CColX &getDispFourierFluid() const;
+    
+    // get displacement
+    const CMatX3 &getDispFourierSolid() const;
+    const CColX &getDispFourierFluid() const;
     
 private:
     double measureCoupling(int count);

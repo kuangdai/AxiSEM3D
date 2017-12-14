@@ -69,10 +69,10 @@ public:
     
     // signature for cost measurement
     std::string costSignature() const;
-	
-	// get displacement
-	virtual const CMatX3 &getDispFourierSolid() const;
-	virtual const CColX &getDispFourierFluid() const;
+    
+    // get displacement
+    virtual const CMatX3 &getDispFourierSolid() const;
+    virtual const CColX &getDispFourierFluid() const;
 
 protected:
     

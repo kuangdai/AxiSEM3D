@@ -26,39 +26,39 @@ mInputFile(fileRec), mGeographic(geographic), mSaveWholeSurface(saveSurf),
 mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
     std::vector<std::string> name, network;
     std::vector<double> theta, phi, depth;
-	if (!boost::iequals(fileRec, "none")) {
-		mInputFile = Parameters::sInputDirectory + "/" + mInputFile;
-		if (XMPI::root()) {
-	        std::fstream fs(mInputFile, std::fstream::in);
-	        if (!fs) {
-	            throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
-	                "Error opening station data file " + mInputFile + ".");
-	        }
-	        std::string line;
-	        while (getline(fs, line)) {
-	            try {
-	                std::vector<std::string> strs = Parameters::splitString(line, "\t ");
-	                if (strs.size() < 5 || strs.size() > 6) {
-	                    continue;
-	                }
-	                name.push_back(strs[0]);
-	                network.push_back(strs[1]);
-	                theta.push_back(boost::lexical_cast<double>(strs[2]));
-	                phi.push_back(boost::lexical_cast<double>(strs[3]));
-	                depth.push_back(boost::lexical_cast<double>(strs[strs.size() - 1]));
-	            } catch(std::exception) {
-	                // simply ignore invalid lines
-	                continue;
-	            }
-	        }
-	        fs.close();
-	    }
-	    XMPI::bcast(name);
-	    XMPI::bcast(network);
-	    XMPI::bcast(theta);
-	    XMPI::bcast(phi);
-	    XMPI::bcast(depth);
-	}
+    if (!boost::iequals(fileRec, "none")) {
+        mInputFile = Parameters::sInputDirectory + "/" + mInputFile;
+        if (XMPI::root()) {
+            std::fstream fs(mInputFile, std::fstream::in);
+            if (!fs) {
+                throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
+                    "Error opening station data file " + mInputFile + ".");
+            }
+            std::string line;
+            while (getline(fs, line)) {
+                try {
+                    std::vector<std::string> strs = Parameters::splitString(line, "\t ");
+                    if (strs.size() < 5 || strs.size() > 6) {
+                        continue;
+                    }
+                    name.push_back(strs[0]);
+                    network.push_back(strs[1]);
+                    theta.push_back(boost::lexical_cast<double>(strs[2]));
+                    phi.push_back(boost::lexical_cast<double>(strs[3]));
+                    depth.push_back(boost::lexical_cast<double>(strs[strs.size() - 1]));
+                } catch(std::exception) {
+                    // simply ignore invalid lines
+                    continue;
+                }
+            }
+            fs.close();
+        }
+        XMPI::bcast(name);
+        XMPI::bcast(network);
+        XMPI::bcast(theta);
+        XMPI::bcast(phi);
+        XMPI::bcast(depth);
+    }
     
     // create receivers
     mWidthName = -1;
@@ -119,7 +119,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     MultilevelTimer::begin("Release to Domain", 2);
     PointwiseRecorder *recorderPW = new PointwiseRecorder(
         mTotalRecordSteps, mRecordInterval, mBufferSize, mComponents,
-		mSrcLat, mSrcLon, mSrcDep);
+        mSrcLat, mSrcLon, mSrcDep);
     for (int irec = 0; irec < mReceivers.size(); irec++) {
         int recRankMin = XMPI::min(recRank[irec]);
         if (recRankMin == XMPI::nproc()) {
@@ -140,21 +140,21 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     
     // add recorder to domain
     domain.setPointwiseRecorder(recorderPW);
-	
-	// whole surface
-	if (mSaveWholeSurface) {
-		SurfaceRecorder *recorderSF = new SurfaceRecorder(mTotalRecordSteps, 
-			mRecordInterval, mBufferSize, 
-			mSrcLat, mSrcLon, mSrcDep);
-		for (int iloc = 0; iloc < mesh.getNumQuads(); iloc++) {
-	        const Quad *quad = mesh.getQuad(iloc);
-	        if (quad->onSurface()) {
-				Element *ele = domain.getElement(quad->getElementTag());
-				recorderSF->addElement(ele, quad->getSurfSide());
-			}
-	    }
-		domain.setSurfaceRecorder(recorderSF);
-	}
+    
+    // whole surface
+    if (mSaveWholeSurface) {
+        SurfaceRecorder *recorderSF = new SurfaceRecorder(mTotalRecordSteps, 
+            mRecordInterval, mBufferSize, 
+            mSrcLat, mSrcLon, mSrcDep);
+        for (int iloc = 0; iloc < mesh.getNumQuads(); iloc++) {
+            const Quad *quad = mesh.getQuad(iloc);
+            if (quad->onSurface()) {
+                Element *ele = domain.getElement(quad->getElementTag());
+                recorderSF->addElement(ele, quad->getSurfSide());
+            }
+        }
+        domain.setSurfaceRecorder(recorderSF);
+    }
     MultilevelTimer::end("Release to Domain", 2);
 }
 
@@ -171,9 +171,9 @@ std::string ReceiverCollection::verbose() const {
         ss << "    " << std::setw(mWidthName) << "..." << std::endl;
         ss << "    " << mReceivers[mReceivers.size() - 1]->verbose(mGeographic, mWidthName, mWidthNetwork) << std::endl;
     }
-	if (mSaveWholeSurface) {
-		ss << "  * Wavefield on the whole surface will be saved." << std::endl;
-	}
+    if (mSaveWholeSurface) {
+        ss << "  * Wavefield on the whole surface will be saved." << std::endl;
+    }
     ss << "========================= Receivers ========================\n" << std::endl;
     return ss.str();
 }
@@ -208,9 +208,9 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
         throw std::runtime_error("ReceiverCollection::buildInparam || "
             "Invalid parameter, keyword = OUT_STATIONS_DUPLICATED.");
     }
-	bool saveSurf = par.getValue<bool>("OUT_STATIONS_WHOLE_SURFACE");
+    bool saveSurf = par.getValue<bool>("OUT_STATIONS_WHOLE_SURFACE");
     rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep, 
-		duplicated, saveSurf); 
+        duplicated, saveSurf); 
     
     // options 
     rec->mRecordInterval = par.getValue<int>("OUT_STATIONS_RECORD_INTERVAL");

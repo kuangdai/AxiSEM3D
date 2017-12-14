@@ -28,7 +28,7 @@ SET(CMAKE_Fortran_COMPILER     gfortran)
 # SET(BOOST_ROOT            edit_here)
 # SET(METIS_ROOT            edit_here)
 # SET(NETCDF_ROOT           edit_here)
-# SET(HDF5_ROOT           	edit_here)
+# SET(HDF5_ROOT             edit_here)
 
 # polynomial order of spectral elements (from 1 to 8)
 SET(NPOL 4)
@@ -111,10 +111,10 @@ find_package(NETCDF REQUIRED)
 include_directories(${NETCDF_INCLUDE_DIR})
 # hdf5
 if (NEED_HDF5_LINK)
-	if (HDF5_ROOT)
-    	set(ENV{HDF5_ROOT} ${HDF5_ROOT})
-	endif ()
-	find_package(HDF5 COMPONENTS C COMPONENTS HL REQUIRED)
+    if (HDF5_ROOT)
+        set(ENV{HDF5_ROOT} ${HDF5_ROOT})
+    endif ()
+    find_package(HDF5 COMPONENTS C COMPONENTS HL REQUIRED)
 endif ()
 
 ############# local includes #############
@@ -144,7 +144,7 @@ include_directories(
 
     src/core/source
     src/core/output/pointwise
-	src/core/output/surface
+    src/core/output/surface
     src/core/domain
     src/core/newmark
 
@@ -168,7 +168,7 @@ include_directories(
 
     src/preloop/source
     src/preloop/source/stf
-	src/preloop/source/offaxis
+    src/preloop/source/offaxis
     src/preloop/receiver
 
     src/3d_model/3d_volumetric
@@ -246,9 +246,9 @@ add_executable(
     src/core/output/pointwise/PointwiseRecorder.cpp
     src/core/output/pointwise/PointwiseIOAscii.cpp
     src/core/output/pointwise/PointwiseIONetCDF.cpp
-	src/core/output/surface/SurfaceRecorder.cpp
-	src/core/output/surface/SurfaceIO.cpp
-	src/core/output/surface/SurfaceInfo.cpp
+    src/core/output/surface/SurfaceRecorder.cpp
+    src/core/output/surface/SurfaceIO.cpp
+    src/core/output/surface/SurfaceInfo.cpp
     src/core/domain/Domain.cpp
     src/core/newmark/Newmark.cpp
 
@@ -301,8 +301,8 @@ add_executable(
     src/preloop/source/stf/ErfSTF.cpp
     src/preloop/source/stf/GaussSTF.cpp
     src/preloop/source/stf/RickerSTF.cpp
-	src/preloop/source/offaxis/OffAxisSource.cpp
-	src/preloop/source/offaxis/OffAxisPointForce.cpp
+    src/preloop/source/offaxis/OffAxisSource.cpp
+    src/preloop/source/offaxis/OffAxisPointForce.cpp
     src/preloop/receiver/Receiver.cpp
     src/preloop/receiver/ReceiverCollection.cpp
 
@@ -333,7 +333,7 @@ target_link_libraries(
     ${FFTW_LIBRARIES}
     ${METIS_LIBRARIES}
     ${NETCDF_LIBRARIES}
-	${HDF5_LIBRARIES}
-	${HDF5_HL_LIBRARIES}
+    ${HDF5_LIBRARIES}
+    ${HDF5_HL_LIBRARIES}
     ${ADDITIONAL_LIBS}
 )

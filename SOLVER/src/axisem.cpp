@@ -144,9 +144,9 @@ int axisem_main(int argc, char *argv[]) {
         // release receivers
         MultilevelTimer::begin("Release Receivers", 1);
         pl.mReceivers->release(*(sv.mDomain), *(pl.mMesh));
-		MultilevelTimer::begin("Initialize Recorders", 2);
-		sv.mDomain->initializeRecorders();
-		MultilevelTimer::end("Initialize Recorders", 2);
+        MultilevelTimer::begin("Initialize Recorders", 2);
+        sv.mDomain->initializeRecorders();
+        MultilevelTimer::end("Initialize Recorders", 2);
         MultilevelTimer::end("Release Receivers", 1);
         
         // verbose domain 

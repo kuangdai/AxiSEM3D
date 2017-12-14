@@ -33,7 +33,7 @@ public:
     void addSourceTerm(SourceTerm *source) {mSourceTerms.push_back(source);};
     void setSTF(SourceTimeFunction *stf) {mSTF = stf;};
     void setPointwiseRecorder(PointwiseRecorder *recorderPW) {mPointwiseRecorder = recorderPW;};
-	void setSurfaceRecorder(SurfaceRecorder *recorderSF) {mSurfaceRecorder = recorderSF;};
+    void setSurfaceRecorder(SurfaceRecorder *recorderSF) {mSurfaceRecorder = recorderSF;};
     void setMessaging(MessagingInfo *msgInfo, MessagingBuffer *msgBuffer) 
         {mMsgInfo = msgInfo; mMsgBuffer = msgBuffer;};
     void addSFPoint(SolidFluidPoint *SFPoint) {mSFPoints.push_back(SFPoint);};
@@ -99,7 +99,7 @@ private:
     SourceTimeFunction *mSTF = 0;
     // point-wise stations
     PointwiseRecorder *mPointwiseRecorder = 0;
-	// surface wavefield
+    // surface wavefield
     SurfaceRecorder *mSurfaceRecorder = 0;
     // massaging 
     MessagingInfo *mMsgInfo = 0;

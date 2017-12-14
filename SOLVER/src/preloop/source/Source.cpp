@@ -102,20 +102,20 @@ bool Source::locate(const Mesh &mesh, int &locTag, RDColP &interpFactZ) const {
 #include <cfloat>
 
 void Source::parseLine(const std::string &line, const std::string &key, double &res) {
-	std::stringstream ss;
-	std::string keylong;
-	ss << line;
-	ss >> keylong;
-	if (boost::icontains(keylong, key)) {
-		ss >> res;
-	}
+    std::stringstream ss;
+    std::string keylong;
+    ss << line;
+    ss >> keylong;
+    if (boost::icontains(keylong, key)) {
+        ss >> res;
+    }
 }
 
 void Source::checkValue(const std::string &key, double res) {
-	if (res > DBL_MAX * .99) {
-		throw std::runtime_error("Source::checkValue || "
-			"Error initializing source parameter: " + key);
-	}
+    if (res > DBL_MAX * .99) {
+        throw std::runtime_error("Source::checkValue || "
+            "Error initializing source parameter: " + key);
+    }
 }
 
 void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
@@ -139,7 +139,7 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
         std::string cmtfile = Parameters::sInputDirectory + "/" + src_file;
         double depth = DBL_MAX, lat = DBL_MAX, lon = DBL_MAX;
         double Mrr = DBL_MAX, Mtt = DBL_MAX, Mpp = DBL_MAX; 
-		double Mrt = DBL_MAX, Mrp = DBL_MAX, Mtp = DBL_MAX;
+        double Mrt = DBL_MAX, Mrp = DBL_MAX, Mtp = DBL_MAX;
         if (XMPI::root()) {
             std::fstream fs(cmtfile, std::fstream::in);
             if (!fs) {
@@ -147,27 +147,27 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
                     "Error opening CMT data file: ||" + cmtfile);
             }
             std::string line;
-			while (std::getline(fs, line)) {
-				parseLine(line, "latitude", lat);
-				parseLine(line, "longitude", lon);
-				parseLine(line, "depth", depth);
-				parseLine(line, "Mrr", Mrr);
-				parseLine(line, "Mtt", Mtt);
-				parseLine(line, "Mpp", Mpp);
-				parseLine(line, "Mrt", Mrt);
-				parseLine(line, "Mrp", Mrp);
-				parseLine(line, "Mtp", Mtp);
-	        }
-			checkValue("latitude", lat);
-			checkValue("longitude", lon);
-			checkValue("depth", depth);
-			checkValue("Mrr", Mrr);
-			checkValue("Mtt", Mtt);
-			checkValue("Mpp", Mpp);
-			checkValue("Mrt", Mrt);
-			checkValue("Mrp", Mrp);
-			checkValue("Mtp", Mtp);
-			// unit
+            while (std::getline(fs, line)) {
+                parseLine(line, "latitude", lat);
+                parseLine(line, "longitude", lon);
+                parseLine(line, "depth", depth);
+                parseLine(line, "Mrr", Mrr);
+                parseLine(line, "Mtt", Mtt);
+                parseLine(line, "Mpp", Mpp);
+                parseLine(line, "Mrt", Mrt);
+                parseLine(line, "Mrp", Mrp);
+                parseLine(line, "Mtp", Mtp);
+            }
+            checkValue("latitude", lat);
+            checkValue("longitude", lon);
+            checkValue("depth", depth);
+            checkValue("Mrr", Mrr);
+            checkValue("Mtt", Mtt);
+            checkValue("Mpp", Mpp);
+            checkValue("Mrt", Mrt);
+            checkValue("Mrp", Mrp);
+            checkValue("Mtp", Mtp);
+            // unit
             depth *= 1e3;
             Mrr *= 1e-7;
             Mtt *= 1e-7;
@@ -199,21 +199,21 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
                     "Error opening point force data file: ||" + pointffile);
             }
             std::string line;
-			while (std::getline(fs, line)) {
-				parseLine(line, "latitude", lat);
-				parseLine(line, "longitude", lon);
-				parseLine(line, "depth", depth);
-				parseLine(line, "Ft", f1);
-				parseLine(line, "Fp", f2);
-				parseLine(line, "Fr", f3);
-	        }
-			checkValue("latitude", lat);
-			checkValue("longitude", lon);
-			checkValue("depth", depth);
-			checkValue("Ft", f1);
-			checkValue("Fp", f2);
-			checkValue("Fr", f3);
-			// unit
+            while (std::getline(fs, line)) {
+                parseLine(line, "latitude", lat);
+                parseLine(line, "longitude", lon);
+                parseLine(line, "depth", depth);
+                parseLine(line, "Ft", f1);
+                parseLine(line, "Fp", f2);
+                parseLine(line, "Fr", f3);
+            }
+            checkValue("latitude", lat);
+            checkValue("longitude", lon);
+            checkValue("depth", depth);
+            checkValue("Ft", f1);
+            checkValue("Fp", f2);
+            checkValue("Fr", f3);
+            // unit
             depth *= 1e3;
             fs.close();
         }
@@ -225,7 +225,7 @@ void Source::buildInparam(Source *&src, const Parameters &par, int verbose) {
         XMPI::bcast(f3);
         src = new PointForce(depth, lat, lon, f1, f2, f3);
     } else {
-         throw std::runtime_error("Source::buildInparam || Unknown source type: " + src_type);
+        throw std::runtime_error("Source::buildInparam || Unknown source type: " + src_type);
     }
     
     if (verbose) {

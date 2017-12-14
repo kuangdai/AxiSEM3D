@@ -51,15 +51,15 @@ Material::Material(const Quad *myQuad, const ExodusModel &exModel): mMyQuad(myQu
     for (int i = 0; i < 4; i++) {
         mRho1D(i) = exModel.getElementalVariables("RHO_" + std::to_string(i), quadTag);
     }
-	if (exModel.hasAttenuation()) {
-		for (int i = 0; i < 4; i++) {
-	        mQkp1D(i) = exModel.getElementalVariables("QKAPPA_" + std::to_string(i), quadTag);
-	        mQmu1D(i) = exModel.getElementalVariables("QMU_" + std::to_string(i), quadTag);
-	    }
-	} else {
-		mQkp1D.setZero();
-		mQmu1D.setZero();
-	}
+    if (exModel.hasAttenuation()) {
+        for (int i = 0; i < 4; i++) {
+            mQkp1D(i) = exModel.getElementalVariables("QKAPPA_" + std::to_string(i), quadTag);
+            mQmu1D(i) = exModel.getElementalVariables("QMU_" + std::to_string(i), quadTag);
+        }
+    } else {
+        mQkp1D.setZero();
+        mQmu1D.setZero();
+    }
     
     // initialize 3D properties with 1D reference
     int Nr = mMyQuad->getNr();

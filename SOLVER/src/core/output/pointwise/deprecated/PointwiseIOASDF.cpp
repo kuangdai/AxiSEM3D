@@ -17,7 +17,7 @@
 #include <boost/lexical_cast.hpp>
 
 void PointwiseIOASDF::initialize(int totalRecordSteps, int bufferSize, 
-	const std::string &components, const std::vector<PointwiseInfo> &receivers) {
+    const std::string &components, const std::vector<PointwiseInfo> &receivers) {
     // number
     int numRec = receivers.size();
     if (numRec == 0) {

@@ -51,8 +51,8 @@ public:
     // compute Real displacement, used by receiver
     void computeGroundMotion(Real phi, const RMatPP &weights, RRow3 &u_spz) const; 
     
-	// side-wise
-	void feedDispOnSide(int side, CMatXX_RM &buffer, int row) const; 
+    // side-wise
+    void feedDispOnSide(int side, CMatXX_RM &buffer, int row) const; 
     
     // verbose
     std::string verbose() const;
