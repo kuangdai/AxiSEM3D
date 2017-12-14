@@ -36,7 +36,10 @@ parser.add_argument('-s', '--spatial_sampling', dest='spatial_sampling',
 					action='store', type=float, required=True,
 					help='spatial sampling on surface (km)\n' +
 						 '<required>') 
-parser.add_argument('-m', '--max_dist', dest='max_dist', 
+parser.add_argument('-m', '--min_dist', dest='min_dist', 
+					action='store', type=float, default=0.,
+					help='minimum distance (deg); default = 0')
+parser.add_argument('-M', '--max_dist', dest='max_dist', 
 					action='store', type=float, default=180.,
 					help='maximum distance (deg); default = 180') 						 
 parser.add_argument('-t', '--tstart', dest='tstart', 
@@ -99,8 +102,9 @@ if args.verbose:
 if args.verbose:
 	clock0 = time.clock()
 	print('Sampling surface...')
-ndist = int(np.radians(args.max_dist) * r_outer / (args.spatial_sampling * 1e3)) + 1
-dists = np.linspace(0, np.pi, num=ndist, endpoint=True)
+ndist = int(np.radians(args.max_dist - args.min_dist) * r_outer / \
+ 		(args.spatial_sampling * 1e3)) + 1
+dists = np.linspace(args.min_dist, args.max_dist, num=ndist, endpoint=True)
 azims = []
 nazim = np.zeros(ndist, dtype=int)
 for idist, dist in enumerate(dists):
