@@ -42,5 +42,17 @@ private:
     RDColX mGridDep;
     RDColX mGridLat;
     RDColX mGridLon;
+    
+    // special model flag
+    // abs -- use absolute value of the perturbations
+    // pow -- use power of the perturbations
+    // to use these special model flags, reference type cannot be Absolute
+    // for "abs" flag, the following factor is used to change the sign
+    // for "pow" flag, the following factor specifies the power, e.g.,
+    // 2.0 means "squared", which makes the model sharper  
+    // 0.5 means "sqrt", which makes the model smoother
+    // the pow flag keeps the sign and global absolute maximum of the perturbations
+    std::string mModelFlag = "none";
+    double mModelFlagFactor = 1.0;
 };
 

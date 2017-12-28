@@ -32,7 +32,7 @@ void Volumetric3D_EMC::initialize() {
             // get all files
             DIR *dir = opendir(fname.c_str());
             if (!dir) {
-                throw std::runtime_error("Geometric3D_EMC::initialize || " 
+                throw std::runtime_error("Volumetric3D_EMC::initialize || " 
                     "Error opening directory of data files || Directory = " + fname);    
             }
             struct dirent *entry;
@@ -48,7 +48,7 @@ void Volumetric3D_EMC::initialize() {
                 boost::replace_first(depthStr, ".grd", "");
                 std::size_t found = depthStr.find_last_of("_");
                 if (found == std::string::npos) {
-                    throw std::runtime_error("Geometric3D_EMC::initialize || " 
+                    throw std::runtime_error("Volumetric3D_EMC::initialize || " 
                         "Error processing file name || File = " + fn);    
                 }
                 depthStr = depthStr.substr(found + 1);
@@ -56,7 +56,7 @@ void Volumetric3D_EMC::initialize() {
                 try {
                     depth = boost::lexical_cast<float>(depthStr);
                 } catch (std::exception) {
-                    throw std::runtime_error("Geometric3D_EMC::initialize || " 
+                    throw std::runtime_error("Volumetric3D_EMC::initialize || " 
                         "Error processing file name || File = " + fn);
                 }
                 // add pair
@@ -132,15 +132,15 @@ void Volumetric3D_EMC::initialize() {
         
         // check dimensions
         if (dims.size() != 3) {
-            throw std::runtime_error("Geometric3D_EMC::initialize || Inconsistent data dimensions || "
+            throw std::runtime_error("Volumetric3D_EMC::initialize || Inconsistent data dimensions || "
                 "File/Directory = " + fname);
         }
         if (dims[0] != fdep.size() || dims[1] != flat.size() || dims[2] != flon.size()) {
-            throw std::runtime_error("Geometric3D_EMC::initialize || Inconsistent data dimensions || "
+            throw std::runtime_error("Volumetric3D_EMC::initialize || Inconsistent data dimensions || "
                 "File/Directory = " + fname);
         }
         if (!XMath::sortedAscending(fdep) || !XMath::sortedAscending(flat) || !XMath::sortedAscending(flon)) {
-            throw std::runtime_error("Geometric3D_EMC::initialize || Grid coordinates are not sorted ascendingly || "
+            throw std::runtime_error("Volumetric3D_EMC::initialize || Grid coordinates are not sorted ascendingly || "
                 "File/Directory = " + fname);
         }
     }
@@ -163,6 +163,21 @@ void Volumetric3D_EMC::initialize() {
     
     // apply factor
     data *= mFactor;
+    
+    // special flag
+    if (!boost::iequals(mModelFlag, "none")) {
+        if (boost::iequals(mModelFlag, "abs")) {
+            data.array() = data.array().abs();
+            data *= mModelFlagFactor;
+        } else if (boost::iequals(mModelFlag, "pow")) {
+            double absmax = data.array().abs().maxCoeff();
+            double scalefact = std::abs(absmax / std::pow(absmax, mModelFlagFactor));
+            data.array() = data.array().sign() * (data.array().abs().pow(mModelFlagFactor) * scalefact);
+        } else {
+            throw std::runtime_error("Volumetric3D_EMC::initialize || "
+                "Unknown special model flag, flag = " + mModelFlag);
+        }
+    }
     
     // reshape data
     int pos = 0;
@@ -221,8 +236,17 @@ void Volumetric3D_EMC::initialize(const std::vector<std::string> &params) {
         Parameters::castValue(mFactor, params.at(ipar++), source);
         Parameters::castValue(mGeographic, params.at(ipar++), source);
         Parameters::castValue(mOneFilePerDepth, params.at(ipar++), source);
+        Parameters::castValue(mModelFlag, params.at(ipar++), source);
+        Parameters::castValue(mModelFlagFactor, params.at(ipar++), source);
     } catch (std::out_of_range) {
         // nothing
+    }
+    
+    if (!boost::iequals(mModelFlag, "none")) {
+        if (mReferenceType == MaterialRefType::Absolute) {
+            throw std::runtime_error("Volumetric3D_EMC::initialize || "
+                "Imposing special model flag on an absolute model.");
+        }
     }
     initialize();
 }
@@ -319,6 +343,10 @@ std::string Volumetric3D_EMC::verbose() const {
     ss << "  Factor               =   " << mFactor << std::endl;
     ss << "  Use Geographic       =   " << (mGeographic ? "YES" : "NO") << std::endl;
     ss << "  One File per Depth   =   " << (mOneFilePerDepth ? "YES" : "NO") << std::endl;
+    if (!boost::iequals(mModelFlag, "none")) {
+        ss << "  Special Model Flag   =   " << mModelFlag << std::endl;
+        ss << "  Model Flag Factor    =   " << mModelFlagFactor << std::endl;
+    }
     ss << "======================= 3D Volumetric =======================\n" << std::endl;
     return ss.str();
 }
