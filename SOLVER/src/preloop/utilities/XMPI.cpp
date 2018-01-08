@@ -15,8 +15,11 @@ void XMPI::initialize(int argc, char *argv[]) {
     #endif
     
     // find path of executable
-    // 9 characters: /axisem3d
     std::string argv0(argv[0]);
+    if (argv0 == "axisem3d") {
+        argv0 = "./axisem3d";
+    }
+    // 9 characters: /axisem3d
     std::string execDirectory = argv0.substr(0, argv0.length() - 9); 
     
     // so far, this problem happens with valgrind only 
