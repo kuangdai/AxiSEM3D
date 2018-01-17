@@ -93,10 +93,27 @@ void ExodusModel::readRawData() {
         mSideSetValues.col(i) = values;
     }
     
-    // ellipticity
-    reader.read2D("ellipticity", dbuffer);
-    mEllipKnots = dbuffer.row(0).transpose();
-    mEllipCoeffs = dbuffer.row(1).transpose();
+    // do not read ellipticity for cartesian
+    bool cartesian = false;
+    for (int i = 0; i < mGlobalRecordsRaw.size(); i++) {
+        std::vector<std::string> substrs = Parameters::splitString(mGlobalRecordsRaw[i], "=");
+        if (boost::iequals(boost::trim_copy(substrs[0]), "crdsys") && 
+            boost::iequals(boost::trim_copy(substrs[1]), "cartesian")) {
+            cartesian = true;
+            break;
+        }
+    }
+    if (cartesian) {
+        mEllipKnots = RDColX::Zero(0);
+        mEllipCoeffs = RDColX::Zero(0);
+        // set radius to PREM 
+        mGlobalVariables.insert(std::pair<std::string, double>("radius", 6371e3));
+    } else {
+        // ellipticity
+        reader.read2D("ellipticity", dbuffer);
+        mEllipKnots = dbuffer.row(0).transpose();
+        mEllipCoeffs = dbuffer.row(1).transpose();
+    }
     
     // close file
     reader.close();
