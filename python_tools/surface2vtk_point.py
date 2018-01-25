@@ -6,7 +6,7 @@ surface2vtk_point.py
 
 Generate VTK animations from a NetCDF database of surface wavefield 
 created by AxiSEM3D (named axisem3d_surface.nc by the solver). Data
-are presented on discretized vertices.
+are presented on discretised vertices.
 
 To see usage, type
 python surface2vtk_point.py -h
@@ -15,7 +15,7 @@ python surface2vtk_point.py -h
 ################### PARSER ###################
 aim = '''Generate VTK animations from a NetCDF database of surface wavefield 
 created by AxiSEM3D (named axisem3d_surface.nc by the solver). Data
-are presented on discretized vertices.'''
+are presented on discretised vertices.'''
 
 notes = '''Parallelise data processing using --nporc option.
 Animate the VKT files with Paraview.
