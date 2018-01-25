@@ -178,7 +178,7 @@ for ist in np.arange(0, len(station_info)):
     # ignore buried depth
     if depth > 0.: 
         buried += 1
-        if (largest_depth < depth):
+        if largest_depth < depth:
             largest_depth = depth
             largest_depth_station = key
     # duplicated stations    

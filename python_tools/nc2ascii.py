@@ -172,7 +172,7 @@ def write_ascii(iproc):
         ncdf = Dataset(tempnc, 'r', format='NETCDF4')
 
     for ist, st in enumerate(stations):
-        if (ist % args.nproc != iproc): 
+        if ist % args.nproc != iproc: 
             continue
         
         # station info

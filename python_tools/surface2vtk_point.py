@@ -214,7 +214,7 @@ def write_vtk(iproc):
         clock0 = time.clock()
         print('Generating snapshot...')
     for it, istep in enumerate(steps):
-        if (it % args.nproc != iproc): 
+        if it % args.nproc != iproc: 
             continue
         disp = np.zeros((nstation, 3))
         istation = 0

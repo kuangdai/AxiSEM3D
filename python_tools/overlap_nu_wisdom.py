@@ -55,7 +55,7 @@ for infile in args.in_wisdom_files:
     ind = np.lexsort((data[:, 0], data[:, 1]))
     nus.append(data[ind])
     ncdf.close()
-    if (len(nus) > 1):
+    if len(nus) > 1:
         assert data.shape == nus[0].shape, 'Incompatible mesh.'
 
 # overlap
