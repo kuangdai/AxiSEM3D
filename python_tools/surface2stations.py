@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-surface2nc.py
+surface2stations.py
 
 Extract synthetics at given stations from a NetCDF database of surface
 wavefield created by AxiSEM3D (named axisem3d_surface.nc by the solver)
@@ -10,7 +10,7 @@ and save them into a NetCDF waveform database (same as the built-in
 NetCDF output axisem3d_synthetics.nc).
 
 To see usage, type
-python surface2nc.py -h
+python surface2stations.py -h
 '''
 
 ################### PARSER ###################
