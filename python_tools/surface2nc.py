@@ -62,8 +62,82 @@ args = parser.parse_args()
 
 import numpy as np
 from netCDF4 import Dataset
-from surface_utils import interpLagrange
-from surface_utils import SurfaceStation
+from obspy.geodetics import gps2dist_azimuth
+
+################### TOOLS ###################
+def rotation_matrix(theta, phi):
+    return np.array([[np.cos(theta) * np.cos(phi), -np.sin(phi), np.sin(theta) * np.cos(phi)],
+                     [np.cos(theta) * np.sin(phi), np.cos(phi), np.sin(theta) * np.sin(phi)],
+                     [-np.sin(theta), 0., np.cos(theta)]])
+                     
+def latlon2thetaphi(lat, lon, flattening):
+    temp = (1. - flattening) * (1. - flattening)
+    return np.pi / 2. - np.arctan(temp * np.tan(np.radians(lat))), np.radians(lon)
+
+def thetaphi2latlon(theta, phi, flattening):
+    temp = 1. / (1. - flattening) / (1. - flattening)
+    return np.degrees(np.arctan(temp * np.tan(np.pi / 2. - theta))), np.degrees(phi)
+           
+def thetaphi2xyz(theta, phi):
+    return np.array([np.sin(theta) * np.cos(phi),
+                     np.sin(theta) * np.sin(phi),
+                     np.cos(theta)])
+
+def xyz2thetaphi(xyz):
+    theta = np.arccos(xyz[2])
+    phi = np.arctan2(xyz[1], xyz[0])
+    return theta, phi 
+
+class SurfaceStation:
+    # class variables and methods
+    src_lat = None
+    src_lon = None
+    src_rmat = None
+    def setSource(srclat, srclon, srcflattening):
+        SurfaceStation.src_lat, SurfaceStation.src_lon = srclat, srclon
+        srctheta, srcphi = latlon2thetaphi(srclat, srclon, srcflattening)
+        SurfaceStation.src_rmat = rotation_matrix(srctheta, srcphi)
+    
+    def __init__(self, network, name):
+        self.network = network
+        self.name = name
+
+    def setloc_geographic(self, lat, lon, flattening):
+        self.lat = lat
+        self.lon = lon
+        theta, phi = latlon2thetaphi(lat, lon, flattening)
+        xglb = thetaphi2xyz(theta, phi)
+        xsrc = SurfaceStation.src_rmat.T.dot(xglb)
+        self.dist, self.azimuth = xyz2thetaphi(xsrc)
+        d, az, baz = gps2dist_azimuth(SurfaceStation.src_lat, SurfaceStation.src_lon, 
+            self.lat, self.lon, a=1., f=flattening)
+        self.baz = np.radians(baz)
+    
+    def setloc_source_centered(self, dist, azimuth, flattening):
+        self.dist = dist
+        self.azimuth = azimuth
+        xsrc = thetaphi2xyz(dist, azimuth)
+        xglb = SurfaceStation.src_rmat.dot(xsrc)
+        theta, phi = xyz2thetaphi(xglb)
+        self.lat, self.lon = thetaphi2latlon(theta, phi, flattening)
+        d, az, baz = gps2dist_azimuth(SurfaceStation.src_lat, SurfaceStation.src_lon, 
+            self.lat, self.lon, a=1., f=flattening)
+        self.baz = np.radians(baz)
+
+def interpLagrange(target, bases):
+    nbases = len(bases)
+    results = np.zeros(nbases)
+    for dgr in np.arange(0, nbases):
+        prod1 = 1.
+        prod2 = 1.
+        for i in np.arange(0, nbases):
+            if i != dgr:
+                prod1 *= target - bases[i]
+                prod2 *= bases[dgr] - bases[i]
+        results[dgr] = prod1 / prod2
+    return results    
+################### TOOLS ###################
+
 
 ###### read surface database
 nc_surf = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
@@ -85,6 +159,9 @@ var_GLL = nc_surf.variables['GLL']
 var_GLJ = nc_surf.variables['GLJ']
 nPntEdge = len(var_GLL)
 
+# set source
+SurfaceStation.setSource(srclat, srclon, srcflat)
+
 ###### read station info
 station_info = np.loadtxt(args.stations, dtype=str)
 stations = {}
@@ -96,7 +173,7 @@ for ist in np.arange(0, len(station_info)):
     network = station_info[ist, 1]
     lat_theta = float(station_info[ist, 2])
     lon_phi = float(station_info[ist, 3])
-    depth = float(station_info[ist, len(station_info[ist]) - 1])
+    depth = float(station_info[ist, -1])
     key = network + '.' + name
     # ignore buried depth
     if depth > 0.: 
@@ -121,13 +198,11 @@ for ist in np.arange(0, len(station_info)):
     st = SurfaceStation(network, name)
     # coordinate system
     if args.crdsys == 'geographic':
-        st.setloc_geographic(lat_theta, lon_phi, surfflat, 
-            srclat, srclon, srcflat)
+        st.setloc_geographic(lat_theta, lon_phi, surfflat)
     else:
         lat_theta = np.radians(lat_theta)
         lon_phi = np.radians(lon_phi)
-        st.setloc_source_centered(lat_theta, lon_phi, surfflat, 
-            srclat, srclon, srcflat)
+        st.setloc_source_centered(lat_theta, lon_phi, surfflat)
     stations[key] = st
 if buried > 0:
     print('Warning: Ignoring buried depth of %d stations;' % (buried))    
@@ -149,6 +224,7 @@ var_time_out[:] = var_time[:]
 
 # waveforms
 nc_wave.createDimension('ncdim_3', size=3)
+max_theta = np.amax(var_theta, axis=1)
 for ist, station in enumerate(stations.values()):
     # waveform
     key = station.network + '.' + station.name
@@ -159,11 +235,7 @@ for ist, station in enumerate(stations.values()):
     var_wave.longitude = station.lon
     var_wave.depth = 0.
     # locate station
-    eleTag = -1
-    for iele in np.arange(0, nele):
-        if station.dist <= var_theta[iele, 1]:
-            eleTag = iele
-            break
+    eleTag = np.searchsorted(max_theta, station.dist)
     assert eleTag >= 0, 'Fail to locate station %s, dist = %f' \
         % (key, station.dist)
     theta0 = var_theta[eleTag, 0]
