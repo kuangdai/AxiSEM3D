@@ -2,18 +2,20 @@
 # -*- coding: utf-8 -*-
 
 '''
-surface_vtk.py
+surface2vtk_point.py
 
 Generate VTK animations from a NetCDF database of surface wavefield 
-created by AxiSEM3D (named axisem3d_surface.nc by the solver).
+created by AxiSEM3D (named axisem3d_surface.nc by the solver). Data
+are presented on discretized vertices.
 
 To see usage, type
-python surface_vtk.py -h
+python surface2vtk_point.py -h
 '''
     
 ################### PARSER ###################
 aim = '''Generate VTK animations from a NetCDF database of surface wavefield 
-created by AxiSEM3D (named axisem3d_surface.nc by the solver).'''
+created by AxiSEM3D (named axisem3d_surface.nc by the solver). Data
+are presented on discretized vertices.'''
 
 notes = '''Parallelise data processing using --nporc option.
 Animate the VKT files with Paraview.
@@ -238,7 +240,7 @@ def write_vtk(iproc):
         vtk = pyvtk.VtkData(vtk_points,
             pyvtk.PointData(pyvtk.Vectors(disp, name='disp_RTZ')),
             'surface animation')
-        vtk.tofile(args.out_vtk + '/surface_vtk.' + str(it) + '.vtk', 'binary')
+        vtk.tofile(args.out_vtk + '/surface_vtk_point.' + str(it) + '.vtk', 'binary')
         if args.verbose:
             print('    Done with snapshot t = %f s; tstep = %d / %d; iproc = %d' \
                 % (istep * dt + t0, it + 1, len(steps), iproc))
