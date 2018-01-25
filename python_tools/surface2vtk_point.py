@@ -55,6 +55,9 @@ parser.add_argument('-d', '--time_interval', dest='time_interval',
 parser.add_argument('-n', '--nsnapshots', dest='nsnapshots',
                     action='store', type=int, required=True,
                     help='number of snapshots <required>')
+parser.add_argument('-N', '--norm', dest='norm', action='store_true', 
+                    help='only dump displacement norm;\n' +
+                         'default = False')
 parser.add_argument('-p', '--nproc', dest='nproc', action='store', 
                     type=int, default=1, 
                     help='number of processors; default = 1')
@@ -216,7 +219,10 @@ def write_vtk(iproc):
     for it, istep in enumerate(steps):
         if it % args.nproc != iproc: 
             continue
-        disp = np.zeros((nstation, 3))
+        if args.norm:
+            disp_norm = np.zeros(nstation)
+        else:
+            disp = np.zeros((nstation, 3))    
         istation = 0
         for idist, dist in enumerate(dists):
             fourier_r = nc_surf_local.variables['edge_' + str(eleTags[idist]) + 'r'][istep, :]
@@ -233,13 +239,21 @@ def write_vtk(iproc):
                 exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * azim)
                 exparray[0] = 1.
                 spz = wdotf.dot(exparray).real
-                disp[istation, 0] = spz[0] * np.cos(dist) - spz[2] * np.sin(dist)
-                disp[istation, 1] = spz[1]
-                disp[istation, 2] = spz[0] * np.sin(dist) + spz[2] * np.cos(dist)
+                if args.norm:
+                    disp_norm[istation] = np.linalg.norm(spz)
+                else:
+                    disp[istation, 0] = spz[0] * np.cos(dist) - spz[2] * np.sin(dist)
+                    disp[istation, 1] = spz[1]
+                    disp[istation, 2] = spz[0] * np.sin(dist) + spz[2] * np.cos(dist)
                 istation += 1
-        vtk = pyvtk.VtkData(vtk_points,
-            pyvtk.PointData(pyvtk.Vectors(disp, name='disp_RTZ')),
-            'surface animation')
+        if args.norm:
+            vtk = pyvtk.VtkData(vtk_points,
+                pyvtk.PointData(pyvtk.Scalars(disp_norm, name='disp_norm')), 
+                'surface animation')
+        else:
+            vtk = pyvtk.VtkData(vtk_points,
+                pyvtk.PointData(pyvtk.Vectors(disp, name='disp_RTZ')),
+                'surface animation')
         vtk.tofile(args.out_vtk + '/surface_vtk_point.' + str(it) + '.vtk', 'binary')
         if args.verbose:
             print('    Done with snapshot t = %f s; tstep = %d / %d; iproc = %d' \
