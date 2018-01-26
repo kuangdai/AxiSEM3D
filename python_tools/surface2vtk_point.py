@@ -127,6 +127,7 @@ if args.verbose:
     
 ###### xyz
 if args.verbose:
+    clock0 = time.clock()
     print('Computing xyz of points...')    
 dist_azim = np.zeros((nstation, 2))
 istart = 0
