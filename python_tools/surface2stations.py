@@ -148,15 +148,15 @@ srcdep = nc_surf.source_depth
 srcflat = nc_surf.source_flattening
 surfflat = nc_surf.surface_flattening
 # time
-var_time = nc_surf.variables['time_points']
+var_time = nc_surf.variables['time_points'][:]
 nstep = len(var_time)
-solver_dtype = var_time.datatype
+solver_dtype = nc_surf.variables['time_points'].datatype
 # theta
-var_theta = nc_surf.variables['theta']
+var_theta = nc_surf.variables['theta'][:]
 nele = len(var_theta)
 # GLL and GLJ
-var_GLL = nc_surf.variables['GLL']
-var_GLJ = nc_surf.variables['GLJ']
+var_GLL = nc_surf.variables['GLL'][:]
+var_GLJ = nc_surf.variables['GLJ'][:]
 nPntEdge = len(var_GLL)
 
 # set source
@@ -249,10 +249,10 @@ for ist, station in enumerate(stations.values()):
         
     # Fourier
     # NOTE: change to stepwise if memory issue occurs
-    fourier_r = nc_surf.variables['edge_' + str(eleTag) + 'r']
-    fourier_i = nc_surf.variables['edge_' + str(eleTag) + 'i']
-    fourier = fourier_r[:, :] + fourier_i[:, :] * 1j
-    nu_p_1 = int(fourier_r[:, :].shape[1] / nPntEdge / 3)
+    fourier_r = nc_surf.variables['edge_' + str(eleTag) + 'r'][:, :]
+    fourier_i = nc_surf.variables['edge_' + str(eleTag) + 'i'][:, :]
+    fourier = fourier_r + fourier_i * 1j
+    nu_p_1 = int(fourier_r.shape[1] / nPntEdge / 3)
     exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * station.azimuth)
     exparray[0] = 1.
     # compute disp

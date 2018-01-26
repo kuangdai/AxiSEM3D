@@ -190,17 +190,16 @@ srcflat = nc_surf.source_flattening
 surfflat = nc_surf.surface_flattening
 r_outer = nc_surf.radius
 # time
-var_time = nc_surf.variables['time_points']
+var_time = nc_surf.variables['time_points'][:]
 nstep = len(var_time)
 assert nstep > 0, 'Zero time steps'
 t0 = var_time[0]
-solver_dtype = var_time.datatype
 # theta
-var_theta = nc_surf.variables['theta']
+var_theta = nc_surf.variables['theta'][:]
 nele = len(var_theta)
 # GLL and GLJ
-var_GLL = nc_surf.variables['GLL']
-var_GLJ = nc_surf.variables['GLJ']
+var_GLL = nc_surf.variables['GLL'][:]
+var_GLJ = nc_surf.variables['GLJ'][:]
 nPntEdge = len(var_GLL)
 if args.verbose:
     elapsed = time.clock() - clock0
@@ -331,11 +330,17 @@ if nstep == 1:
     steps = np.array([0])
     dt = 0.
 else:
-    dt = var_time[1] - t0
-    istart = max(int(round((args.tstart - t0) / dt)), 0)
-    dtsteps = max(int(round(args.time_interval / dt)), 1)
-    iend = min(istart + dtsteps * (args.nsnapshots - 1) + 1, nstep)
-    steps = np.arange(istart, iend, dtsteps)
+    tend = args.tstart + (args.nsnapshots - 1) * args.time_interval
+    times = np.arange(args.tstart, tend + args.time_interval * .1, args.time_interval)
+    steps = np.searchsorted(var_time[:], times)
+    # remove values out of range
+    steps = steps[steps<nstep]
+    if steps[0] == 0:
+        steps = steps[steps>0]
+        steps = np.insert(steps, 0, 0)
+    else:
+        steps = steps[steps>0]
+    dt = var_time[1] - t0    
 if args.verbose:
     elapsed = time.clock() - clock0
     print('    Number of snapshots: %d' % (len(steps)))
@@ -403,7 +408,7 @@ def write_vtk(iproc):
         vtk.tofile(args.out_vtk + '/surface_vtk_quad.' + str(it) + '.vtk', 'binary')
         if args.verbose:
             print('    Done with snapshot t = %f s; tstep = %d / %d; iproc = %d' \
-                % (istep * dt + t0, it + 1, len(steps), iproc))
+                % (var_time[istep], it + 1, len(steps), iproc))
     # close
     nc_surf_local.close()
     
