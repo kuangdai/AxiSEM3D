@@ -63,6 +63,15 @@ parser.add_argument('-p', '--nproc', dest='nproc', action='store',
                     help='number of processors; default = 1')
 parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', 
                     help='verbose mode')        
+# hidden options
+# timestep range, used to take a subset of the timesteps
+# determined by tstart, time_interval and nsnapshots
+parser.add_argument('--min_step', dest='min_step',
+                    action='store', type=int, default=int('-inf'),
+                    help=argparse.SUPPRESS)
+parser.add_argument('--max_step', dest='max_step',
+                    action='store', type=int, default=int('inf'),
+                    help=argparse.SUPPRESS)
 args = parser.parse_args()
 
 ################### PARSER ###################
@@ -235,6 +244,7 @@ if read_mesh:
     xyz = nc_mesh.variables['xyz'][:, :]
     connect = nc_mesh.variables['connect'][:, :]
     nstation = len(xyz)
+    ncell = len(connect)
 else:
     xyz, connect = SpherifiedCube(divisions, zmin, zmax)
     nstation = len(xyz)
@@ -248,6 +258,7 @@ else:
 if args.verbose:
     elapsed = time.clock() - clock0
     print('    Number of sampling points: %d' % (nstation))
+    print('    Number of quad cells: %d' % (ncell))
     print('Sampling surface done, ' + 
           '%f sec elapsed.\n' % (elapsed))
           
@@ -366,6 +377,8 @@ def write_vtk(iproc):
     for it, istep in enumerate(steps):
         if it % args.nproc != iproc: 
             continue
+        if (it < args.min_step or it > args.max_step):
+            continue    
         if args.norm:
             disp_norm = np.zeros(nstation)
         else:
