@@ -67,10 +67,10 @@ parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
 # timestep range, used to take a subset of the timesteps
 # determined by tstart, time_interval and nsnapshots
 parser.add_argument('--min_step', dest='min_step',
-                    action='store', type=int, default=int('-inf'),
+                    action='store', type=int, default=None,
                     help=argparse.SUPPRESS)
 parser.add_argument('--max_step', dest='max_step',
-                    action='store', type=int, default=int('inf'),
+                    action='store', type=int, default=None,
                     help=argparse.SUPPRESS)
 args = parser.parse_args()
 
@@ -377,8 +377,12 @@ def write_vtk(iproc):
     for it, istep in enumerate(steps):
         if it % args.nproc != iproc: 
             continue
-        if (it < args.min_step or it > args.max_step):
-            continue    
+        if args.min_step is not None:
+            if it < args.min_step:
+                continue
+        if args.max_step is not None:
+            if it > args.max_step:
+                continue  
         if args.norm:
             disp_norm = np.zeros(nstation)
         else:
