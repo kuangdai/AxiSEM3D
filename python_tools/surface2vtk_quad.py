@@ -228,33 +228,9 @@ if args.verbose:
 divisions = int(0.5 * np.pi * r_outer / (args.spatial_sampling * 1e3)) + 1
 zmin = np.cos(np.radians(args.max_dist))
 zmax = np.cos(np.radians(args.min_dist))
-# try to read from a temp mesh database
-mesh_file = args.out_vtk + '/mesh_%d_%f_%f.nc' % (divisions, zmin, zmax)
-try:
-    nc_mesh = Dataset(mesh_file, 'r', format='NETCDF4')
-    read_mesh = True
-except IOError:
-    nc_mesh = Dataset(mesh_file, 'w', format='NETCDF4')
-    nc_mesh.createDimension('ncdim_3', size=3)
-    nc_mesh.createDimension('ncdim_4', size=4)
-    nc_mesh.createDimension('ncdim_p', size=nPntEdge)
-    read_mesh = False
-# mesh    
-if read_mesh:
-    xyz = nc_mesh.variables['xyz'][:, :]
-    connect = nc_mesh.variables['connect'][:, :]
-    nstation = len(xyz)
-    ncell = len(connect)
-else:
-    xyz, connect = SpherifiedCube(divisions, zmin, zmax)
-    nstation = len(xyz)
-    ncell = len(connect)
-    nc_mesh.createDimension('ncdim_np', size=nstation)
-    nc_mesh.createDimension('ncdim_nc', size=ncell)
-    nc_mesh.createVariable('xyz', xyz.dtype, ('ncdim_np','ncdim_3'))
-    nc_mesh.createVariable('connect', connect.dtype, ('ncdim_nc','ncdim_4'))
-    nc_mesh.variables['xyz'][:, :] = xyz[:, :]
-    nc_mesh.variables['connect'][:, :] = connect[:, :]
+xyz, connect = SpherifiedCube(divisions, zmin, zmax)
+nstation = len(xyz)
+ncell = len(connect)
 if args.verbose:
     elapsed = time.clock() - clock0
     print('    Number of sampling points: %d' % (nstation))
@@ -277,16 +253,8 @@ if args.verbose:
     clock0 = time.clock()
     print('Computing (distances, azimuths) of points...')    
 # dists
-if read_mesh:
-    dists = nc_mesh.variables['dists'][:]
-    azims = nc_mesh.variables['azims'][:]
-else:
-    dists = np.arccos(xyz[:, 2] / r_plot)
-    azims = np.arctan2(xyz[:, 1], xyz[:, 0])    
-    nc_mesh.createVariable('dists', dists.dtype, ('ncdim_np',))
-    nc_mesh.createVariable('azims', azims.dtype, ('ncdim_np',))
-    nc_mesh.variables['dists'][:] = dists[:]
-    nc_mesh.variables['azims'][:] = azims[:]
+dists = np.arccos(xyz[:, 2] / r_plot)
+azims = np.arctan2(xyz[:, 1], xyz[:, 0])    
 if args.verbose:
     elapsed = time.clock() - clock0
     print('Computing (distances, azimuths) of points done, ' + 
@@ -307,31 +275,20 @@ def interpLagrange(target, lbases):
 if args.verbose:
     clock0 = time.clock()
     print('Locating points in distance...')
-if read_mesh:
-    eleTags = nc_mesh.variables['eleTags'][:]
-    weights = nc_mesh.variables['weights'][:]
-else:   
-    # locate element
-    max_theta = np.amax(var_theta, axis=1)
-    eleTags = np.searchsorted(max_theta, dists)
-    # compute weights
-    lbases = np.tile(var_GLL, (nstation, 1))
-    lbases[0, :] = var_GLJ[:]
-    lbases[-1, :] = var_GLJ[:]
-    theta_bounds = var_theta[eleTags, :]
-    etas = (dists - theta_bounds[:, 0]) / (theta_bounds[:, 1] - theta_bounds[:, 0]) * 2. - 1.
-    weights = interpLagrange(etas, lbases)
-    nc_mesh.createVariable('eleTags', eleTags.dtype, ('ncdim_np',))
-    nc_mesh.createVariable('weights', weights.dtype, ('ncdim_np','ncdim_p'))
-    nc_mesh.variables['eleTags'][:] = eleTags[:]
-    nc_mesh.variables['weights'][:, :] = weights[:, :]
+# locate element
+max_theta = np.amax(var_theta, axis=1)
+eleTags = np.searchsorted(max_theta, dists)
+# compute weights
+lbases = np.tile(var_GLL, (nstation, 1))
+lbases[0, :] = var_GLJ[:]
+lbases[-1, :] = var_GLJ[:]
+theta_bounds = var_theta[eleTags, :]
+etas = (dists - theta_bounds[:, 0]) / (theta_bounds[:, 1] - theta_bounds[:, 0]) * 2. - 1.
+weights = interpLagrange(etas, lbases)
 if args.verbose:
     elapsed = time.clock() - clock0
     print('Locating points in distance done, ' + 
           '%f sec elapsed.\n' % (elapsed))    
-
-# close mesh database
-nc_mesh.close()
 
 ###### prepare time steps
 if args.verbose:
