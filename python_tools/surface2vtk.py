@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 '''
-surface2vtk_quad.py
+surface2vtk.py
 
 Generate VTK animations from a NetCDF database of surface wavefield 
 created by AxiSEM3D (named axisem3d_surface.nc by the solver). Data
 are presented on an unstructured mesh.
 
 To see usage, type
-python surface2vtk_quad.py -h
+python surface2vtk.py -h
 '''
     
 ################### PARSER ###################
@@ -165,7 +165,7 @@ def SpherifiedCube(divisions, zmin, zmax, zsort=True):
         idx_revs = np.argsort(idx_sort)
         f2n[idx_need] = f2n[idx_need][idx_revs]
                 
-	# quads
+	# cells
     connectivity = []
     for face in np.arange(6):
         for j in np.arange(divisions):
@@ -379,7 +379,7 @@ def write_vtk(iproc):
             vtk = pyvtk.VtkData(vtk_points,
                 pyvtk.PointData(pyvtk.Vectors(disp, name='disp_RTZ')),
                 'surface animation')
-        vtk.tofile(args.out_vtk + '/surface_vtk_quad.' + str(it) + '.vtk', 'binary')
+        vtk.tofile(args.out_vtk + '/surface_vtk.' + str(it) + '.vtk', 'binary')
         if args.verbose:
             print('    Done with snapshot t = %f s; tstep = %d / %d; iproc = %d' \
                 % (var_time[istep], it + 1, len(steps), iproc))
