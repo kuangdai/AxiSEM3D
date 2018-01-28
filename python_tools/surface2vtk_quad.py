@@ -57,7 +57,7 @@ parser.add_argument('-n', '--nsnapshots', dest='nsnapshots',
                     help='number of snapshots <required>')
 parser.add_argument('-N', '--norm', dest='norm', action='store_true', 
                     help='only dump displacement norm;\n' +
-                         'default = False')
+                         'default = False (dump 3D vector)')
 parser.add_argument('-p', '--nproc', dest='nproc', action='store', 
                     type=int, default=1, 
                     help='number of processors; default = 1')
