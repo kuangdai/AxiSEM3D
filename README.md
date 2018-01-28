@@ -4,7 +4,7 @@ I look ugly to you? I am a Markdown file. If you do not have a Markdown reader, 
 
 Report issues to kuangdal@earth.ox.ac.uk.
 
-### Watch these videos to see what you can do with AxiSEM3D
+### AxiSEM3D cartoons 
 [![](https://img.youtube.com/vi/JKTvW49OR8s/2.jpg)](https://www.youtube.com/watch?v=JKTvW49OR8s)
 [![](https://img.youtube.com/vi/qSypfrHFg_o/2.jpg)](https://www.youtube.com/watch?v=qSypfrHFg_o)
 
