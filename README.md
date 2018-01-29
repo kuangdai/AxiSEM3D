@@ -5,8 +5,8 @@ I look ugly to you? I am a Markdown file. If you do not have a Markdown reader, 
 Report issues to kuangdal@earth.ox.ac.uk.
 
 ### Show-off videos on Youtube:
-[![](https://img.youtube.com/vi/JKTvW49OR8s/2.jpg)](https://www.youtube.com/watch?v=JKTvW49OR8s)
-[![](https://img.youtube.com/vi/qSypfrHFg_o/2.jpg)](https://www.youtube.com/watch?v=qSypfrHFg_o)
+[![](https://img.youtube.com/vi/c0cZMfuJR90/2.jpg)](https://www.youtube.com/watch?v=c0cZMfuJR90)
+[![](https://img.youtube.com/vi/nL8GByGyPvQ/2.jpg)](https://www.youtube.com/watch?v=nL8GByGyPvQ)
 
 ## 1 Get AxiSEM3D
 ```sh
