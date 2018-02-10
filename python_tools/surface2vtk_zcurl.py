@@ -285,8 +285,9 @@ max_theta = np.amax(var_theta, axis=1)
 eleTags = np.searchsorted(max_theta, dists)
 # compute weights
 lbases = np.tile(var_GLL, (nstation, 1))
-lbases[0, :] = var_GLJ[:]
-lbases[-1, :] = var_GLJ[:]
+for ist in np.arange(nstation):
+    if eleTags[ist] == 0 or eleTags[ist] == nele - 1:
+        lbases[ist, :] = var_GLJ[:]
 theta_bounds = var_theta[eleTags, :]
 etas = (dists - theta_bounds[:, 0]) / (theta_bounds[:, 1] - theta_bounds[:, 0]) * 2. - 1.
 weights = interpLagrange(etas, lbases)
