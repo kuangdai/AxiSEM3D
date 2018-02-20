@@ -44,20 +44,28 @@ void FluidPoint::resetZero() {
     mAccel.setZero();
 }
 
-void FluidPoint::randomDispl(Real factor, int seed) {
+void FluidPoint::randomDispl(Real factor, int seed, int max_order) {
     if (seed >= 0) {
         std::srand(seed);
-    } 
-    mDispl.setRandom(); 
+    }
+    if (max_order < 0 || max_order > mNu) {
+        mDispl.setRandom(); 
+    } else {
+        mDispl.topRows(max_order + 1).setRandom();
+    }
     mDispl *= factor;
     maskField(mDispl);
 }
 
-void FluidPoint::randomStiff(Real factor, int seed) {
+void FluidPoint::randomStiff(Real factor, int seed, int max_order) {
     if (seed >= 0) {
         std::srand(seed);
     }
-    mStiff.setRandom(); 
+    if (max_order < 0 || max_order > mNu) {
+        mStiff.setRandom(); 
+    } else {
+        mStiff.topRows(max_order + 1).setRandom();
+    }
     mStiff *= factor;
     maskField(mStiff);
 }

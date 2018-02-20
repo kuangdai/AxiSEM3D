@@ -24,8 +24,8 @@ public:
     void resetZero(); 
     
     // randomize disp and stiff
-    void randomDispl(Real factor = one, int seed = -1);
-    void randomStiff(Real factor = one, int seed = -1);
+    void randomDispl(Real factor = one, int seed = -1, int max_order = -1);
+    void randomStiff(Real factor = one, int seed = -1, int max_order = -1);
     
     // verbose
     std::string verbose() const;

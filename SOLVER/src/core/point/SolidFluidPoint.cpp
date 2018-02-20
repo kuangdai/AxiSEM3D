@@ -38,14 +38,14 @@ void SolidFluidPoint::resetZero() {
     mFluidPoint->resetZero();
 }
 
-void SolidFluidPoint::randomDispl(Real factor, int seed) {
-    mSolidPoint->randomDispl(factor, seed);
-    mFluidPoint->randomDispl(factor, seed);
+void SolidFluidPoint::randomDispl(Real factor, int seed, int max_order) {
+    mSolidPoint->randomDispl(factor, seed, max_order);
+    mFluidPoint->randomDispl(factor, seed, max_order);
 }
 
-void SolidFluidPoint::randomStiff(Real factor, int seed) {
-    mSolidPoint->randomStiff(factor, seed);
-    mFluidPoint->randomStiff(factor, seed);
+void SolidFluidPoint::randomStiff(Real factor, int seed, int max_order) {
+    mSolidPoint->randomStiff(factor, seed, max_order);
+    mFluidPoint->randomStiff(factor, seed, max_order);
 }
 
 std::string SolidFluidPoint::verbose() const {

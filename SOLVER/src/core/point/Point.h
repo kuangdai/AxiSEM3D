@@ -23,8 +23,8 @@ public:
     virtual void resetZero() = 0; 
     
     // randomize disp and stiff
-    virtual void randomDispl(Real factor = one, int seed = -1) = 0;
-    virtual void randomStiff(Real factor = one, int seed = -1) = 0;
+    virtual void randomDispl(Real factor = one, int seed = -1, int max_order = -1) = 0;
+    virtual void randomStiff(Real factor = one, int seed = -1, int max_order = -1) = 0;
     
     // verbose
     virtual std::string verbose() const = 0;
