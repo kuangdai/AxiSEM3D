@@ -57,6 +57,9 @@ public:
     // verbose
     std::string verbose() const;
     
+    // reset
+    void resetZero();
+    
 private:
     
     // displ ==> stiff

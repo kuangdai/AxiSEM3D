@@ -64,6 +64,15 @@ void Domain::test() const {
     }
 }
 
+void Domain::resetZero() const {
+    for (const auto &point: mPoints) {
+        point->resetZero();
+    }
+    for (const auto &elem: mElements) {
+        elem->resetZero();
+    }
+}
+
 void Domain::initDisplTinyRandom() const {
     for (const auto &point: mPoints) {
         point->randomDispl((Real)1e-30, point->getDomainTag(), 0);

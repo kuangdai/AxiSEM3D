@@ -54,6 +54,9 @@ public:
     // form theta for TIso
     RDMatPP formThetaMat() const;
     
+    // reset
+    virtual void resetZero() {};
+    
 protected:
     int mMaxNu;
     int mMaxNr;

@@ -88,6 +88,8 @@ double SolidElement::measure(int count) const {
             mPoints[ipnt++]->resetZero();
         }
     }
+    // reset Elastic
+    mElastic->resetZero();
     return elapsed_time / count;
 }
 
@@ -257,6 +259,10 @@ std::string SolidElement::verbose() const {
     } else {
         return "SolidElement$" + mElastic->verbose();
     }
+}
+
+void SolidElement::resetZero() {
+    mElastic->resetZero();
 }
 
 void SolidElement::displToStiff() const {

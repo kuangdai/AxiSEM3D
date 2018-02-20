@@ -52,6 +52,9 @@ public:
     // test domain 
     void test() const;
     
+    // reset all field variables to zero
+    void resetZero() const;
+    
     // initialize displacement with tiny random numbers  
     void initDisplTinyRandom() const;
     

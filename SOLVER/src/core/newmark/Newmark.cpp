@@ -27,6 +27,7 @@ void Newmark::solve(int verbose) const {
     Real t = zero - mDomain->getSTF().getShift();
     Real dt = mDomain->getSTF().getDeltaT();
     int maxStep = mDomain->getSTF().getSize();
+    mDomain->resetZero();
     mDomain->initDisplTinyRandom();
     const double sec2h = 1. / 3600.;
     double elapsed_last = 0.;
