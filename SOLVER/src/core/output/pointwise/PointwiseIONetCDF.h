@@ -18,12 +18,17 @@ public:
     void finalize();
     
     // dump to user-specified format
-    void dumpToFile(const RMatXX_RM &bufferDisp, const RColX &bufferTime, int bufferLine);
+    void dumpToFile(const RMatXX_RM &bufferDisp, const RMatXX_RM &bufferStrain, 
+        const RColX &bufferTime, int bufferLine);
     
 private:
-    // variable names
-    std::vector<std::string> mVarNames;
+    // receivers
     const std::vector<PointwiseInfo> *mReceivers;
+    
+    // variable names
+    std::vector<std::string> mVarNamesDisp;
+    std::vector<std::string> mVarNamesStrain;
+    std::vector<int> mStrainIndex;
     
     // file ID
     NetCDF_Writer *mNetCDF = 0;

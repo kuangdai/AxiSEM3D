@@ -55,12 +55,13 @@ SOURCE_STF_HALF_DURATION                    0.0
 # ================================ stations ================================
 # WHAT: file of stations
 # TYPE: string (path to file)
-# NOTE: File format 1 -- name network latitude longitude depth
-#       File format 2 -- name network latitude longitude elevation depth
-#       * File format 2 is compatible with SPECFEM input. However, the 
-#         "elevation" column is not used in either SPECFEM or AxiSEM3D.
-#       * The "depth" column should be given in meters.
-#       * Use "none" if no station presents.
+# NOTE: Line format -- name network latitude longitude elevation depth [dump_strain]
+#       * The "elevation" (5th column) is NEVER used in AxiSEM3D because it is redundant.
+#         The actual elevation of a station is determined by topography and its depth.
+#       * The "depth" column should be given in meters instead of km.
+#       * If "dump_strain" is appended after "depth", the strain at this station will be
+#         computed and dumped. Strain components: [RR, TT, ZZ, TZ, RZ, RT] (Voigt rule)
+#       Use "none" if no station presents.
 OUT_STATIONS_FILE                           STATIONS
 
 # WHAT: coordinate system used in OUT_STATIONS_FILE

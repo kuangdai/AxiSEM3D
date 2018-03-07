@@ -165,6 +165,18 @@ void FluidElement::computeGroundMotion(Real phi, const RMatPP &weights, RRow3 &u
         "Not implemented."); 
 }
 
+void FluidElement::computeStrain(Real phi, const RMatPP &weights, RRow6 &strain) const {
+    throw std::runtime_error("FluidElement::computeStrain || "
+        "Not implemented."); 
+}
+
+void FluidElement::forceTIso() {
+    if (mCrdTransTIso == 0) {
+        mCrdTransTIso = new CrdTransTIsoFluid(formThetaMat());
+        mInTIso = true;
+    } 
+}
+
 void FluidElement::feedDispOnSide(int side, CMatXX_RM &buffer, int row) const {
     throw std::runtime_error("FluidElement::getDispOnSide || "
         "Not implemented."); 

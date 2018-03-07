@@ -18,8 +18,8 @@
 
 Receiver::Receiver(const std::string &name, const std::string &network, 
     double theta_lat, double phi_lon, bool geographic, 
-    double depth, double srcLat, double srcLon, double srcDep):
-mName(name), mNetwork(network), mDepth(depth) {
+    double depth, bool dumpStrain, double srcLat, double srcLon, double srcDep):
+mName(name), mNetwork(network), mDepth(depth), mDumpStrain(dumpStrain) {
     RDCol3 rtpG, rtpS;
     if (geographic) {
         rtpG(0) = 1.;
@@ -45,8 +45,11 @@ mName(name), mNetwork(network), mDepth(depth) {
 void Receiver::release(PointwiseRecorder &recorderPW, const Domain &domain, 
     int elemTag, const RDMatPP &interpFact) {
     Element *myElem = domain.getElement(elemTag);
+    if (mDumpStrain) {
+        myElem->forceTIso();
+    }
     recorderPW.addReceiver(mName, mNetwork, mPhi, interpFact, myElem, mTheta, mBackAzimuth,
-        mLat, mLon, mDepth);
+        mLat, mLon, mDepth, mDumpStrain);
 }
 
 bool Receiver::locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const {

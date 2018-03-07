@@ -17,6 +17,7 @@ typedef Eigen::Matrix<Complex, Eigen::Dynamic, 3> CMatX3;
 typedef std::array<CMatX3, nPntElem> arPP_CMatX3; // source 
 typedef std::vector<arPP_CMatX3> vec_arPP_CMatX3; // off-axis source 
 typedef Eigen::Matrix<Real, 1, 3> RRow3;         // receiver
+typedef Eigen::Matrix<Real, 1, 6> RRow6;         // receiver
 typedef Eigen::Matrix<Complex, Eigen::Dynamic, Eigen::Dynamic> CMatXX; // mpi buffer
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> RMatXX;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RMatXX_RM;

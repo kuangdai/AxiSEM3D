@@ -15,7 +15,7 @@ class Receiver {
 public:
     Receiver(const std::string &name, const std::string &network, 
         double theta_lat, double phi_lon, bool geographic, 
-        double depth, double srcLat, double srcLon, double srcDep);
+        double depth, bool dumpStrain, double srcLat, double srcLon, double srcDep);
     
     void release(PointwiseRecorder &recorderPW, const Domain &domain, 
         int elemTag, const RDMatPP &interpFact);     
@@ -34,5 +34,6 @@ private:
     double mLat, mLon;
     double mDepth;
     double mBackAzimuth;
+    bool mDumpStrain;
 };
 

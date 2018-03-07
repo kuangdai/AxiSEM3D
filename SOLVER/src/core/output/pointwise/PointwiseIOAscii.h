@@ -18,16 +18,26 @@ public:
     void finalize();
     
     // dump to user-specified format
-    void dumpToFile(const RMatXX_RM &bufferDisp, const RColX &bufferTime, int bufferLine);
+    void dumpToFile(const RMatXX_RM &bufferDisp, const RMatXX_RM &bufferStrain,
+        const RColX &bufferTime, int bufferLine);
     
 private:
     // file names
-    std::vector<std::string> mFileNames;
+    std::vector<std::string> mFileNamesDisp;
     
     // fstream
-    std::vector<std::fstream *> mFiles;
+    std::vector<std::fstream *> mFilesDisp;
     
     // buffer
-    RMatXX mBuffer;
+    RMatXX mBufferDisp;
+    
+    // file names
+    std::vector<std::string> mFileNamesStrain;
+    
+    // fstream
+    std::vector<std::fstream *> mFilesStrain;
+    
+    // buffer
+    RMatXX mBufferStrain;
 };
 

@@ -14,11 +14,11 @@ struct PointwiseInfo {
     PointwiseInfo(const std::string &name, const std::string &network, 
         double phi, const RDMatPP &weights, const Element *ele,
         double theta, double baz, 
-        double lat, double lon, double dep):
+        double lat, double lon, double dep, bool dumpStrain):
         mName(name), mNetwork(network), 
         mPhi(phi), mWeights(weights.cast<Real>()), mElement(ele),
         mTheta(theta), mBAz(baz),
-        mLat(lat), mLon(lon), mDep(dep) {};
+        mLat(lat), mLon(lon), mDep(dep), mDumpStrain(dumpStrain) {};
     
     //// name
     std::string mName;
@@ -35,6 +35,9 @@ struct PointwiseInfo {
     
     // for station XML
     double mLat, mLon, mDep;
+    
+    // dump strain
+    bool mDumpStrain;
 };
 
 class PointwiseRecorder {
@@ -47,7 +50,7 @@ public:
     // add a receiver
     void addReceiver(const std::string &name, const std::string &network,
         double phi, const RDMatPP &weights, const Element *ele, double theta, double baz,
-        double lat, double lon, double dep);
+        double lat, double lon, double dep, bool dumpStrain);
     
     // before time loop
     void initialize();
@@ -76,6 +79,7 @@ private:
     int mBufferLine;
     // need row-major to be consistent with netcdf
     RMatXX_RM mBufferDisp;
+    RMatXX_RM mBufferStrain;
     RColX mBufferTime;
     
     // components
