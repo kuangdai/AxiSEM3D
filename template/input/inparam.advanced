@@ -87,6 +87,11 @@ DEVELOP_DIAGNOSE_PRELOOP                    false
 # NOTE: see results in output/develop/measured_costs.txt
 DEVELOP_MEASURED_COSTS                      false
 
+# WHAT: randomize displacement with tiny values at the beginning of timeloop
+# TYPE: bool
+# NOTE: do not change
+DEVELOP_RANDOMIZE_DISP0                     false
+
 
 
 # ============================== fftw ==============================

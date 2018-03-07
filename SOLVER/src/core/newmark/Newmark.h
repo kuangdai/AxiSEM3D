@@ -8,7 +8,7 @@ class Domain;
 
 class Newmark {
 public:
-    Newmark(Domain *&domain, int reportInterval, int checkStabInterval);
+    Newmark(Domain *&domain, int reportInterval, int checkStabInterval, bool randomDispl);
     
     void solve(int verbose) const;
     
@@ -18,5 +18,5 @@ private:
     Domain *mDomain;
     int mReportInterval;
     int mCheckStabInterval;
-
+    bool mRandomDispl;
 };

@@ -164,7 +164,8 @@ int axisem_main(int argc, char *argv[]) {
         //////// Newmark
         int infoInt = pl.mParameters->getValue<int>("OPTION_LOOP_INFO_INTERVAL");
         int stabInt = pl.mParameters->getValue<int>("OPTION_STABILITY_INTERVAL");
-        sv.mNewmark = new Newmark(sv.mDomain, infoInt, stabInt);
+        bool randomDispl = pl.mParameters->getValue<bool>("DEVELOP_RANDOMIZE_DISP0");
+        sv.mNewmark = new Newmark(sv.mDomain, infoInt, stabInt, randomDispl);
         
         //////// final preparations
         // finalize preloop variables before time loop starts

@@ -9,9 +9,9 @@
 #include "XMPI.h"
 #include "MultilevelTimer.h"
 
-Newmark::Newmark(Domain *&domain, int reportInterval, int checkStabInterval):
+Newmark::Newmark(Domain *&domain, int reportInterval, int checkStabInterval, bool randomDispl):
 mDomain(domain), mReportInterval(reportInterval), 
-mCheckStabInterval(checkStabInterval) {
+mCheckStabInterval(checkStabInterval), mRandomDispl(randomDispl) {
     if (mReportInterval <= 0) mReportInterval = 100;
     if (mCheckStabInterval <= 0) mCheckStabInterval = mReportInterval;
 }
@@ -28,7 +28,9 @@ void Newmark::solve(int verbose) const {
     Real dt = mDomain->getSTF().getDeltaT();
     int maxStep = mDomain->getSTF().getSize();
     mDomain->resetZero();
-    mDomain->initDisplTinyRandom();
+    if (mRandomDispl) {
+        mDomain->initDisplTinyRandom();
+    }
     const double sec2h = 1. / 3600.;
     double elapsed_last = 0.;
     MyBoostTimer timer;

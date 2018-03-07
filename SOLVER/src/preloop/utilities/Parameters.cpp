@@ -92,6 +92,7 @@ void Parameters::registerAll() {
     registerPar("DEVELOP_NON_SOURCE_MODE");
     registerPar("DEVELOP_DIAGNOSE_PRELOOP");
     registerPar("DEVELOP_MEASURED_COSTS");
+    registerPar("DEVELOP_RANDOMIZE_DISP0");
     registerPar("FFTW_LUCKY_NUMBER");
     registerPar("FFTW_DISABLE_WISDOM");
     
