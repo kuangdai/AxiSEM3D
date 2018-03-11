@@ -231,6 +231,7 @@ double Mesh::computeRPhysical(double r, double theta, double phi) const {
     return r + deltaR;
 }
 
+// # include "NetCDF_Writer.h"
 void Mesh::buildLocal(const DecomposeOption &option) {
     // destroy existent
     destroy();
@@ -286,6 +287,19 @@ void Mesh::buildLocal(const DecomposeOption &option) {
         mQuads[iloc]->setupGLLPoints(mGLLPoints, mLocalElemToGLL[iloc], mExModel->getDistTolerance());
     } 
     MultilevelTimer::end("Setup Points", 2);
+    
+    // RDMatXX_RM sz = RDMatXX::Zero(nGllLocal, 2);
+    // for (int i = 0; i < nGllLocal; i++) {
+    //     sz.row(i) = mGLLPoints[i]->getCoords().transpose();
+    // }
+    // NetCDF_Writer nc;
+    // nc.open(Parameters::sOutputDirectory + "/plots/gllsz.nc", true);
+    // std::vector<size_t> dims;
+    // dims.push_back(nGllLocal);
+    // dims.push_back(2);
+    // nc.defineVariable<double>("gllsz", dims);
+    // nc.writeVariableWhole("gllsz", sz);
+    // exit(0);
     
     /////////////////////////////// assemble mass and normal ///////////////////////////////
     MultilevelTimer::begin("Assemble Mass", 2);

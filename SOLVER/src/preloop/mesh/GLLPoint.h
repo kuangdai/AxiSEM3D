@@ -31,6 +31,7 @@ public:
     // gets 
     int getNr() const {return mNr;};
     int getReferenceCount() const {return mReferenceCount;};
+    const RDCol2 &getCoords() const {return mCoords;};
     
     // feed/extract buffer
     void feedBuffer(RDMatXX &buffer, int col);
