@@ -104,23 +104,83 @@ mQuadTag(quadTag) {
     }
 
     // solid-fluid boundary
+    ///////////////////////////////////////////////
+    ////// this piece of code is correct and more general,
+    ////// which should be re-enabled after fixing the issue in mesher
+    // mOnSFBoundary = false;
+    // mSFSide = exModel.getSideSolidFluid(mQuadTag);
+    // if (mSFSide >= 0) {
+    //     mOnSFBoundary = true;
+    //     if (!exModel.isCartesian()) {
+    //         if (mMapping->getType() == Mapping::MappingTypes::Linear) {
+    //             throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
+    //         }
+    //         if (mMapping->getType() == Mapping::MappingTypes::Spherical && (mSFSide + mCurvedOuter) % 2 != 0) {
+    //             throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
+    //         }
+    //         if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && mSFSide != mCurvedOuter) {
+    //             throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
+    //         }
+    //     }
+    // }
+    ///////////////////////////////////////////////
+    
+    ///////////////////////////////////////////////
+    ////// this piece of code is temporary
+    // change radius of CMB and ICB if necessary
+    double rCMB = exModel.getR_CMB();
+    double rICB = exModel.getR_ICB();
+    
+    // init
     mOnSFBoundary = false;
-    mSFSide = exModel.getSideSolidFluid(mQuadTag);
-    if (mSFSide >= 0) {
+    mSFSide = -1;
+    
+    // vertex radius
+    double r0 = mNodalCoords.col(0).norm();
+    double r1 = mNodalCoords.col(1).norm();
+    double r2 = mNodalCoords.col(2).norm();
+    double r3 = mNodalCoords.col(3).norm();
+    
+    // CMB
+    if (std::abs(r0 - rCMB) < distTol && std::abs(r1 - rCMB) < distTol) {
         mOnSFBoundary = true;
-        if (!exModel.isCartesian()) {
-            if (mMapping->getType() == Mapping::MappingTypes::Linear) {
-                throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
-            }
-            if (mMapping->getType() == Mapping::MappingTypes::Spherical && (mSFSide + mCurvedOuter) % 2 != 0) {
-                throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
-            }
-            if (mMapping->getType() == Mapping::MappingTypes::SemiSpherical && mSFSide != mCurvedOuter) {
-                throw std::runtime_error("Quad::Quad || Conflict in solid-fluid boundary.");
-            }
-        }
+        mSFSide = 0;
+    }
+    if (std::abs(r1 - rCMB) < distTol && std::abs(r2 - rCMB) < distTol) {
+        mOnSFBoundary = true;
+        mSFSide = 1;
+    }
+    if (std::abs(r2 - rCMB) < distTol && std::abs(r3 - rCMB) < distTol) {
+        mOnSFBoundary = true;
+        mSFSide = 2;
+    }
+    if (std::abs(r3 - rCMB) < distTol && std::abs(r0 - rCMB) < distTol) {
+        mOnSFBoundary = true;
+        mSFSide = 3;
     }
     
+    // ICB
+    if (std::abs(r0 - rICB) < distTol && std::abs(r1 - rICB) < distTol) {
+        mOnSFBoundary = true;
+        mSFSide = 0;
+    }
+    if (std::abs(r1 - rICB) < distTol && std::abs(r2 - rICB) < distTol) {
+        mOnSFBoundary = true;
+        mSFSide = 1;
+    }
+    if (std::abs(r2 - rICB) < distTol && std::abs(r3 - rICB) < distTol) {
+        mOnSFBoundary = true;
+        mSFSide = 2;
+    }
+    if (std::abs(r3 - rICB) < distTol && std::abs(r0 - rICB) < distTol) {
+        mOnSFBoundary = true;
+        mSFSide = 3;
+    }
+    
+    
+    ///////////////////////////////////////////////
+
+
     // surface boundary
     mOnSurface = false;
     mSurfaceSide = exModel.getSideSurface(mQuadTag);
