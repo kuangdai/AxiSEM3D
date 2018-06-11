@@ -10,7 +10,7 @@
 GaussSTF::GaussSTF(double dt, double duration, double hdur, double decay):
 mHalfDuration(hdur), mDecay(decay) {
     mDeltaT = dt;
-    int nStepBeforeZero = ceil(1.5 * mHalfDuration / mDeltaT);
+    int nStepBeforeZero = ceil(2.5 * mHalfDuration / mDeltaT);
     int nStepAfterZero = ceil(duration / mDeltaT);
     mShift = nStepBeforeZero * mDeltaT;
     int nStep = nStepBeforeZero + nStepAfterZero;
