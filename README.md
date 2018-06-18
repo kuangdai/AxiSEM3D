@@ -106,9 +106,11 @@ NetCDF | 4.4 | Follow instructions [here](https://www.unidata.ucar.edu/software/
         ```
 
 ## 4 The MESHER
-In the above examples, we use the mesh file `AxiSEM_prem_ani_one_crust_50.e` (anisotropic PREM model with one crustal layer and a 50 s period), located at `SOLVER/template/input`. To generate an AxiSEM3D mesh like this, you will need the `salvus_mesher_lite`, a python-based command-line tool to generate AxiSEM/AxiSEM3D meshes (credit to van Driel Martin, Lion Krischer and others from the Salvus group at ETH Zurich). 
+In the above examples, we use the mesh file `AxiSEM_prem_ani_one_crust_50.e` (anisotropic PREM model with one crustal layer at a 50 s period), located at `SOLVER/template/input`. 
 
-* See installation and usage of `salvus_mesher_lite` [here](https://gitlab.com/Salvus/SalvusMesherLite) 
+To generate an AxiSEM3D mesh like this, you will need the `salvus_mesher_lite`, a python-based command-line tool to generate AxiSEM/AxiSEM3D meshes (credit to van Driel Martin, Lion Krischer and others from the Salvus group at ETH Zurich). 
+
+* See installation and usage of `salvus_mesher_lite` from [here](https://gitlab.com/Salvus/SalvusMesherLite). 
 
 
 
