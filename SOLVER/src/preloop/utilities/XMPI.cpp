@@ -16,11 +16,12 @@ void XMPI::initialize(int argc, char *argv[]) {
     
     // find path of executable
     std::string argv0(argv[0]);
-    if (argv0 == "axisem3d") {
-        argv0 = "./axisem3d";
+    std::size_t found = argv0.find_last_of("/\\");
+    if (found == std::string::npos) {
+        argv0 = "./" + argv0;
+        found = argv0.find_last_of("/\\");
     }
-    // 9 characters: /axisem3d
-    std::string execDirectory = argv0.substr(0, argv0.length() - 9); 
+    std::string execDirectory = argv0.substr(0, found);
     
     // so far, this problem happens with valgrind only 
     if (execDirectory.length() == 0) {
