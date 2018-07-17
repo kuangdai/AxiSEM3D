@@ -66,8 +66,10 @@ OUT_STATIONS_FILE                           STATIONS
 
 # WHAT: coordinate system used in OUT_STATIONS_FILE
 # TYPE: geographic / source-centered
-# NOTE: geographic      -- name network latitude longitude [elevation] depth
-#       source-centered -- name network distance azimuth [elevation] depth
+# NOTE: geographic      -- name network latitude longitude elevation depth [dump_strain]
+#       source-centered -- name network distance azimuth elevation depth [dump_strain]
+# the column "elevation" is not used in AxiSEM3D but must be presented in each line
+# if "dump_strain" is appended, strain will be dumped in addition to displacement 
 OUT_STATIONS_SYSTEM                         geographic
 
 # WHAT: if duplicated stations (network + name) are found in OUT_STATIONS_FILE
