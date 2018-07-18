@@ -173,7 +173,7 @@ for ist in np.arange(0, len(station_info)):
     network = station_info[ist, 1]
     lat_theta = float(station_info[ist, 2])
     lon_phi = float(station_info[ist, 3])
-    depth = float(station_info[ist, -1])
+    depth = float(station_info[ist, 5])
     key = network + '.' + name
     # ignore buried depth
     if depth > 0.: 
