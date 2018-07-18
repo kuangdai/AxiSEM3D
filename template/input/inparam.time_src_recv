@@ -80,7 +80,7 @@ OUT_STATIONS_SYSTEM                         geographic
 OUT_STATIONS_DUPLICATED                     rename
 
 # WHAT: seismogram format
-# TYPE: ascii / netcdf 
+# TYPE: ascii / netcdf / netcdf_no_assemble
 # NOTE: may be one or both of the two options
 #       * Do not use ascii if the number of stations exceeds/approximates 
 #         the open-files limit on you OS (find it with "ulimit -n").
@@ -88,6 +88,9 @@ OUT_STATIONS_DUPLICATED                     rename
 #         NetCDF files named axisem3d_synthetics.nc.rankXXXX (XXXX = processor rank),
 #         each containing part of the stations. The complete NetCDF file containing all 
 #         stations, named axisem3d_synthetics.nc, will be assembled after the time loop.
+#       * Assembling axisem3d_synthetics.nc.rankXXXX can be time-consuming for a large 
+#         number of stations, which can be avoided by using netcdf_no_assemble.
+#         A file named station_rank.txt will be provided to locate stations on ranks.  
 #       * If parallel NetCDF library is used, all processors dump directly into 
 #         axisem3d_synthetics.nc during the time loop. 
 #       * Use python_tools/nc2ascii.py to convert axisem3d_synthetics.nc

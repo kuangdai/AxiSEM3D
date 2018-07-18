@@ -10,6 +10,7 @@
 #include <sstream>
 #include <cstdio>
 #include "PointwiseRecorder.h"
+#include <fstream>
 
 void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize, 
     const std::string &components, const std::vector<PointwiseInfo> &receivers,
@@ -190,6 +191,29 @@ void PointwiseIONetCDF::finalize() {
     #ifdef _USE_PARALLEL_NETCDF
         return;
     #endif
+    
+    if (!mAssemble) {
+        int numRec = mVarNamesDisp.size();
+        std::vector<std::string> myRecKeys;
+        for (int irec = 0; irec < numRec; irec++) {
+            myRecKeys.push_back((*mReceivers)[irec].mNetwork + "." + (*mReceivers)[irec].mName);
+        }
+        std::vector<std::vector<std::string>> allRecKeys;
+        XMPI::gather(myRecKeys, allRecKeys, false);
+        if (XMPI::root()) {
+            std::fstream fout(Parameters::sOutputDirectory + "/stations/station_rank.txt", std::fstream::out);
+            for (int rank = 0; rank < XMPI::nproc(); rank++) {
+                if (allRecKeys[rank].size() > 0) {
+                    fout << "RANK " << rank << ":\n";
+                    for (int irec = 0; irec < allRecKeys[rank].size(); irec++) {
+                        fout << allRecKeys[rank][irec] << "\n";
+                    }
+                    fout << "\n";    
+                }
+            }
+        }
+        return;
+    }
     
     // file name
     std::string oneFile = Parameters::sOutputDirectory + "/stations/axisem3d_synthetics.nc";

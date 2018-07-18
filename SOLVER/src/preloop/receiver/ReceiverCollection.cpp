@@ -258,13 +258,15 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
     // IO
     int numFmt = par.getSize("OUT_STATIONS_FORMAT");
     // use bool first to avoid duplicated IO
-    bool ascii = false, netcdf = false; 
+    bool ascii = false, netcdf = false, netcdf_no_assemble = false; 
     for (int i = 0; i < numFmt; i++) {
         std::string strfmt = par.getValue<std::string>("OUT_STATIONS_FORMAT", i); 
         if (boost::iequals(strfmt, "ascii")) {
             ascii = true;
         } else if (boost::iequals(strfmt, "netcdf")) {
             netcdf = true;
+        } else if (boost::iequals(strfmt, "netcdf_no_assemble")) {
+            netcdf_no_assemble = true;
         } else {
             throw std::runtime_error("ReceiverCollection::buildInparam || "
                 "Invalid parameter, keyword = OUT_STATIONS_FORMAT.");
@@ -275,7 +277,10 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
         rec->mPointwiseIO.push_back(new PointwiseIOAscii());
     }
     if (netcdf) {
-        rec->mPointwiseIO.push_back(new PointwiseIONetCDF());
+        rec->mPointwiseIO.push_back(new PointwiseIONetCDF(true));
+    }
+    if (netcdf_no_assemble) {
+        rec->mPointwiseIO.push_back(new PointwiseIONetCDF(false));
     }
     
     if (verbose) {

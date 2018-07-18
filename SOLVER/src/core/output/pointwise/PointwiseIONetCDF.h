@@ -9,6 +9,10 @@ class NetCDF_Writer;
 
 class PointwiseIONetCDF: public PointwiseIO {
 public:
+    PointwiseIONetCDF(bool assemble): mAssemble(assemble) {
+        // nothing
+    }
+    
     // before time loop
     void initialize(int totalRecordSteps, int bufferSize, 
         const std::string &components, const std::vector<PointwiseInfo> &receivers, 
@@ -41,5 +45,8 @@ private:
     
     // source location
     double mSrcLat, mSrcLon, mSrcDep;
+    
+    // assemble or not
+    bool mAssemble = true;
 };
 
