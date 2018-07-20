@@ -54,6 +54,14 @@ parser.add_argument('-c', '--components', dest='components', action='store',
                     type=str, default='RTZ', choices=['RTZ', 'ENZ', 'SPZ'],
                     help='seismogram components, see OUT_STATIONS_COMPONENTS\n' + 
                          'in inparam.time_src_recv; default = RTZ')
+parser.add_argument('-f', '--factors_Fourier', dest='factors_Fourier', 
+                    action='store', nargs='+', type=complex, default=None, 
+                    help='factors to scale the Fourier coefficients;\n' + 
+                         'default = None (1.0 for all the orders)')                         
+parser.add_argument('-l', '--source_lat_lon', dest='source_lat_lon', 
+                    action='store', nargs=2, type=float, default=None, 
+                    help='specify source latitude and longitude;\n' + 
+                         'default = None (use those in the solver)')                         
 parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', 
                     help='verbose mode')        
 args = parser.parse_args()
@@ -142,8 +150,12 @@ def interpLagrange(target, bases):
 ###### read surface database
 nc_surf = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
 # global attribute
-srclat = nc_surf.source_latitude
-srclon = nc_surf.source_longitude
+if args.source_lat_lon is not None:
+    srclat = args.source_lat_lon[0]
+    srclon = args.source_lat_lon[1]
+else:    
+    srclat = nc_surf.source_latitude
+    srclon = nc_surf.source_longitude
 srcdep = nc_surf.source_depth
 srcflat = nc_surf.source_flattening
 surfflat = nc_surf.surface_flattening
@@ -163,7 +175,7 @@ nPntEdge = len(var_GLL)
 SurfaceStation.setSource(srclat, srclon, srcflat)
 
 ###### read station info
-station_info = np.loadtxt(args.stations, dtype=str)
+station_info = np.loadtxt(args.stations, dtype=str, ndmin=2)
 stations = {}
 buried = 0
 largest_depth = -1.
@@ -222,6 +234,10 @@ var_time_out = nc_wave.createVariable('time_points',
     solver_dtype, (ncdim_nstep,))
 var_time_out[:] = var_time[:]
 
+# Fourier orders
+if args.factors_Fourier is not None:
+    args.factors_Fourier = np.array(args.factors_Fourier)
+    
 # waveforms
 nc_wave.createDimension('ncdim_3', size=3)
 max_theta = np.amax(var_theta, axis=1)
@@ -255,6 +271,9 @@ for ist, station in enumerate(stations.values()):
     nu_p_1 = int(fourier_r.shape[1] / nPntEdge / 3)
     exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * station.azimuth)
     exparray[0] = 1.
+    if args.factors_Fourier is not None:
+        length = min(nu_p_1, len(args.factors_Fourier))
+        exparray[0:length] *= args.factors_Fourier[0:length]
     # compute disp
     disp = np.zeros((nstep, 3), dtype=solver_dtype)
     for istep in np.arange(0, nstep):
