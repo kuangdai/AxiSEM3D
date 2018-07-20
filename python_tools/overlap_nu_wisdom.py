@@ -60,14 +60,17 @@ for infile in args.in_wisdom_files:
 
 # overlap
 nu_res = nus[0]
-length = len(nu_res)
 for nu in nus[1:]:
     if args.summation:
-        nu_res[:, 2:4] += nu[:, 2:4]
+        nu_res[:, 2] += nu[:, 2]
     else:
         nu_res[:, 2] = np.maximum(nu_res[:, 2], nu[:, 2])
 
+# set starting field to -1 as an indication of overlap
+nu_res[:, 3].fill(-1) 
+
 # write
+length = len(nu_res)
 ncdf = Dataset(args.out_wisdom_file, 'w', format='NETCDF4')
 ncdf.createDimension('ncdim_4', size=4)
 ncdf.createDimension('ncdim_' + str(length), size=length)

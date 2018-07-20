@@ -54,10 +54,14 @@ parser.add_argument('-c', '--components', dest='components', action='store',
                     type=str, default='RTZ', choices=['RTZ', 'ENZ', 'SPZ'],
                     help='seismogram components, see OUT_STATIONS_COMPONENTS\n' + 
                          'in inparam.time_src_recv; default = RTZ')
-parser.add_argument('-f', '--factors_Fourier', dest='factors_Fourier', 
-                    action='store', nargs='+', type=complex, default=None, 
-                    help='factors to scale the Fourier coefficients;\n' + 
-                         'default = None (1.0 for all the orders)')                         
+parser.add_argument('-F', '--order_Fourier', dest='order_Fourier', 
+                    action='store', type=int, default=-1, 
+                    help='only compute the specified order;\n' + 
+                         'default = -1 (sum up all the orders)') 
+parser.add_argument('-f', '--factor_Fourier', dest='factor_Fourier', 
+                    action='store', type=complex, default=1.0, 
+                    help='factor to scale the Fourier coefficients,\n' + 
+                         'can be a complex number; default = 1.0')                         
 parser.add_argument('-l', '--source_lat_lon', dest='source_lat_lon', 
                     action='store', nargs=2, type=float, default=None, 
                     help='specify source latitude and longitude;\n' + 
@@ -216,6 +220,11 @@ for ist in np.arange(0, len(station_info)):
         lon_phi = np.radians(lon_phi)
         st.setloc_source_centered(lat_theta, lon_phi, surfflat)
     stations[key] = st
+    
+# sort stations by distance    
+station_list = list(stations.values())
+station_list.sort(key=lambda st: st.dist)    
+    
 if buried > 0:
     print('Warning: Ignoring buried depth of %d stations;' % (buried))    
     print('         the deepest station %s is buried at %.0f m' \
@@ -234,14 +243,11 @@ var_time_out = nc_wave.createVariable('time_points',
     solver_dtype, (ncdim_nstep,))
 var_time_out[:] = var_time[:]
 
-# Fourier orders
-if args.factors_Fourier is not None:
-    args.factors_Fourier = np.array(args.factors_Fourier)
-    
 # waveforms
 nc_wave.createDimension('ncdim_3', size=3)
 max_theta = np.amax(var_theta, axis=1)
-for ist, station in enumerate(stations.values()):
+eleTag_last = -1
+for ist, station in enumerate(station_list):
     # waveform
     key = station.network + '.' + station.name
     var_wave = nc_wave.createVariable(key + '.' + args.components, 
@@ -265,40 +271,48 @@ for ist, station in enumerate(stations.values()):
         
     # Fourier
     # NOTE: change to stepwise if memory issue occurs
-    fourier_r = nc_surf.variables['edge_' + str(eleTag) + 'r'][:, :]
-    fourier_i = nc_surf.variables['edge_' + str(eleTag) + 'i'][:, :]
-    fourier = fourier_r + fourier_i * 1j
-    nu_p_1 = int(fourier_r.shape[1] / nPntEdge / 3)
+    if eleTag != eleTag_last:
+        fourier_r = nc_surf.variables['edge_' + str(eleTag) + 'r'][:, :]
+        fourier_i = nc_surf.variables['edge_' + str(eleTag) + 'i'][:, :]
+        fourier = fourier_r + fourier_i * 1j
+        nu_p_1 = int(fourier_r.shape[1] / nPntEdge / 3)
+        eleTag_last = eleTag
+        
+    # exp array    
     exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * station.azimuth)
     exparray[0] = 1.
-    if args.factors_Fourier is not None:
-        length = min(nu_p_1, len(args.factors_Fourier))
-        exparray[0:length] *= args.factors_Fourier[0:length]
+    if args.order_Fourier >= 0:
+        assert args.order_Fourier < nu_p_1, 'Specified Fourier order %d greater than maximum %d' \
+            % (args.order_Fourier, nu_p_1 - 1)
+        exparray = exparray[args.order_Fourier]
+    exparray *= args.factor_Fourier    
+        
     # compute disp
+    spz = np.zeros((nstep, 3), dtype=solver_dtype)
+    fmat = fourier[:, :].reshape(nstep, 3, nPntEdge, nu_p_1)
+    if args.order_Fourier >= 0:
+        frow = fmat[:, :, :, args.order_Fourier]
+        spz[:, :] = (frow * exparray).real.dot(weights)
+    else:
+        spz[:, :] = fmat.dot(exparray).real.dot(weights)
+    # rotate
     disp = np.zeros((nstep, 3), dtype=solver_dtype)
-    for istep in np.arange(0, nstep):
-        spz = np.zeros(3)
-        for idim in np.arange(0, 3):
-            start = idim * nPntEdge * nu_p_1
-            end = idim * nPntEdge * nu_p_1 + nPntEdge * nu_p_1
-            fmat = fourier[istep, start:end].reshape(nPntEdge, nu_p_1)
-            spz[idim] = weights.dot(fmat.dot(exparray).real)
-        if args.components == 'SPZ':
-            disp[istep, :] = spz
-        else:    
-            ur = spz[0] * np.sin(station.dist) + spz[2] * np.cos(station.dist)
-            ut = spz[0] * np.cos(station.dist) - spz[2] * np.sin(station.dist)    
-            if args.components == 'ENZ':
-                disp[istep, 0] = -ut * np.sin(self.baz) + spz[1] * np.cos(self.baz)
-                disp[istep, 1] = -ut * np.cos(self.baz) - spz[1] * np.sin(self.baz)
-                disp[istep, 2] = ur    
-            else:
-                disp[istep, 0] = ut
-                disp[istep, 1] = spz[1]
-                disp[istep, 2] = ur
+    if args.components == 'SPZ':
+        disp = spz
+    else:
+        ur = spz[:, 0] * np.sin(station.dist) + spz[:, 2] * np.cos(station.dist)
+        ut = spz[:, 0] * np.cos(station.dist) - spz[:, 2] * np.sin(station.dist)    
+        if args.components == 'ENZ':
+            disp[:, 0] = -ut * np.sin(self.baz) + spz[:, 1] * np.cos(self.baz)
+            disp[:, 1] = -ut * np.cos(self.baz) - spz[:, 1] * np.sin(self.baz)
+            disp[:, 2] = ur    
+        else:
+            disp[:, 0] = ut
+            disp[:, 1] = spz[:, 1]
+            disp[:, 2] = ur
     var_wave[:, :] = disp[:, :]
     if args.verbose:
-        print('Done with station %s, %d / %d' % (key, ist + 1, len(stations)))
+        print('Done with station %s, %d / %d' % (key, ist + 1, len(station_list)))
         
 nc_surf.close()
 nc_wave.close()
