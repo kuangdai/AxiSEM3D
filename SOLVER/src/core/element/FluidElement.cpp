@@ -170,6 +170,11 @@ void FluidElement::computeStrain(Real phi, const RMatPP &weights, RRow6 &strain)
         "Not implemented."); 
 }
 
+void FluidElement::computeCurl(Real phi, const RMatPP &weights, RRow3 &curl) const {
+    throw std::runtime_error("FluidElement::computeCurl || "
+        "Not implemented."); 
+}
+
 void FluidElement::forceTIso() {
     if (mCrdTransTIso == 0) {
         mCrdTransTIso = new CrdTransTIsoFluid(formThetaMat());

@@ -18,6 +18,9 @@ public:
     void sphericalToUndulated(SolidResponse &response) const;
     void undulatedToSpherical(SolidResponse &response) const;
     
+    // 9 to 9, for curl computation
+    void sphericalToUndulated9(SolidResponse &response) const;
+    
     std::string verbose() const {return "PRT_3D";};
     bool is1D() const {return false;};
     

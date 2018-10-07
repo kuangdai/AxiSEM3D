@@ -21,7 +21,9 @@ public:
     virtual void finalize() = 0;
     
     // dump to user-specified format
-    virtual void dumpToFile(const RMatXX_RM &bufferDisp, const RMatXX_RM &bufferStrain, 
+    virtual void dumpToFile(const RMatXX_RM &bufferDisp, 
+        const RMatXX_RM &bufferStrain, 
+        const RMatXX_RM &bufferCurl, 
         const RColX &bufferTime, int bufferLine) = 0;
 };
 

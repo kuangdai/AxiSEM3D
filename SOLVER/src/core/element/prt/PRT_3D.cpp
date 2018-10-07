@@ -80,6 +80,29 @@ void PRT_3D::undulatedToSpherical(SolidResponse &response) const{
                                    + mXFlat1.schur(und.block(0, nPE * 4, Nr, nPE));
 }
 
+void PRT_3D::sphericalToUndulated9(SolidResponse &response) const {
+    int Nr = response.mNr;
+    RMatXN9 &sph = SolverFFTW_N9::getC2R_RMat(Nr);
+    RMatXN9 &und = SolverFFTW_N9::getR2C_RMat(Nr);
+    und.block(0, nPE * 0, Nr, nPE) = mXFlat0.schur(sph.block(0, nPE * 0, Nr, nPE))
+                                   + mXFlat1.schur(sph.block(0, nPE * 2, Nr, nPE));
+    und.block(0, nPE * 1, Nr, nPE) = mXFlat0.schur(sph.block(0, nPE * 3, Nr, nPE))
+                                   + mXFlat1.schur(sph.block(0, nPE * 5, Nr, nPE));
+    und.block(0, nPE * 2, Nr, nPE) = mXFlat0.schur(sph.block(0, nPE * 6, Nr, nPE))
+                                   + mXFlat1.schur(sph.block(0, nPE * 8, Nr, nPE));
+    und.block(0, nPE * 3, Nr, nPE) = mXFlat0.schur(sph.block(0, nPE * 1, Nr, nPE))
+                                   + mXFlat2.schur(sph.block(0, nPE * 2, Nr, nPE));
+    und.block(0, nPE * 4, Nr, nPE) = mXFlat0.schur(sph.block(0, nPE * 4, Nr, nPE))
+                                   + mXFlat2.schur(sph.block(0, nPE * 5, Nr, nPE));                                                                 
+    und.block(0, nPE * 5, Nr, nPE) = mXFlat0.schur(sph.block(0, nPE * 7, Nr, nPE))
+                                   + mXFlat2.schur(sph.block(0, nPE * 8, Nr, nPE));
+    und.block(0, nPE * 6, Nr, nPE) = mXFlat3.schur(sph.block(0, nPE * 2, Nr, nPE));
+    und.block(0, nPE * 7, Nr, nPE) = mXFlat3.schur(sph.block(0, nPE * 5, Nr, nPE));
+    und.block(0, nPE * 8, Nr, nPE) = mXFlat3.schur(sph.block(0, nPE * 8, Nr, nPE));
+    // replace
+    sph.block(0, 0, Nr, nPE * 9) = und.block(0, 0, Nr, nPE * 9);
+}
+
 void PRT_3D::checkCompatibility(int Nr) const{
     int myNr = mXFlat0.rows();
     if (Nr != myNr) {

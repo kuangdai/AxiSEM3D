@@ -18,7 +18,9 @@ public:
     void finalize();
     
     // dump to user-specified format
-    void dumpToFile(const RMatXX_RM &bufferDisp, const RMatXX_RM &bufferStrain,
+    void dumpToFile(const RMatXX_RM &bufferDisp, 
+        const RMatXX_RM &bufferStrain,
+        const RMatXX_RM &bufferCurl,
         const RColX &bufferTime, int bufferLine);
     
 private:
@@ -39,5 +41,14 @@ private:
     
     // buffer
     RMatXX mBufferStrain;
+    
+    // file names
+    std::vector<std::string> mFileNamesCurl;
+    
+    // fstream
+    std::vector<std::fstream *> mFilesCurl;
+    
+    // buffer
+    RMatXX mBufferCurl;
 };
 

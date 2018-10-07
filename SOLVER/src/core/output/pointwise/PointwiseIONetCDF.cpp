@@ -28,6 +28,12 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
             numStrainRec++;
         }
     }
+    int numCurlRec = 0;
+    for (const auto &rec: *mReceivers) {
+        if (rec.mDumpCurl) {
+            numCurlRec++;
+        }
+    }
     std::vector<int> allNumRec;
     XMPI::gather(numRec, allNumRec, false);
     if (XMPI::root()) {
@@ -49,8 +55,11 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
     mVarNamesDisp.resize(numRec);
     mVarNamesStrain.resize(numStrainRec);
     mStrainIndex.resize(numStrainRec);
+    mVarNamesCurl.resize(numCurlRec);
+    mCurlIndex.resize(numCurlRec);
     std::vector<double> mylats, mylons, mydeps;
     int istrain = 0;
+    int icurl = 0;
     for (int irec = 0; irec < numRec; irec++) {
         mVarNamesDisp[irec] = receivers[irec].mNetwork + "." + receivers[irec].mName;
         mVarNamesDisp[irec] += "." + components;
@@ -59,6 +68,12 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
             mVarNamesStrain[istrain] += ".RTZ.strain";
             mStrainIndex[istrain] = irec;
             istrain++;
+        }
+        if (receivers[irec].mDumpCurl) {
+            mVarNamesCurl[icurl] = receivers[irec].mNetwork + "." + receivers[irec].mName;
+            mVarNamesCurl[icurl] += ".RTZ.curl";
+            mCurlIndex[icurl] = irec;
+            icurl++;
         }
         mylats.push_back(receivers[irec].mLat);
         mylons.push_back(receivers[irec].mLon);
@@ -69,11 +84,15 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
     std::vector<size_t> dimsTime;
     std::vector<size_t> dimsSeis;
     std::vector<size_t> dimsStrain;
+    std::vector<size_t> dimsCurl;
+    
     dimsTime.push_back(totalRecordSteps);
     dimsSeis.push_back(totalRecordSteps);
     dimsSeis.push_back(3);
     dimsStrain.push_back(totalRecordSteps);
     dimsStrain.push_back(6);
+    dimsCurl.push_back(totalRecordSteps);
+    dimsCurl.push_back(3);
 
     // file
     mNetCDF = new NetCDF_Writer();
@@ -101,6 +120,12 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
             mNetCDF->addAttribute(mVarNamesStrain[irec], "longitude", mylons[mStrainIndex[irec]]);
             mNetCDF->addAttribute(mVarNamesStrain[irec], "depth", mydeps[mStrainIndex[irec]]);
         }
+        for (int irec = 0; irec < numCurlRec; irec++) {
+            mNetCDF->defineVariable<Real>(mVarNamesCurl[irec], dimsCurl);
+            mNetCDF->addAttribute(mVarNamesCurl[irec], "latitude", mylats[mCurlIndex[irec]]);
+            mNetCDF->addAttribute(mVarNamesCurl[irec], "longitude", mylons[mCurlIndex[irec]]);
+            mNetCDF->addAttribute(mVarNamesCurl[irec], "depth", mydeps[mCurlIndex[irec]]);
+        }
         mNetCDF->defModeOff();
         // fill time with err values
         mNetCDF->fillConstant("time_points", dimsTime, (Real)NC_ERR_VALUE);
@@ -111,6 +136,9 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
         for (int irec = 0; irec < numStrainRec; irec++) {
             mNetCDF->fillConstant(mVarNamesStrain[irec], dimsStrain, (Real)NC_ERR_VALUE);
         }
+        for (int irec = 0; irec < numCurlRec; irec++) {
+            mNetCDF->fillConstant(mVarNamesCurl[irec], dimsCurl, (Real)NC_ERR_VALUE);
+        }
         // source location
         mNetCDF->addAttribute("", "source_latitude", mSrcLat);
         mNetCDF->addAttribute("", "source_longitude", mSrcLon);
@@ -118,14 +146,17 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
         mNetCDF->flush();
     #else
         // gather all station names 
-        std::vector<std::vector<std::string>> allNamesDisp, allNamesStrain; 
+        std::vector<std::vector<std::string>> allNamesDisp, allNamesStrain, allNamesCurl; 
         std::vector<std::vector<int>> allIndexStrain;
+        std::vector<std::vector<int>> allIndexCurl;
         std::vector<std::vector<double>> allLats;
         std::vector<std::vector<double>> allLons;
         std::vector<std::vector<double>> allDeps;
         XMPI::gather(mVarNamesDisp, allNamesDisp, true);
         XMPI::gather(mVarNamesStrain, allNamesStrain, true);
         XMPI::gather(mStrainIndex, allIndexStrain, MPI_INT, true);
+        XMPI::gather(mVarNamesCurl, allNamesCurl, true);
+        XMPI::gather(mCurlIndex, allIndexCurl, MPI_INT, true);
         XMPI::gather(mylats, allLats, MPI_DOUBLE, true);
         XMPI::gather(mylons, allLons, MPI_DOUBLE, true);
         XMPI::gather(mydeps, allDeps, MPI_DOUBLE, true);
@@ -151,6 +182,12 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
                     mNetCDF->addAttribute(allNamesStrain[iproc][irec], "longitude", allLons[iproc][allIndexStrain[iproc][irec]]);
                     mNetCDF->addAttribute(allNamesStrain[iproc][irec], "depth", allDeps[iproc][allIndexStrain[iproc][irec]]);
                 }
+                for (int irec = 0; irec < allNamesCurl[iproc].size(); irec++) {
+                    mNetCDF->defineVariable<Real>(allNamesCurl[iproc][irec], dimsCurl);
+                    mNetCDF->addAttribute(allNamesCurl[iproc][irec], "latitude", allLats[iproc][allIndexCurl[iproc][irec]]);
+                    mNetCDF->addAttribute(allNamesCurl[iproc][irec], "longitude", allLons[iproc][allIndexCurl[iproc][irec]]);
+                    mNetCDF->addAttribute(allNamesCurl[iproc][irec], "depth", allDeps[iproc][allIndexCurl[iproc][irec]]);
+                }
             }
             mNetCDF->defModeOff();
             // fill time with err values
@@ -162,6 +199,9 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
                 }
                 for (int irec = 0; irec < allNamesStrain[iproc].size(); irec++) {
                     mNetCDF->fillConstant<Real>(allNamesStrain[iproc][irec], dimsStrain, (Real)NC_ERR_VALUE);
+                }
+                for (int irec = 0; irec < allNamesCurl[iproc].size(); irec++) {
+                    mNetCDF->fillConstant<Real>(allNamesCurl[iproc][irec], dimsCurl, (Real)NC_ERR_VALUE);
                 }
             }
             // source location
@@ -230,11 +270,14 @@ void PointwiseIONetCDF::finalize() {
     std::vector<size_t> dimsTime;
     std::vector<size_t> dimsSeis;
     std::vector<size_t> dimsStrain;
+    std::vector<size_t> dimsCurl;
     dimsTime.push_back(mCurrentRow);
     dimsSeis.push_back(mCurrentRow);
     dimsSeis.push_back(3);
     dimsStrain.push_back(mCurrentRow);
     dimsStrain.push_back(6);
+    dimsCurl.push_back(mCurrentRow);
+    dimsCurl.push_back(3);
     
     // create file 
     if (XMPI::rank() == mMinRankWithRec) {
@@ -264,6 +307,7 @@ void PointwiseIONetCDF::finalize() {
     // write seismograms
     int numRec = mVarNamesDisp.size();
     int numStrainRec = mVarNamesStrain.size();
+    int numCurlRec = mVarNamesCurl.size();
     for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
         if (iproc == XMPI::rank() && numRec > 0) {
             // open
@@ -286,6 +330,12 @@ void PointwiseIONetCDF::finalize() {
                 nw.addAttribute(mVarNamesStrain[irec], "longitude", (*mReceivers)[mStrainIndex[irec]].mLon);
                 nw.addAttribute(mVarNamesStrain[irec], "depth", (*mReceivers)[mStrainIndex[irec]].mDep);
             }
+            for (int irec = 0; irec < numCurlRec; irec++) {
+                nw.defineVariable<Real>(mVarNamesCurl[irec], dimsCurl);
+                nw.addAttribute(mVarNamesCurl[irec], "latitude", (*mReceivers)[mCurlIndex[irec]].mLat);
+                nw.addAttribute(mVarNamesCurl[irec], "longitude", (*mReceivers)[mCurlIndex[irec]].mLon);
+                nw.addAttribute(mVarNamesCurl[irec], "depth", (*mReceivers)[mCurlIndex[irec]].mDep);
+            }
             nw.defModeOff();
             
             // read and write seismograms
@@ -298,6 +348,11 @@ void PointwiseIONetCDF::finalize() {
                 RMatXX_RM seis;
                 nr.read2D(mVarNamesStrain[irec], seis);
                 nw.writeVariableWhole(mVarNamesStrain[irec], seis);
+            }
+            for (int irec = 0; irec < numCurlRec; irec++) {
+                RMatXX_RM seis;
+                nr.read2D(mVarNamesCurl[irec], seis);
+                nw.writeVariableWhole(mVarNamesCurl[irec], seis);
             }
             
             // close
@@ -317,7 +372,9 @@ void PointwiseIONetCDF::finalize() {
     #endif
 }
 
-void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp, const RMatXX_RM &bufferStrain,
+void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp, 
+    const RMatXX_RM &bufferStrain,
+    const RMatXX_RM &bufferCurl,
     const RColX &bufferTime, int bufferLine) {
     if (bufferLine == 0) {
         return;
@@ -327,15 +384,18 @@ void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp, const RMatXX_RM 
     std::vector<size_t> start;
     std::vector<size_t> countDisp;
     std::vector<size_t> countStrain;    
+    std::vector<size_t> countCurl;    
     start.push_back(mCurrentRow);
     countDisp.push_back(bufferLine);
     countStrain.push_back(bufferLine);
+    countCurl.push_back(bufferLine);
     
     // update record postion in nc file
     mCurrentRow += bufferLine;
     
     int numRec = mVarNamesDisp.size();
     int numStrainRec = mVarNamesStrain.size();
+    int numCurlRec = mVarNamesCurl.size();
     #ifndef _USE_PARALLEL_NETCDF
         if (numRec == 0) {
             return;
@@ -356,6 +416,7 @@ void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp, const RMatXX_RM 
     start.push_back(0);
     countDisp.push_back(3);
     countStrain.push_back(6);
+    countCurl.push_back(3);
     for (int irec = 0; irec < numRec; irec++) {
         mNetCDF->writeVariableChunk(mVarNamesDisp[irec], 
             bufferDisp.block(0, irec * 3, bufferLine, 3).eval(), 
@@ -365,6 +426,11 @@ void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp, const RMatXX_RM 
         mNetCDF->writeVariableChunk(mVarNamesStrain[irec], 
             bufferStrain.block(0, irec * 6, bufferLine, 6).eval(), 
             start, countStrain);
+    }
+    for (int irec = 0; irec < numCurlRec; irec++) {
+        mNetCDF->writeVariableChunk(mVarNamesCurl[irec], 
+            bufferCurl.block(0, irec * 3, bufferLine, 3).eval(), 
+            start, countCurl);
     }
     #ifndef NDEBUG
         Eigen::internal::set_is_malloc_allowed(false);

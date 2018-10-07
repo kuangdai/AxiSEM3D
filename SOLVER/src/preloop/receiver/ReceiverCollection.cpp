@@ -27,6 +27,7 @@ mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
     std::vector<std::string> name, network;
     std::vector<double> theta, phi, depth;
     std::vector<int> dumpStrain;
+    std::vector<int> dumpCurl;
     if (!boost::iequals(fileRec, "none")) {
         mInputFile = Parameters::sInputDirectory + "/" + mInputFile;
         if (XMPI::root()) {
@@ -48,9 +49,15 @@ mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
                     // the 4th column (elevation) is ignored
                     double depth_try = boost::lexical_cast<double>(strs[5]);
                     int strain_try = 0;
+                    int curl_try = 0;
                     if (npar > 6) {
-                        if (boost::iequals(strs[6], "dump_strain")) {
-                            strain_try = 1;
+                        for (int ipar = 6; ipar < npar; ipar++) {
+                            if (boost::iequals(strs[ipar], "dump_strain")) {
+                                strain_try = 1;
+                            }
+                            if (boost::iequals(strs[ipar], "dump_curl")) {
+                                curl_try = 1;
+                            }
                         }
                     }
                     name.push_back(strs[0]);
@@ -59,6 +66,7 @@ mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
                     phi.push_back(phi_try);
                     depth.push_back(depth_try);
                     dumpStrain.push_back(strain_try);
+                    dumpCurl.push_back(curl_try);
                 } catch(std::exception) {
                     // simply ignore invalid lines
                     continue;
@@ -72,6 +80,7 @@ mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
         XMPI::bcast(phi);
         XMPI::bcast(depth);
         XMPI::bcast(dumpStrain);
+        XMPI::bcast(dumpCurl);
     }
     
     // create receivers
@@ -103,7 +112,7 @@ mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
         recKeys.push_back(key);
         // add receiver
         mReceivers.push_back(new Receiver(name[i], network[i], 
-            theta[i], phi[i], geographic, depth[i], (bool)dumpStrain[i], 
+            theta[i], phi[i], geographic, depth[i], (bool)dumpStrain[i], (bool)dumpCurl[i], 
             srcLat, srcLon, srcDep));
         mWidthName = std::max(mWidthName, (int)name[i].length());
         mWidthNetwork = std::max(mWidthNetwork, (int)network[i].length());

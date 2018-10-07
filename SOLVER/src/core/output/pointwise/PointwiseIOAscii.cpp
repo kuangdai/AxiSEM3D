@@ -17,6 +17,9 @@ void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize,
     mFileNamesStrain.clear();    
     mFilesStrain.clear();
     mBufferStrain = RMatXX::Zero(bufferSize, 7);
+    mFileNamesCurl.clear();    
+    mFilesCurl.clear();
+    mBufferCurl = RMatXX::Zero(bufferSize, 4);
     
     // files
     std::string outdir = Parameters::sOutputDirectory + "/stations/";
@@ -44,6 +47,19 @@ void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize,
             mFileNamesStrain.push_back(fname_strain);
             mFilesStrain.push_back(fs_strain);
         }
+        
+        // curl
+        if (receivers[irec].mDumpCurl) {
+            std::string fname_curl = fname_base + "." + "RTZ" + ".curl.ascii";
+            std::fstream *fs_curl = new std::fstream(fname_curl, std::fstream::out);
+            if (!(*fs_curl)) {
+                throw std::runtime_error("PointwiseIOAscii::initialize || "
+                    "Error opening ascii output file: || " + fname_curl
+                    + " || Use NetCDF instead of ascii if there are too many stations.");
+            }
+            mFileNamesCurl.push_back(fname_curl);
+            mFilesCurl.push_back(fs_curl);
+        }
     }
 }
 
@@ -58,9 +74,16 @@ void PointwiseIOAscii::finalize() {
         mFilesStrain[irec]->close();
         delete mFilesStrain[irec];
     }
+    int numCurlRec = mFileNamesCurl.size();
+    for (int irec = 0; irec < numCurlRec; irec++) {
+        mFilesCurl[irec]->close();
+        delete mFilesCurl[irec];
+    }
 }
 
-void PointwiseIOAscii::dumpToFile(const RMatXX_RM &bufferDisp, const RMatXX_RM &bufferStrain,
+void PointwiseIOAscii::dumpToFile(const RMatXX_RM &bufferDisp, 
+    const RMatXX_RM &bufferStrain,
+    const RMatXX_RM &bufferCurl,
     const RColX &bufferTime, int bufferLine) {
     if (bufferLine == 0) {
         return;
@@ -84,6 +107,14 @@ void PointwiseIOAscii::dumpToFile(const RMatXX_RM &bufferDisp, const RMatXX_RM &
                                        bufferStrain.block(0, irec * 6, bufferLine, 6);
         (*mFilesStrain[irec]) << mBufferStrain.topRows(bufferLine).format(EIGEN_FMT) << std::endl;   
         mFilesStrain[irec]->flush();
+    }
+    
+    int numCurlRec = mFileNamesCurl.size();
+    for (int irec = 0; irec < numCurlRec; irec++) {
+        mBufferCurl.topRows(bufferLine) << bufferTime.topRows(bufferLine), 
+                                       bufferCurl.block(0, irec * 3, bufferLine, 3);
+        (*mFilesCurl[irec]) << mBufferCurl.topRows(bufferLine).format(EIGEN_FMT) << std::endl;   
+        mFilesCurl[irec]->flush();
     }
     #ifndef NDEBUG
         Eigen::internal::set_is_malloc_allowed(false);

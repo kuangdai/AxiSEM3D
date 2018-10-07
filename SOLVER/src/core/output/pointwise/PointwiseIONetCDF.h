@@ -22,7 +22,9 @@ public:
     void finalize();
     
     // dump to user-specified format
-    void dumpToFile(const RMatXX_RM &bufferDisp, const RMatXX_RM &bufferStrain, 
+    void dumpToFile(const RMatXX_RM &bufferDisp, 
+        const RMatXX_RM &bufferStrain, 
+        const RMatXX_RM &bufferCurl, 
         const RColX &bufferTime, int bufferLine);
     
 private:
@@ -33,6 +35,8 @@ private:
     std::vector<std::string> mVarNamesDisp;
     std::vector<std::string> mVarNamesStrain;
     std::vector<int> mStrainIndex;
+    std::vector<std::string> mVarNamesCurl;
+    std::vector<int> mCurlIndex;
     
     // file ID
     NetCDF_Writer *mNetCDF = 0;
