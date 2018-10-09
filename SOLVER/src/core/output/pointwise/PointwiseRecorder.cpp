@@ -70,7 +70,7 @@ void PointwiseRecorder::record(int tstep, Real t) {
     // get disp
     static RRow3 gm;
     for (int irec = 0; irec < mPointwiseInfo.size(); irec++) {
-        // compute from element
+        // compute from element, in SPZ
         mPointwiseInfo[irec].mElement->computeGroundMotion(mPointwiseInfo[irec].mPhi, 
             mPointwiseInfo[irec].mWeights, gm);
         if (mComponents != "SPZ") {
@@ -100,7 +100,7 @@ void PointwiseRecorder::record(int tstep, Real t) {
     int istrain = 0;
     for (int irec = 0; irec < mPointwiseInfo.size(); irec++) {
         if (mPointwiseInfo[irec].mDumpStrain) {
-            // compute from element
+            // compute from element, in RTZ
             mPointwiseInfo[irec].mElement->computeStrain(mPointwiseInfo[irec].mPhi, 
                 mPointwiseInfo[irec].mWeights, strain);
             // write to buffer
@@ -114,9 +114,20 @@ void PointwiseRecorder::record(int tstep, Real t) {
     int icurl = 0;
     for (int irec = 0; irec < mPointwiseInfo.size(); irec++) {
         if (mPointwiseInfo[irec].mDumpCurl) {
-            // compute from element
+            // compute from element, in RTZ
             mPointwiseInfo[irec].mElement->computeCurl(mPointwiseInfo[irec].mPhi, 
                 mPointwiseInfo[irec].mWeights, curl);
+            if (mComponents == "ENZ") {
+                // transform
+                Real ur = curl(2);
+                Real ut = curl(0);
+                Real up = curl(1);
+                Real cosbaz = cos(mPointwiseInfo[irec].mBAz);
+                Real sinbaz = sin(mPointwiseInfo[irec].mBAz);
+                curl(0) = -ut * sinbaz + up * cosbaz;
+                curl(1) = -ut * cosbaz - up * sinbaz;
+                curl(2) = ur;
+            }        
             // write to buffer
             mBufferCurl.block(mBufferLine, icurl * 3, 1, 3) = curl;
             icurl++;
