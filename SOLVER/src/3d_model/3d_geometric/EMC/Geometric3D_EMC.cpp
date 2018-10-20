@@ -22,14 +22,14 @@ void Geometric3D_EMC::initialize() {
         if (NetCDF_Reader::checkNetCDF_isAscii(fname)) {
             NetCDF_ReaderAscii reader;
             reader.open(fname);
-            reader.read1D("lantidue", flat);
+            reader.read1D("latitude", flat);
             reader.read1D("longitude", flon);
             reader.read2D(mVarName, fdata);
             reader.close();
         } else {
             NetCDF_Reader reader;
             reader.open(fname);
-            reader.read1D("lantidue", flat);
+            reader.read1D("latitude", flat);
             reader.read1D("longitude", flon);
             reader.read2D(mVarName, fdata);
             reader.close();
