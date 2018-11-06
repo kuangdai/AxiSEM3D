@@ -4,7 +4,7 @@
 
 #include "SourceTimeFunction.h"
 
-SourceTimeFunction::SourceTimeFunction(const std::vector<Real> &stf, Real dt, Real shift):
+SourceTimeFunction::SourceTimeFunction(const std::vector<Real> &stf, double dt, double shift):
 mSTF(stf), mDeltaT(dt), mShift(shift) {
     // nothing
 }

@@ -162,7 +162,7 @@ void Domain::assembleStiff(int phase) const {
     #endif
 }
 
-void Domain::updateNewmark(Real dt) const {
+void Domain::updateNewmark(double dt) const {
     #ifdef _MEASURE_TIMELOOP
         mTimerPoints->resume();
     #endif
@@ -204,7 +204,7 @@ void Domain::finalizeRecorders() const {
     }
 }
 
-void Domain::record(int tstep, Real t) const {
+void Domain::record(int tstep, double t) const {
     #ifdef _MEASURE_TIMELOOP
         mTimerOthers->resume();
     #endif

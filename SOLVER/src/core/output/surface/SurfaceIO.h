@@ -7,6 +7,7 @@
 class NetCDF_Writer;
 class SurfaceInfo;
 #include "eigenc.h"
+#include "eigenp.h"
 
 class SurfaceIO {
 public:
@@ -20,7 +21,7 @@ public:
     
     // dump to netcdf
     void dumpToFile(const std::vector<CMatXX_RM> &bufferDisp, 
-        const RColX &bufferTime, int bufferLine);
+        const RDColX &bufferTime, int bufferLine);
     
 private:
     // variable names

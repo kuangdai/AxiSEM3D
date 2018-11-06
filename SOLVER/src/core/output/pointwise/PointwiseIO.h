@@ -5,6 +5,7 @@
 #pragma once
 
 #include "eigenc.h"
+#include "eigenp.h"
 #include <string>
 class PointwiseInfo;
 
@@ -24,6 +25,6 @@ public:
     virtual void dumpToFile(const RMatXX_RM &bufferDisp, 
         const RMatXX_RM &bufferStrain, 
         const RMatXX_RM &bufferCurl, 
-        const RColX &bufferTime, int bufferLine) = 0;
+        const RDColX &bufferTime, int bufferLine) = 0;
 };
 

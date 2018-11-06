@@ -20,7 +20,7 @@ SolidPoint::~SolidPoint() {
     delete mMass;
 }
 
-void SolidPoint::updateNewmark(Real dt) {
+void SolidPoint::updateNewmark(double dt) {
     // mask stiff 
     maskField(mStiff);
     // compute accel inplace
@@ -28,11 +28,11 @@ void SolidPoint::updateNewmark(Real dt) {
     // mask accel (masking must be called twice if mass is 3D)
     maskField(mStiff);
     // update dt
-    Real half_dt = half * dt;
-    Real half_dt_dt = half_dt * dt;
-    mVeloc += half_dt * (mAccel + mStiff);
+    double half_dt = half * dt;
+    double half_dt_dt = half_dt * dt;
+    mVeloc += (Real)half_dt * (mAccel + mStiff);
     mAccel = mStiff;
-    mDispl += dt * mVeloc + half_dt_dt * mAccel;  
+    mDispl += (Real)dt * mVeloc + (Real)half_dt_dt * mAccel;  
     // zero stiffness for next time step
     mStiff.setZero();
 }

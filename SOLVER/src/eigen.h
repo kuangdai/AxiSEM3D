@@ -15,5 +15,5 @@
 
 #include <Eigen/Dense>
 
-const Eigen::IOFormat EIGEN_FMT(Eigen::StreamPrecision, 0, " ", "\n", " ", "", "", "");
+const Eigen::IOFormat EIGEN_FMT(Eigen::FullPrecision, 0, " ", "\n", " ", "", "", "");
 

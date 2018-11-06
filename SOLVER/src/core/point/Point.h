@@ -14,7 +14,7 @@ public:
     virtual ~Point() {};
     
     // update in time domain by Newmark
-    virtual void updateNewmark(Real dt) = 0;
+    virtual void updateNewmark(double dt) = 0;
     
     // check stability
     virtual bool stable() const = 0;

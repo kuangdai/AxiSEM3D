@@ -25,7 +25,7 @@ public:
     void dumpToFile(const RMatXX_RM &bufferDisp, 
         const RMatXX_RM &bufferStrain, 
         const RMatXX_RM &bufferCurl, 
-        const RColX &bufferTime, int bufferLine);
+        const RDColX &bufferTime, int bufferLine);
     
 private:
     // receivers

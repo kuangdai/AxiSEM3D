@@ -15,7 +15,7 @@ public:
     SolidFluidPoint(SolidPoint *sp, FluidPoint *fp, SFCoupling *couple);
     ~SolidFluidPoint();
     
-    void updateNewmark(Real dt);
+    void updateNewmark(double dt);
     
     // check stability
     bool stable() const;

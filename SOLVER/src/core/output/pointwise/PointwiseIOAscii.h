@@ -21,7 +21,7 @@ public:
     void dumpToFile(const RMatXX_RM &bufferDisp, 
         const RMatXX_RM &bufferStrain,
         const RMatXX_RM &bufferCurl,
-        const RColX &bufferTime, int bufferLine);
+        const RDColX &bufferTime, int bufferLine);
     
 private:
     // file names
@@ -31,7 +31,7 @@ private:
     std::vector<std::fstream *> mFilesDisp;
     
     // buffer
-    RMatXX mBufferDisp;
+    RDMatXX mBufferDisp;
     
     // file names
     std::vector<std::string> mFileNamesStrain;
@@ -40,7 +40,7 @@ private:
     std::vector<std::fstream *> mFilesStrain;
     
     // buffer
-    RMatXX mBufferStrain;
+    RDMatXX mBufferStrain;
     
     // file names
     std::vector<std::string> mFileNamesCurl;
@@ -49,6 +49,6 @@ private:
     std::vector<std::fstream *> mFilesCurl;
     
     // buffer
-    RMatXX mBufferCurl;
+    RDMatXX mBufferCurl;
 };
 

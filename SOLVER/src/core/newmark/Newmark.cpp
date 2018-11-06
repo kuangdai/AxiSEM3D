@@ -24,8 +24,8 @@ void Newmark::solve(int verbose) const {
         XMPI::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << XMPI::endl << XMPI::endl;
     }
     
-    Real t = zero - mDomain->getSTF().getShift();
-    Real dt = mDomain->getSTF().getDeltaT();
+    double t = 0. - mDomain->getSTF().getShift();
+    double dt = mDomain->getSTF().getDeltaT();
     int maxStep = mDomain->getSTF().getSize();
     mDomain->resetZero();
     if (mRandomDispl) {

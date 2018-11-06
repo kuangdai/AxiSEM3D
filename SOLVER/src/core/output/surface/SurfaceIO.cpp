@@ -83,7 +83,7 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
         mNetCDF->open(fname.str(), true);
         mNetCDF->defModeOn();
         // define time
-        mNetCDF->defineVariable<Real>("time_points", dimsTime);
+        mNetCDF->defineVariable<double>("time_points", dimsTime);
         // define seismograms
         for (int iele = 0; iele < numEle; iele++) {
             dimsSeis[1] = nPntEdge * 3 * (mNu[iele] + 1);
@@ -97,7 +97,7 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
         mNetCDF->defineVariable<double>("GLJ", dimsGLL);
         mNetCDF->defModeOff();
         // fill time with err values
-        mNetCDF->fillConstant("time_points", dimsTime, (Real)NC_ERR_VALUE);
+        mNetCDF->fillConstant("time_points", dimsTime, NC_ERR_VALUE);
         // fill seismograms with err values
         for (int iele = 0; iele < numEle; iele++) {
             dimsSeis[1] = nPntEdge * 3 * (mNu[iele] + 1);
@@ -131,7 +131,7 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
             mNetCDF->open(fname, true);
             mNetCDF->defModeOn();
             // define time
-            mNetCDF->defineVariable<Real>("time_points", dimsTime);
+            mNetCDF->defineVariable<double>("time_points", dimsTime);
             // define seismograms
             for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
                 for (int iele = 0; iele < allNames[iproc].size(); iele++) {
@@ -147,7 +147,7 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
             mNetCDF->defineVariable<double>("GLJ", dimsGLL);
             mNetCDF->defModeOff();
             // fill time with err values
-            mNetCDF->fillConstant("time_points", dimsTime, (Real)NC_ERR_VALUE);
+            mNetCDF->fillConstant("time_points", dimsTime, NC_ERR_VALUE);
             // fill seismograms with err values
             for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
                 for (int iele = 0; iele < allNames[iproc].size(); iele++) {
@@ -219,7 +219,7 @@ void SurfaceIO::finalize() {
         // read time
         NetCDF_Reader nr;
         nr.open(locFile);
-        RColX times;
+        RDColX times;
         nr.read1D("time_points", times);
         
         // read theta
@@ -235,7 +235,7 @@ void SurfaceIO::finalize() {
         NetCDF_Writer nw;
         nw.open(oneFile, true);
         nw.defModeOn();
-        nw.defineVariable<Real>("time_points", dimsTime);
+        nw.defineVariable<double>("time_points", dimsTime);
         nw.defineVariable<double>("theta", dimsTheta);
         nw.defineVariable<double>("GLL", dimsGLL);
         nw.defineVariable<double>("GLJ", dimsGLL);
@@ -303,7 +303,7 @@ void SurfaceIO::finalize() {
 }
 
 void SurfaceIO::dumpToFile(const std::vector<CMatXX_RM> &bufferDisp, 
-    const RColX &bufferTime, int bufferLine) {
+    const RDColX &bufferTime, int bufferLine) {
     int numEle = mVarNames.size();
     if (bufferLine == 0) {
         return;

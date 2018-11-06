@@ -65,13 +65,13 @@ public:
     
     // point operations
     void assembleStiff(int phase = 0) const; 
-    void updateNewmark(Real dt) const;
+    void updateNewmark(double dt) const;
     void coupleSolidFluid() const;
     
     // point-wise stations
     void initializeRecorders() const;
     void finalizeRecorders() const;
-    void record(int tstep, Real t) const;
+    void record(int tstep, double t) const;
     void dumpLeft() const;
     
     // stability

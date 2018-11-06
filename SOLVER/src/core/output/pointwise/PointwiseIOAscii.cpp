@@ -13,13 +13,13 @@ void PointwiseIOAscii::initialize(int totalRecordSteps, int bufferSize,
     int numRec = receivers.size();
     mFileNamesDisp.clear();    
     mFilesDisp.clear();
-    mBufferDisp = RMatXX::Zero(bufferSize, 4);
+    mBufferDisp = RDMatXX::Zero(bufferSize, 4);
     mFileNamesStrain.clear();    
     mFilesStrain.clear();
-    mBufferStrain = RMatXX::Zero(bufferSize, 7);
+    mBufferStrain = RDMatXX::Zero(bufferSize, 7);
     mFileNamesCurl.clear();    
     mFilesCurl.clear();
-    mBufferCurl = RMatXX::Zero(bufferSize, 4);
+    mBufferCurl = RDMatXX::Zero(bufferSize, 4);
     
     // files
     std::string outdir = Parameters::sOutputDirectory + "/stations/";
@@ -84,7 +84,7 @@ void PointwiseIOAscii::finalize() {
 void PointwiseIOAscii::dumpToFile(const RMatXX_RM &bufferDisp, 
     const RMatXX_RM &bufferStrain,
     const RMatXX_RM &bufferCurl,
-    const RColX &bufferTime, int bufferLine) {
+    const RDColX &bufferTime, int bufferLine) {
     if (bufferLine == 0) {
         return;
     }
@@ -96,7 +96,7 @@ void PointwiseIOAscii::dumpToFile(const RMatXX_RM &bufferDisp,
     int numRec = mFileNamesDisp.size();
     for (int irec = 0; irec < numRec; irec++) {
         mBufferDisp.topRows(bufferLine) << bufferTime.topRows(bufferLine), 
-                                       bufferDisp.block(0, irec * 3, bufferLine, 3);
+                                       bufferDisp.block(0, irec * 3, bufferLine, 3).cast<double>();
         (*mFilesDisp[irec]) << mBufferDisp.topRows(bufferLine).format(EIGEN_FMT) << std::endl;   
         mFilesDisp[irec]->flush();
     }
@@ -104,7 +104,7 @@ void PointwiseIOAscii::dumpToFile(const RMatXX_RM &bufferDisp,
     int numStrainRec = mFileNamesStrain.size();
     for (int irec = 0; irec < numStrainRec; irec++) {
         mBufferStrain.topRows(bufferLine) << bufferTime.topRows(bufferLine), 
-                                       bufferStrain.block(0, irec * 6, bufferLine, 6);
+                                       bufferStrain.block(0, irec * 6, bufferLine, 6).cast<double>();
         (*mFilesStrain[irec]) << mBufferStrain.topRows(bufferLine).format(EIGEN_FMT) << std::endl;   
         mFilesStrain[irec]->flush();
     }
@@ -112,7 +112,7 @@ void PointwiseIOAscii::dumpToFile(const RMatXX_RM &bufferDisp,
     int numCurlRec = mFileNamesCurl.size();
     for (int irec = 0; irec < numCurlRec; irec++) {
         mBufferCurl.topRows(bufferLine) << bufferTime.topRows(bufferLine), 
-                                       bufferCurl.block(0, irec * 3, bufferLine, 3);
+                                       bufferCurl.block(0, irec * 3, bufferLine, 3).cast<double>();
         (*mFilesCurl[irec]) << mBufferCurl.topRows(bufferLine).format(EIGEN_FMT) << std::endl;   
         mFilesCurl[irec]->flush();
     }

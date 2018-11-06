@@ -62,7 +62,7 @@ public:
     void finalize();
     
     // record at a time step
-    void record(int tstep, Real t);
+    void record(int tstep, double t);
     
     // dump to user-specified format
     void dumpToFile();
@@ -84,7 +84,7 @@ private:
     RMatXX_RM mBufferDisp;
     RMatXX_RM mBufferStrain;
     RMatXX_RM mBufferCurl;
-    RColX mBufferTime;
+    RDColX mBufferTime;
     
     // components
     std::string mComponents;

@@ -15,7 +15,7 @@ public:
     ~SolidPoint();
     
     // update in time domain by Newmark
-    void updateNewmark(Real dt);
+    void updateNewmark(double dt);
     
     // check stability
     bool stable() const {return mDispl.allFinite();};

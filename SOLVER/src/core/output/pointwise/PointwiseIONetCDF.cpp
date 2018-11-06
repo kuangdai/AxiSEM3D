@@ -106,7 +106,7 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
         mNetCDF->open(fname.str(), true);
         mNetCDF->defModeOn();
         // define time
-        mNetCDF->defineVariable<Real>("time_points", dimsTime);
+        mNetCDF->defineVariable<double>("time_points", dimsTime);
         // define seismograms
         for (int irec = 0; irec < numRec; irec++) {
             mNetCDF->defineVariable<Real>(mVarNamesDisp[irec], dimsSeis);
@@ -128,7 +128,7 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
         }
         mNetCDF->defModeOff();
         // fill time with err values
-        mNetCDF->fillConstant("time_points", dimsTime, (Real)NC_ERR_VALUE);
+        mNetCDF->fillConstant("time_points", dimsTime, NC_ERR_VALUE);
         // fill seismograms with err values
         for (int irec = 0; irec < numRec; irec++) {
             mNetCDF->fillConstant(mVarNamesDisp[irec], dimsSeis, (Real)NC_ERR_VALUE);
@@ -167,7 +167,7 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
             mNetCDF->open(fname, true);
             mNetCDF->defModeOn();
             // define time
-            mNetCDF->defineVariable<Real>("time_points", dimsTime);
+            mNetCDF->defineVariable<double>("time_points", dimsTime);
             // define seismograms
             for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
                 for (int irec = 0; irec < allNamesDisp[iproc].size(); irec++) {
@@ -191,7 +191,7 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
             }
             mNetCDF->defModeOff();
             // fill time with err values
-            mNetCDF->fillConstant("time_points", dimsTime, (Real)NC_ERR_VALUE);
+            mNetCDF->fillConstant("time_points", dimsTime, NC_ERR_VALUE);
             // fill seismograms with err values
             for (int iproc = 0; iproc < XMPI::nproc(); iproc++) {
                 for (int irec = 0; irec < allNamesDisp[iproc].size(); irec++) {
@@ -284,7 +284,7 @@ void PointwiseIONetCDF::finalize() {
         // read time
         NetCDF_Reader nr;
         nr.open(locFile);
-        RColX times;
+        RDColX times;
         nr.read1D("time_points", times);
         nr.close();
         
@@ -292,7 +292,7 @@ void PointwiseIONetCDF::finalize() {
         NetCDF_Writer nw;
         nw.open(oneFile, true);
         nw.defModeOn();
-        nw.defineVariable<Real>("time_points", dimsTime);
+        nw.defineVariable<double>("time_points", dimsTime);
         nw.defModeOff();
         nw.writeVariableWhole("time_points", times);
         
@@ -375,7 +375,7 @@ void PointwiseIONetCDF::finalize() {
 void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp, 
     const RMatXX_RM &bufferStrain,
     const RMatXX_RM &bufferCurl,
-    const RColX &bufferTime, int bufferLine) {
+    const RDColX &bufferTime, int bufferLine) {
     if (bufferLine == 0) {
         return;
     }

@@ -31,7 +31,7 @@ void PointwiseRecorder::addReceiver(const std::string &name, const std::string &
 void PointwiseRecorder::initialize() {
     int numRec = mPointwiseInfo.size();
     mBufferDisp = RMatXX_RM::Zero(mBufferSize, numRec * 3);
-    mBufferTime = RColX::Zero(mBufferSize);
+    mBufferTime = RDColX::Zero(mBufferSize);
     int numStrainRec = 0;
     for (const auto &rec: mPointwiseInfo) {
         if (rec.mDumpStrain) {
@@ -59,7 +59,7 @@ void PointwiseRecorder::finalize() {
     }
 }
 
-void PointwiseRecorder::record(int tstep, Real t) {
+void PointwiseRecorder::record(int tstep, double t) {
     if (tstep % mRecordInterval != 0) {
         return;
     }

@@ -64,7 +64,7 @@ void SurfaceRecorder::initialize() {
     }
     
     // buffer
-    mBufferTime = RColX::Zero(mBufferSize);
+    mBufferTime = RDColX::Zero(mBufferSize);
     for (int iele = 0; iele < numSurfEle; iele++) {
         CMatXX_RM buf;
         mSurfaceInfo[iele].initBuffer(mBufferSize, buf);
@@ -80,7 +80,7 @@ void SurfaceRecorder::finalize() {
     mIO->finalize();
 }
 
-void SurfaceRecorder::record(int tstep, Real t) {
+void SurfaceRecorder::record(int tstep, double t) {
     if (tstep % mRecordInterval != 0) {
         return;
     }
