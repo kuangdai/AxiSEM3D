@@ -242,13 +242,14 @@ void PointwiseIONetCDF::finalize() {
         XMPI::gather(myRecKeys, allRecKeys, false);
         if (XMPI::root()) {
             std::fstream fout(Parameters::sOutputDirectory + "/stations/station_rank.txt", std::fstream::out);
+            fout << "# MPI_RANK NETWORK.NAME\n";
             for (int rank = 0; rank < XMPI::nproc(); rank++) {
                 if (allRecKeys[rank].size() > 0) {
-                    fout << "RANK " << rank << ":\n";
+                    // fout << "RANK " << rank << ":\n";
                     for (int irec = 0; irec < allRecKeys[rank].size(); irec++) {
-                        fout << allRecKeys[rank][irec] << "\n";
+                        fout << rank << " " << allRecKeys[rank][irec] << "\n";
                     }
-                    fout << "\n";    
+                    // fout << "\n";    
                 }
             }
         }

@@ -285,6 +285,21 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
     if (ascii) {
         rec->mPointwiseIO.push_back(new PointwiseIOAscii());
     }
+    
+    // check netcdf options
+    if (netcdf && netcdf_no_assemble) {
+        throw std::runtime_error("ReceiverCollection::buildInparam || "
+            "Invalid parameter OUT_STATIONS_FORMAT, ||"
+            "netcdf and netcdf_no_assemble cannot coexist.");
+    }
+    #ifdef _USE_PARALLEL_NETCDF
+        if (netcdf_no_assemble) {
+            throw std::runtime_error("ReceiverCollection::buildInparam || "
+                "Invalid parameter OUT_STATIONS_FORMAT, ||"
+                "netcdf_no_assemble is not compatible with parallel NetCDF.");
+        }
+    #endif
+    
     if (netcdf) {
         rec->mPointwiseIO.push_back(new PointwiseIONetCDF(true));
     }
