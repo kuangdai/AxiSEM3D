@@ -30,6 +30,9 @@ parser.add_argument('-i', '--input', dest='in_surface_nc',
                     action='store', type=str, required=True,
                     help='NetCDF database of surface wavefield\n' + 
                          'created by AxiSEM3D <required>')
+parser.add_argument('-m', '--multi_file', dest='multi_file', action='store_true', 
+                    help='Does the NetCDF database consist of\n' +
+                         'multiple files; default = False')                         
 parser.add_argument('-o', '--output', dest='out_waveform_nc', 
                     action='store', type=str, required=True,
                     help='NetCDF waveform database to store the\n' + 
@@ -75,6 +78,7 @@ args = parser.parse_args()
 import numpy as np
 from netCDF4 import Dataset
 from obspy.geodetics import gps2dist_azimuth
+import os
 
 ################### TOOLS ###################
 def rotation_matrix(theta, phi):
@@ -152,7 +156,23 @@ def interpLagrange(target, bases):
 
 
 ###### read surface database
-nc_surf = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
+if args.multi_file:
+    # create first
+    nc_surfs = []
+    for irank in np.arange(0, 99999):
+        fname = args.in_surface_nc + str(irank)
+        if os.path.isfile(fname):
+            nc_surfs.append(Dataset(fname, 'r'))
+            if args.verbose:
+                print('Done opening nc file %s' % (fname))
+    nc_surf = nc_surfs[0]
+else:
+    nc_surf = Dataset(args.in_surface_nc, 'r')
+    if args.verbose:
+        print('Done opening nc file %s' % (fname))
+    nc_surfs = [nc_surf]
+    
+    
 # global attribute
 if args.source_lat_lon is not None:
     srclat = args.source_lat_lon[0]
@@ -174,6 +194,16 @@ nele = len(var_theta)
 var_GLL = nc_surf.variables['GLL'][:]
 var_GLJ = nc_surf.variables['GLJ'][:]
 nPntEdge = len(var_GLL)
+
+# element on rank
+irank_ele = np.zeros(nele, dtype='int')
+irank_ele.fill(-1)
+for inc, nc in enumerate(nc_surfs):
+    keys = nc.variables.keys()
+    for eleTag in np.arange(nele):
+        key = 'edge_' + str(eleTag) + 'r'
+        if key in keys:
+            irank_ele[eleTag] = inc
 
 # set source
 SurfaceStation.setSource(srclat, srclon, srcflat)
@@ -231,7 +261,7 @@ if buried > 0:
         % (largest_depth_station, largest_depth))    
     
 ###### prepare output
-nc_wave = Dataset(args.out_waveform_nc, 'w', format='NETCDF4')
+nc_wave = Dataset(args.out_waveform_nc, 'w')
 # global attribute
 nc_wave.source_latitude = srclat
 nc_wave.source_longitude = srclon
@@ -272,8 +302,9 @@ for ist, station in enumerate(station_list):
     # Fourier
     # NOTE: change to stepwise if memory issue occurs
     if eleTag != eleTag_last:
-        fourier_r = nc_surf.variables['edge_' + str(eleTag) + 'r'][:, :]
-        fourier_i = nc_surf.variables['edge_' + str(eleTag) + 'i'][:, :]
+        nce = nc_surfs[irank_ele[eleTag]]
+        fourier_r = nce.variables['edge_' + str(eleTag) + 'r'][:, :]
+        fourier_i = nce.variables['edge_' + str(eleTag) + 'i'][:, :]
         fourier = fourier_r + fourier_i * 1j
         nu_p_1 = int(fourier_r.shape[1] / nPntEdge / 3)
         eleTag_last = eleTag
@@ -313,8 +344,9 @@ for ist, station in enumerate(station_list):
     var_wave[:, :] = disp[:, :]
     if args.verbose:
         print('Done with station %s, %d / %d' % (key, ist + 1, len(station_list)))
-        
-nc_surf.close()
+
+for nc_s in nc_surfs:
+    nc_s.close() 
 nc_wave.close()
 
 

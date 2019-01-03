@@ -50,7 +50,7 @@ nus = []
 for infile in args.in_wisdom_files:
     if args.verbose:
         print('Reading ' + infile)
-    ncdf = Dataset(infile, 'r', format='NETCDF4')
+    ncdf = Dataset(infile, 'r')
     data = ncdf.variables['axisem3d_wisdom'][:, :]
     ind = np.lexsort((data[:, 0], data[:, 1]))
     nus.append(data[ind])
@@ -71,7 +71,7 @@ nu_res[:, 3].fill(-1)
 
 # write
 length = len(nu_res)
-ncdf = Dataset(args.out_wisdom_file, 'w', format='NETCDF4')
+ncdf = Dataset(args.out_wisdom_file, 'w')
 ncdf.createDimension('ncdim_4', size=4)
 ncdf.createDimension('ncdim_' + str(length), size=length)
 var = ncdf.createVariable('axisem3d_wisdom', float, 

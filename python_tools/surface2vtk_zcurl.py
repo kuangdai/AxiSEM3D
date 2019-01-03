@@ -195,7 +195,7 @@ def SpherifiedCube(divisions, zmin, zmax, zsort=True):
 if args.verbose:
     clock0 = time.clock()
     print('Reading global parameters...')
-nc_surf = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
+nc_surf = Dataset(args.in_surface_nc, 'r')
 # global attribute
 srclat = nc_surf.source_latitude
 srclon = nc_surf.source_longitude
@@ -341,13 +341,13 @@ if args.verbose:
 nc_surf.close()
 def write_vtk(iproc):
     if args.nproc == 1:
-        nc_surf_local = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
+        nc_surf_local = Dataset(args.in_surface_nc, 'r')
         iproc = 0
     else:
         # copy netcdf file for parallel access
         tempnc = args.out_vtk + '/surface_temp.nc' + str(iproc)
         shutil.copy(args.in_surface_nc, tempnc)
-        nc_surf_local = Dataset(tempnc, 'r', format='NETCDF4')
+        nc_surf_local = Dataset(tempnc, 'r')
 
     # write vtk
     if args.verbose and iproc == 0:

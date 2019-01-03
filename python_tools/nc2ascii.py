@@ -83,7 +83,7 @@ import fnmatch, os, shutil
 from multiprocessing import Pool
 
 # open file
-ncdf = Dataset(args.in_nc_file, 'r', format='NETCDF4')
+ncdf = Dataset(args.in_nc_file, 'r')
 
 # time info
 vartime = ncdf.variables['time_points'][:]
@@ -163,13 +163,13 @@ if args.verbose:
     
 def write_ascii(iproc):
     if args.nproc == 1:
-        ncdf = Dataset(args.in_nc_file, 'r', format='NETCDF4')
+        ncdf = Dataset(args.in_nc_file, 'r')
         iproc = 0
     else:
         # copy netcdf file for parallel access
         tempnc = args.out_ascii_dir + '/nc_temp.nc' + str(iproc)
         shutil.copy(args.in_nc_file, tempnc)
-        ncdf = Dataset(tempnc, 'r', format='NETCDF4')
+        ncdf = Dataset(tempnc, 'r')
 
     for ist, st in enumerate(stations):
         if ist % args.nproc != iproc: 

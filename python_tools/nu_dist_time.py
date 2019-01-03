@@ -74,7 +74,7 @@ import time
 if args.verbose:
     clock0 = time.clock()
     print('Reading global parameters...')
-nc_surf = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
+nc_surf = Dataset(args.in_surface_nc, 'r')
 # global attribute
 srclat = nc_surf.source_latitude
 srclon = nc_surf.source_longitude
@@ -170,13 +170,13 @@ nu = np.zeros((nsteps, ndists), dtype=int)
 
 def compute_nu(iproc):
     if args.nproc == 1:
-        nc_surf_local = Dataset(args.in_surface_nc, 'r', format='NETCDF4')
+        nc_surf_local = Dataset(args.in_surface_nc, 'r')
         iproc = 0
     else:
         # copy netcdf file for parallel access
         tempnc = args.out_vtk + '/surface_temp.nc' + str(iproc)
         shutil.copy(args.in_surface_nc, tempnc)
-        nc_surf_local = Dataset(tempnc, 'r', format='NETCDF4')
+        nc_surf_local = Dataset(tempnc, 'r')
 
     # compute nu
     if args.verbose and iproc == 0:
@@ -235,7 +235,7 @@ else:
         p.map(write_vtk, range(0, args.nproc))
         
 ###### prepare output
-nc_nu = Dataset(args.out_nu, 'w', format='NETCDF4')
+nc_nu = Dataset(args.out_nu, 'w')
 # time
 ncdim_nstep = 'ncdim_' + str(nsteps)
 nc_nu.createDimension(ncdim_nstep, size=nsteps)
