@@ -171,7 +171,14 @@ void ExodusModel::formStructured() {
     }
     
     // name of axis and surface sets
-    mSSNameAxis = isCartesian() ? "x0" : "t0";
+    std::string sphere_axis_name = "t0";
+    if (!isCartesian()) {
+        if (mSideSets.find("t1") != mSideSets.end()) {
+            sphere_axis_name = "t1";
+        }
+    }
+    
+    mSSNameAxis = isCartesian() ? "x0" : sphere_axis_name;
     mSSNameSurface = isCartesian() ? "y1" : "r1";
     
     // NOTE: we temporarily treat Cartesian meshes as special cases of spherical meshes
