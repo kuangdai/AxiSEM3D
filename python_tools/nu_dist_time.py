@@ -27,6 +27,9 @@ parser.add_argument('-i', '--input', dest='in_surface_nc',
                     action='store', type=str, required=True,
                     help='NetCDF database of surface wavefield\n' + 
                          'created by AxiSEM3D <required>')
+parser.add_argument('--multi_file', dest='multi_file', action='store_true', 
+                    help='Does the NetCDF database consist of\n' +
+                         'multiple files; default = False')                                                    
 parser.add_argument('-o', '--output', dest='out_nu', 
                     action='store', type=str, required=True,
                     help='output NetCDF database <required>') 
@@ -74,7 +77,28 @@ import time
 if args.verbose:
     clock0 = time.clock()
     print('Reading global parameters...')
-nc_surf = Dataset(args.in_surface_nc, 'r')
+    
+if args.multi_file:
+    # create first
+    nc_surfs = []
+    for irank in np.arange(0, 99999):
+        fname = args.in_surface_nc + str(irank)
+        if os.path.isfile(fname):
+            nc = Dataset(fname, 'r')
+            print(str(nc.variables['time_points'][0]))
+            if nc.variables['time_points'][-1] < -1. or '--' in str(nc.variables['time_points'][0]):
+                print('Skip opening nc file %s' % (fname))
+                continue 
+            nc_surfs.append(nc)
+            if args.verbose:
+                print('Done opening nc file %s' % (fname))
+    nc_surf = nc_surfs[0]
+else:
+    nc_surf = Dataset(args.in_surface_nc, 'r')
+    if args.verbose:
+        print('Done opening nc file %s' % (args.in_surface_nc))
+    nc_surfs = [nc_surf]
+
 # global attribute
 srclat = nc_surf.source_latitude
 srclon = nc_surf.source_longitude
@@ -94,6 +118,18 @@ nele = len(var_theta)
 var_GLL = nc_surf.variables['GLL'][:]
 var_GLJ = nc_surf.variables['GLJ'][:]
 nPntEdge = len(var_GLL)
+
+# element on rank
+irank_ele = np.zeros(nele, dtype='int')
+irank_ele.fill(-1)
+for inc, nc in enumerate(nc_surfs):
+    keys = nc.variables.keys()
+    for eleTag in np.arange(nele):
+        key = 'edge_' + str(eleTag) + 'r'
+        if key in keys:
+            irank_ele[eleTag] = inc
+
+
 if args.verbose:
     elapsed = time.clock() - clock0
     print('Reading global parameters done, ' + 
@@ -165,18 +201,17 @@ if args.verbose:
           '%f sec elapsed.\n' % (elapsed))
 
 # close serial input    
-nc_surf.close()
 nu = np.zeros((nsteps, ndists), dtype=int)
 
 def compute_nu(iproc):
-    if args.nproc == 1:
-        nc_surf_local = Dataset(args.in_surface_nc, 'r')
-        iproc = 0
-    else:
-        # copy netcdf file for parallel access
-        tempnc = args.out_vtk + '/surface_temp.nc' + str(iproc)
-        shutil.copy(args.in_surface_nc, tempnc)
-        nc_surf_local = Dataset(tempnc, 'r')
+    # if args.nproc == 1:
+    #     nc_surf_local = Dataset(args.in_surface_nc, 'r')
+    #     iproc = 0
+    # else:
+    #     # copy netcdf file for parallel access
+    #     tempnc = args.out_vtk + '/surface_temp.nc' + str(iproc)
+    #     shutil.copy(args.in_surface_nc, tempnc)
+    #     nc_surf_local = Dataset(tempnc, 'r')
 
     # compute nu
     if args.verbose and iproc == 0:
@@ -191,8 +226,9 @@ def compute_nu(iproc):
             if eleTags[idist] == eleTag_last:
                 fourier = fourier_last
             else:
-                fourier_r = nc_surf_local.variables['edge_' + str(eleTags[idist]) + 'r'][istep, :]
-                fourier_i = nc_surf_local.variables['edge_' + str(eleTags[idist]) + 'i'][istep, :]
+                nce = nc_surfs[irank_ele[eleTags[idist]]]
+                fourier_r = nce.variables['edge_' + str(eleTags[idist]) + 'r'][istep, :]
+                fourier_i = nce.variables['edge_' + str(eleTags[idist]) + 'i'][istep, :]
                 fourier = fourier_r[:] + fourier_i[:] * 1j
                 fourier_last = fourier
                 eleTag_last = eleTags[idist]
@@ -215,7 +251,8 @@ def compute_nu(iproc):
             print('    Done with timestep t = %f s; tstep = %d / %d; iproc = %d' \
                 % (var_time[istep], it + 1, nsteps, iproc))
     # close
-    nc_surf_local.close()
+    for nc_s in nc_surfs:
+        nc_s.close() 
     
     # remove temp nc
     if args.nproc > 1:
@@ -232,7 +269,7 @@ if args.nproc == 1:
     compute_nu(0)
 else:
     with Pool(args.nproc) as p:
-        p.map(write_vtk, range(0, args.nproc))
+        p.map(compute_nu, range(0, args.nproc))
         
 ###### prepare output
 nc_nu = Dataset(args.out_nu, 'w')

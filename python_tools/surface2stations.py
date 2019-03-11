@@ -162,14 +162,19 @@ if args.multi_file:
     for irank in np.arange(0, 99999):
         fname = args.in_surface_nc + str(irank)
         if os.path.isfile(fname):
-            nc_surfs.append(Dataset(fname, 'r'))
+            nc = Dataset(fname, 'r')
+            print(str(nc.variables['time_points'][0]))
+            if nc.variables['time_points'][-1] < -1. or '--' in str(nc.variables['time_points'][0]):
+                print('Skip opening nc file %s' % (fname))
+                continue 
+            nc_surfs.append(nc)
             if args.verbose:
                 print('Done opening nc file %s' % (fname))
     nc_surf = nc_surfs[0]
 else:
     nc_surf = Dataset(args.in_surface_nc, 'r')
     if args.verbose:
-        print('Done opening nc file %s' % (fname))
+        print('Done opening nc file %s' % (args.in_surface_nc))
     nc_surfs = [nc_surf]
     
     
