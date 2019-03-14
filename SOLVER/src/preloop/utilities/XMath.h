@@ -79,5 +79,24 @@ public:
     
     // compute value at phi 
     static RDRowN computeFourierAtPhi(const RDMatXN &data, double phi);
+    
+    
+    // memory info for eigen
+    template<class EigenMat>
+    static std::string eigenMemoryInfo(const std::string &title, const EigenMat &mat) {
+        // scalar size
+        size_t scalar = sizeof(typename EigenMat::Scalar);
+        // total size
+        double memGB = (mat.size() * scalar) / 1e9;
+        // format
+        std::stringstream ss;
+        ss << title << ": ";
+        ss << "dimensions = " << mat.rows() << " x " << mat.cols() << "; ";
+        ss << "scalar bytes = " << scalar << "; ";
+        ss << "memory = " << memGB << " GB";
+        return ss.str();
+    }
+
+
 };
 

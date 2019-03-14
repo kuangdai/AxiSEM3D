@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
+#include "XMath.h"
 
 ExodusModel::ExodusModel(const std::string &fileName): mExodusFileName(fileName) {
     std::vector<std::string> substrs = Parameters::splitString(mExodusFileName, "/");
@@ -245,6 +246,18 @@ void ExodusModel::readRawData() {
 }
 
 void ExodusModel::bcastRawData() {
+    // 
+    // XMPI::cout << XMath::eigenMemoryInfo("mGlobalVariableValues", mGlobalVariableValues) << XMPI::endl;
+    // XMPI::cout << XMath::eigenMemoryInfo("mConnectivity", mConnectivity) << XMPI::endl;
+    // XMPI::cout << XMath::eigenMemoryInfo("mNodalS", mNodalS) << XMPI::endl;
+    // XMPI::cout << XMath::eigenMemoryInfo("mNodalZ", mNodalZ) << XMPI::endl;
+    // XMPI::cout << XMath::eigenMemoryInfo("mElementalVariableValues_elem", mElementalVariableValues_elem) << XMPI::endl;
+    // XMPI::cout << XMath::eigenMemoryInfo("mElementalVariableValues_axis", mElementalVariableValues_axis) << XMPI::endl;
+    // XMPI::cout << XMath::eigenMemoryInfo("mElementalVariableCoords_axis", mElementalVariableCoords_axis) << XMPI::endl;
+    // XMPI::cout << XMath::eigenMemoryInfo("mSideSetValues", mSideSetValues) << XMPI::endl;
+    // XMPI::cout << XMath::eigenMemoryInfo("mEllipKnots", mEllipKnots) << XMPI::endl;
+    // XMPI::cout << XMath::eigenMemoryInfo("mEllipCoeffs", mEllipCoeffs) << XMPI::endl;
+    // 
     XMPI::bcast(mGlobalVariableNames);
     XMPI::bcastEigen(mGlobalVariableValues);
     XMPI::bcast(mGlobalRecordsRaw);
