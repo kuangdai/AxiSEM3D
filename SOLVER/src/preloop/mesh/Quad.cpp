@@ -219,7 +219,8 @@ mQuadTag(quadTag) {
     mMaterial = new Material(this, exModel);
     
     // relabelling
-    mRelabelling = new Relabelling(this);
+    // mRelabelling = new Relabelling(this);
+    mRelabelling = 0;
     
     // dt 
     mDeltaTRef = exModel.getElementalVariables("dt", mQuadTag);
@@ -236,7 +237,9 @@ mQuadTag(quadTag) {
 Quad::~Quad() {
     delete mMapping;
     delete mMaterial;
-    delete mRelabelling;
+    if (mRelabelling) {
+        delete mRelabelling;
+    }
 }
 
 void Quad::addVolumetric3D(const std::vector<Volumetric3D *> &m3D, 
@@ -246,7 +249,10 @@ void Quad::addVolumetric3D(const std::vector<Volumetric3D *> &m3D,
 
 void Quad::addGeometric3D(const std::vector<Geometric3D *> &g3D, 
     double srcLat, double srcLon, double srcDep, double phi2D) {
-    mRelabelling->addUndulation(g3D, srcLat, srcLon, srcDep, phi2D);
+    if (g3D.size() > 0) {
+        mRelabelling = new Relabelling(this);
+        mRelabelling->addUndulation(g3D, srcLat, srcLon, srcDep, phi2D);
+    }    
 }
 
 void Quad::setOceanLoad3D(const OceanLoad3D &o3D, 
@@ -277,7 +283,10 @@ void Quad::setOceanLoad3D(const OceanLoad3D &o3D,
 }
 
 bool Quad::hasRelabelling() const {
-    return !mRelabelling->isZero();
+    if (!mRelabelling) {
+        return false;
+    }
+    return !(mRelabelling->isZero());
 }
 
 double Quad::getDeltaT() const {
@@ -375,7 +384,10 @@ int Quad::release(Domain &domain, const IMatPP &myPointTags, const AttBuilder *a
 }
 
 int Quad::releaseSolid(Domain &domain, const IMatPP &myPointTags, const AttBuilder *attBuild) const {
-    bool elem1D = mRelabelling->isPar1D() && mMaterial->isSolidPar1D(attBuild != 0);
+    bool elem1D = mMaterial->isSolidPar1D(attBuild != 0);
+    if (hasRelabelling()) {
+        elem1D = elem1D && mRelabelling->isPar1D();
+    }
     std::array<Point *, nPntElem> points;
     for (int ipol = 0; ipol <= nPol; ipol++) {
         for (int jpol = 0; jpol <= nPol; jpol++) {
@@ -383,14 +395,17 @@ int Quad::releaseSolid(Domain &domain, const IMatPP &myPointTags, const AttBuild
         }
     }
     Gradient *grad = createGraident();
-    PRT *prt = mRelabelling->createPRT(elem1D);
+    PRT *prt = mRelabelling ? mRelabelling->createPRT(elem1D) : 0;
     Elastic *elas = mMaterial->createElastic(elem1D, attBuild);
     Element *elem = new SolidElement(grad, prt, points, elas);
     return domain.addElement(elem);
 }
 
 int Quad::releaseFluid(Domain &domain, const IMatPP &myPointTags) const {
-    bool elem1D = mRelabelling->isPar1D() && mMaterial->isFluidPar1D();
+    bool elem1D = mMaterial->isFluidPar1D();
+    if (hasRelabelling()) {
+        elem1D = elem1D && mRelabelling->isPar1D();
+    }
     std::array<Point *, nPntElem> points;
     for (int ipol = 0; ipol <= nPol; ipol++) {
         for (int jpol = 0; jpol <= nPol; jpol++) {
@@ -398,7 +413,7 @@ int Quad::releaseFluid(Domain &domain, const IMatPP &myPointTags) const {
         }
     }
     Gradient *grad = createGraident();
-    PRT *prt = mRelabelling->createPRT(elem1D);
+    PRT *prt = mRelabelling ? mRelabelling->createPRT(elem1D) : 0;
     Acoustic *acous = mMaterial->createAcoustic(elem1D);
     Element *elem = new FluidElement(grad, prt, points, acous);
     return domain.addElement(elem);
@@ -700,7 +715,11 @@ RDMatX3 Quad::computeNormal(int side, int ipol, int jpol) const {
 }
 
 RDRowN Quad::getUndulationOnSlice(double phi) const {
-    return XMath::computeFourierAtPhi(mRelabelling->getDeltaR(), phi);
+    if (hasRelabelling()) {
+        return XMath::computeFourierAtPhi(mRelabelling->getDeltaR(), phi);
+    } else {
+        return RDRowN::Zero();
+    }
 }
 
 RDRowN Quad::getMaterialOnSlice(const std::string &parName, int refType, double phi) const {

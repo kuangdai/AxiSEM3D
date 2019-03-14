@@ -63,14 +63,14 @@ Material::Material(const Quad *myQuad, const ExodusModel &exModel): mMyQuad(myQu
     
     // initialize 3D properties with 1D reference
     int Nr = mMyQuad->getNr();
-    mVpv3D = RDMatXN::Zero(Nr, nPE);
-    mVph3D = RDMatXN::Zero(Nr, nPE);
-    mVsv3D = RDMatXN::Zero(Nr, nPE);
-    mVsh3D = RDMatXN::Zero(Nr, nPE);
-    mRho3D = RDMatXN::Zero(Nr, nPE);
-    mEta3D = RDMatXN::Zero(Nr, nPE);
-    mQkp3D = RDMatXN::Zero(Nr, nPE);
-    mQmu3D = RDMatXN::Zero(Nr, nPE);
+    mVpv3D = RDMatXN::Zero(1, nPE);
+    mVph3D = RDMatXN::Zero(1, nPE);
+    mVsv3D = RDMatXN::Zero(1, nPE);
+    mVsh3D = RDMatXN::Zero(1, nPE);
+    mRho3D = RDMatXN::Zero(1, nPE);
+    mEta3D = RDMatXN::Zero(1, nPE);
+    mQkp3D = RDMatXN::Zero(1, nPE);
+    mQmu3D = RDMatXN::Zero(1, nPE);
     
     for (int ipol = 0; ipol <= nPol; ipol++) {
         for (int jpol = 0; jpol <= nPol; jpol++) {
@@ -87,8 +87,8 @@ Material::Material(const Quad *myQuad, const ExodusModel &exModel): mMyQuad(myQu
             mQmu3D.col(ipnt).fill(Mapping::interpolate(mQmu1D, xieta));
             // rho for mass
             int NrP = mMyQuad->getPointNr(ipol, jpol);
-            mRhoMass3D[ipnt] = RDColX::Constant(NrP, mRho3D.col(ipnt)[0]);
-            mVpFluid3D[ipnt] = RDColX::Constant(NrP, mVpv3D.col(ipnt)[0]);
+            mRhoMass3D[ipnt] = RDColX::Constant(NrP, mRho3D.col(ipnt)(0));
+            mVpFluid3D[ipnt] = RDColX::Constant(NrP, mVpv3D.col(ipnt)(0));
         }
     }
 }
@@ -145,6 +145,11 @@ void Material::addVolumetric3D(const std::vector<Volumetric3D *> &m3D,
                         // point (r, t, p) not in model range
                         continue;
                     }
+                    
+                    if (!_3Dprepared()) {
+                        prepare3D();
+                    }
+                    
                     // deal with VP and VS
                     std::vector<Volumetric3D::MaterialProperty> propertiesTIso; 
                     std::vector<Volumetric3D::MaterialRefType> refTypesTIso;
@@ -208,12 +213,14 @@ void Material::addVolumetric3D(const std::vector<Volumetric3D *> &m3D,
     }
     
     // form mass point sampling
-    for (int ipol = 0; ipol <= nPol; ipol++) {
-        for (int jpol = 0; jpol <= nPol; jpol++) {
-            int ipnt = ipol * nPntEdge + jpol;
-            int nr_mass = mMyQuad->getPointNr(ipol, jpol);
-            mRhoMass3D[ipnt] = XMath::linearResampling(nr_mass, mRho3D.col(ipnt));
-            mVpFluid3D[ipnt] = XMath::linearResampling(nr_mass, mVpv3D.col(ipnt));
+    if (_3Dprepared()) {
+        for (int ipol = 0; ipol <= nPol; ipol++) {
+            for (int jpol = 0; jpol <= nPol; jpol++) {
+                int ipnt = ipol * nPntEdge + jpol;
+                int nr_mass = mMyQuad->getPointNr(ipol, jpol);
+                mRhoMass3D[ipnt] = XMath::linearResampling(nr_mass, mRho3D.col(ipnt));
+                mVpFluid3D[ipnt] = XMath::linearResampling(nr_mass, mVpv3D.col(ipnt));
+            }
         }
     }
     
@@ -249,7 +256,12 @@ arPP_RDColX Material::computeElementalMass() const {
 
 Acoustic *Material::createAcoustic(bool elem1D) const {
     const RDRowN &iFact = mMyQuad->getIntegralFactor();
-    RDMatXN fluidK = mRho3D.array().pow(-1.);
+    RDMatXN fluidK;
+    if (_3Dprepared()) {
+        fluidK = mRho3D.array().pow(-1.);    
+    } else {
+        fluidK = mRho3D.replicate(mMyQuad->getNr(), 1).array().pow(-1.);
+    }
     for (int ipnt = 0; ipnt < nPntElem; ipnt++) {
        fluidK.col(ipnt) *= iFact(ipnt);
     }
@@ -272,16 +284,42 @@ Elastic *Material::createElastic(bool elem1D, const AttBuilder *attBuild) const 
     
     // elasticity tensor
     const RDRowN &iFact = mMyQuad->getIntegralFactor(); 
-    RDMatXN A(mRho3D), C(mRho3D), F(mRho3D), L(mRho3D), N(mRho3D);
+    RDMatXN vpv3D, vph3D;
+    RDMatXN vsv3D, vsh3D;
+    RDMatXN rho3D;
+    RDMatXN eta3D;
+    RDMatXN qkp3D, qmu3D;
+    
+    if (_3Dprepared()) {
+        vpv3D = mVpv3D;
+        vph3D = mVph3D;
+        vsv3D = mVsv3D;
+        vsh3D = mVsh3D;
+        rho3D = mRho3D;
+        eta3D = mEta3D;
+        qkp3D = mQkp3D;
+        qmu3D = mQmu3D;
+    } else {
+        vpv3D = mVpv3D.replicate(mMyQuad->getNr(), 1);
+        vph3D = mVph3D.replicate(mMyQuad->getNr(), 1);
+        vsv3D = mVsv3D.replicate(mMyQuad->getNr(), 1);
+        vsh3D = mVsh3D.replicate(mMyQuad->getNr(), 1);
+        rho3D = mRho3D.replicate(mMyQuad->getNr(), 1);
+        eta3D = mEta3D.replicate(mMyQuad->getNr(), 1);
+        qkp3D = mQkp3D.replicate(mMyQuad->getNr(), 1);
+        qmu3D = mQmu3D.replicate(mMyQuad->getNr(), 1);
+    }
+    
+    RDMatXN A(rho3D), C(rho3D), F(rho3D), L(rho3D), N(rho3D);
     for (int ipnt = 0; ipnt < nPntElem; ipnt++) {
         // A C L N
-        A.col(ipnt).array() *= mVph3D.col(ipnt).array().pow(2.) * iFact(ipnt);
-        C.col(ipnt).array() *= mVpv3D.col(ipnt).array().pow(2.) * iFact(ipnt);
-        L.col(ipnt).array() *= mVsv3D.col(ipnt).array().pow(2.) * iFact(ipnt);
-        N.col(ipnt).array() *= mVsh3D.col(ipnt).array().pow(2.) * iFact(ipnt);
+        A.col(ipnt).array() *= vph3D.col(ipnt).array().pow(2.) * iFact(ipnt);
+        C.col(ipnt).array() *= vpv3D.col(ipnt).array().pow(2.) * iFact(ipnt);
+        L.col(ipnt).array() *= vsv3D.col(ipnt).array().pow(2.) * iFact(ipnt);
+        N.col(ipnt).array() *= vsh3D.col(ipnt).array().pow(2.) * iFact(ipnt);
     }
     // F
-    F = mEta3D.schur(A - 2. * L);
+    F = eta3D.schur(A - 2. * L);
     // must do relabelling before attenuation
     if (mMyQuad->hasRelabelling()) {
         const RDMatXN &J = mMyQuad->getRelabelling().getStiffJacobian();
@@ -305,9 +343,9 @@ Elastic *Material::createElastic(bool elem1D, const AttBuilder *attBuild) const 
         L -= mu;
         N -= mu;
         if (elem1D) {
-            att1D = attBuild->createAttenuation1D(mQkp3D, mQmu3D, kappa, mu, mMyQuad);
+            att1D = attBuild->createAttenuation1D(qkp3D, qmu3D, kappa, mu, mMyQuad);
         } else {
-            att3D = attBuild->createAttenuation3D(mQkp3D, mQmu3D, kappa, mu, mMyQuad);
+            att3D = attBuild->createAttenuation3D(qkp3D, qmu3D, kappa, mu, mMyQuad);
         }
         A += (kappa + 4. / 3. * mu);
         C += (kappa + 4. / 3. * mu);
@@ -485,8 +523,16 @@ double Material::getVMaxRef() const {
 }
 
 RDColX Material::getVMax() const {
-    const RDColX &vpvMax = mVpv3D.rowwise().maxCoeff();
-    const RDColX &vphMax = mVph3D.rowwise().maxCoeff();
+    RDMatXN vpv3D, vph3D;
+    if (_3Dprepared()) {
+        vpv3D = mVpv3D;
+        vph3D = mVph3D;
+    } else {
+        vpv3D = mVpv3D.replicate(mMyQuad->getNr(), 1);
+        vph3D = mVph3D.replicate(mMyQuad->getNr(), 1);
+    }
+    const RDColX &vpvMax = vpv3D.rowwise().maxCoeff();
+    const RDColX &vphMax = vph3D.rowwise().maxCoeff();
     return (vpvMax.array().max(vphMax.array())).matrix();
 }
 
@@ -628,6 +674,10 @@ RDMatXN Material::getProperty(const std::string &vname, int refType) {
         } 
     } else {
         throw std::runtime_error("Material::getProperty || Unknown field variable name: " + vname);
+    }
+    
+    if (data3D.rows() != Nr) {
+        data3D = data3D.replicate(Nr, 1);
     }
     
     // 3D
@@ -925,6 +975,42 @@ RDMatXX Material::bondTransformation(RDMatXX inCijkl, double alpha, double beta,
         }
     }
     return outCijkl;
+}
+
+void Material::prepare3D() {
+    int Nr = mMyQuad->getNr();
+    mVpv3D = RDMatXN::Zero(Nr, nPE);
+    mVph3D = RDMatXN::Zero(Nr, nPE);
+    mVsv3D = RDMatXN::Zero(Nr, nPE);
+    mVsh3D = RDMatXN::Zero(Nr, nPE);
+    mRho3D = RDMatXN::Zero(Nr, nPE);
+    mEta3D = RDMatXN::Zero(Nr, nPE);
+    mQkp3D = RDMatXN::Zero(Nr, nPE);
+    mQmu3D = RDMatXN::Zero(Nr, nPE);
+    
+    for (int ipol = 0; ipol <= nPol; ipol++) {
+        for (int jpol = 0; jpol <= nPol; jpol++) {
+            int ipnt = ipol * nPntEdge + jpol;
+            const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mMyQuad->isAxial());
+            // fill with 1D 
+            mVpv3D.col(ipnt).fill(Mapping::interpolate(mVpv1D, xieta));
+            mVph3D.col(ipnt).fill(Mapping::interpolate(mVph1D, xieta));
+            mVsv3D.col(ipnt).fill(Mapping::interpolate(mVsv1D, xieta));
+            mVsh3D.col(ipnt).fill(Mapping::interpolate(mVsh1D, xieta));
+            mRho3D.col(ipnt).fill(Mapping::interpolate(mRho1D, xieta));
+            mEta3D.col(ipnt).fill(Mapping::interpolate(mEta1D, xieta));
+            mQkp3D.col(ipnt).fill(Mapping::interpolate(mQkp1D, xieta));
+            mQmu3D.col(ipnt).fill(Mapping::interpolate(mQmu1D, xieta));
+            // rho for mass
+            int NrP = mMyQuad->getPointNr(ipol, jpol);
+            mRhoMass3D[ipnt] = RDColX::Constant(NrP, mRho3D.col(ipnt)(0));
+            mVpFluid3D[ipnt] = RDColX::Constant(NrP, mVpv3D.col(ipnt)(0));
+        }
+    }
+}
+
+bool Material::_3Dprepared() const {
+    return mVpv3D.rows() == mMyQuad->getNr();
 }
 
 

@@ -55,6 +55,9 @@ private:
     static RDMatXX bondTransformation(RDMatXX inCijkl, double alpha, double beta, double gamma);
     
 private:
+    void prepare3D();
+    bool _3Dprepared() const;
+    
     // 1D reference material
     RDRow4 mVpv1D, mVph1D;
     RDRow4 mVsv1D, mVsh1D;

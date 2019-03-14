@@ -159,7 +159,7 @@ protected:
     Material *mMaterial; 
     
     // particle relabelling
-    Relabelling *mRelabelling;
+    Relabelling *mRelabelling = 0;
     
     // Ocean depth
     arPP_RDColX mOceanDepth;
