@@ -66,7 +66,6 @@ void ExodusModel::readRawData() {
     reader.read1D("coordx", mNodalS);
     reader.read1D("coordy", mNodalZ);
     
-    MultilevelTimer::begin("Compute Exodus DistTol", 2);
     // distance tolerance
     mDistTolerance = DBL_MAX;
     for (int i = 0; i < getNumQuads(); i++) {
@@ -84,7 +83,6 @@ void ExodusModel::readRawData() {
         double dist3 = sqrt((s3 - s0) * (s3 - s0) + (z3 - z0) * (z3 - z0)) / 1000.;
         mDistTolerance = std::min({dist0, dist1, dist2, dist3, mDistTolerance});
     }
-    MultilevelTimer::end("Compute Exodus DistTol", 2);
     
     // side sets
     reader.readString("ss_names", mSideSetNames);
