@@ -23,9 +23,6 @@
 
 #include "NetCDF_Reader.h"
 
-#include <algorithm>
-#include <boost/lexical_cast.hpp>
-
 ExodusModel::ExodusModel(const std::string &fileName): mExodusFileName(fileName) {
     std::vector<std::string> substrs = Parameters::splitString(mExodusFileName, "/");
     mExodusTitle = substrs[substrs.size() - 1];
@@ -65,26 +62,16 @@ void ExodusModel::readRawData() {
     mConnectivity.array() -= 1;
     reader.read1D("coordx", mNodalS);
     reader.read1D("coordy", mNodalZ);
-    
-    MultilevelTimer::begin("Compute Exodus DistTol", 2);
-    // distance tolerance
-    mDistTolerance = DBL_MAX;
-    for (int i = 0; i < getNumQuads(); i++) {
-        double s0 = mNodalS(mConnectivity(i, 0));
-        double z0 = mNodalZ(mConnectivity(i, 0));
-        double s1 = mNodalS(mConnectivity(i, 1));
-        double z1 = mNodalZ(mConnectivity(i, 1));
-        double s2 = mNodalS(mConnectivity(i, 2));
-        double z2 = mNodalZ(mConnectivity(i, 2));
-        double s3 = mNodalS(mConnectivity(i, 3));
-        double z3 = mNodalZ(mConnectivity(i, 3));
-        double dist0 = sqrt((s0 - s1) * (s0 - s1) + (z0 - z1) * (z0 - z1)) / 1000.;
-        double dist1 = sqrt((s1 - s2) * (s1 - s2) + (z1 - z2) * (z1 - z2)) / 1000.;
-        double dist2 = sqrt((s2 - s3) * (s2 - s3) + (z2 - z3) * (z2 - z3)) / 1000.;
-        double dist3 = sqrt((s3 - s0) * (s3 - s0) + (z3 - z0) * (z3 - z0)) / 1000.;
-        mDistTolerance = std::min({dist0, dist1, dist2, dist3, mDistTolerance});
-    }
-    MultilevelTimer::end("Compute Exodus DistTol", 2);
+        
+    // elemental variables
+    reader.readString("name_elem_var", mElementalVariableNames);
+    mElementalVariableValues = RDMatXX::Zero(getNumQuads(), mElementalVariableNames.size());
+    for (int i = 0; i < mElementalVariableNames.size(); i++) {
+        std::stringstream ss;
+        ss << "vals_elem_var" << i + 1 << "eb1";
+        reader.read2D(ss.str(), dbuffer);
+        mElementalVariableValues.col(i) = dbuffer.transpose();
+    }    
     
     // side sets
     reader.readString("ss_names", mSideSetNames);
@@ -128,120 +115,6 @@ void ExodusModel::readRawData() {
         mEllipCoeffs = dbuffer.row(1).transpose();
     }
     
-    // element var names
-    reader.readString("name_elem_var", mElementalVariableNames_all);    
-    
-    // axis is needed
-    if (cartesian) {
-        mSSNameAxis = "x0";
-    } else {
-        mSSNameAxis = "t0";
-        // delete this "if" after Martin fixes the issue
-        if (std::find(mSideSetNames.begin(), mSideSetNames.end(), "t1") != mSideSetNames.end()) {
-            mSSNameAxis = "t1";
-        }
-    }
-    int axisIdx = std::find(mSideSetNames.begin(), mSideSetNames.end(), mSSNameAxis) - mSideSetNames.begin();
-    IColX axial = mSideSetValues.col(axisIdx);
-    
-    // depth-dependent variable values
-    std::vector<double> coords;
-    std::vector<std::pair<int, int>> quad_nodes;
-    for (int iquad = 0; iquad < getNumQuads(); iquad++) {
-        int axisSide = axial(iquad);
-        if (axisSide > -1) {
-            // coords
-            int otherNode = (axisSide == 3) ? 0 : axisSide + 1;
-            double z1 = mNodalZ(mConnectivity(iquad, axisSide));
-            double z2 = mNodalZ(mConnectivity(iquad, otherNode));
-            // negative values not needed
-            if (std::min(z1, z2) < -mDistTolerance) {
-                continue;
-            }
-            // move both ends inward by tolerance
-            z1 += (z2 - z1) / std::abs(z2 - z1) * mDistTolerance;
-            z2 -= (z2 - z1) / std::abs(z2 - z1) * mDistTolerance;
-            auto ir1 = coords.insert(std::upper_bound(coords.begin(), coords.end(), z1), z1);
-            quad_nodes.insert(quad_nodes.begin() + (ir1 - coords.begin()),
-                              std::pair<int, int>(iquad, axisSide));
-            auto ir2 = coords.insert(std::upper_bound(coords.begin(), coords.end(), z2), z2);
-            quad_nodes.insert(quad_nodes.begin() + (ir2 - coords.begin()),
-                              std::pair<int, int>(iquad, otherNode));
-        }
-    }
-    mElementalVariableCoords_axis = RDColX(coords.size());
-    for (int j = 0; j < coords.size(); j++) {
-        mElementalVariableCoords_axis(j) = coords[j];
-    }
-    
-    // names of axial variables
-    for (int iname = 0; iname < mElementalVariableNames_all.size(); iname++) {
-        std::string varName = mElementalVariableNames_all[iname];
-        if (varName.substr(varName.length() - 2, 1) == std::string("_")) {
-            std::string vname = varName.substr(0, varName.length() - 2);
-            std::string inode_str = varName.substr(varName.length() - 1, 1);
-            if (inode_str == "0") {
-                mElementalVariableNames_axis.push_back(vname);
-            }
-        } else {
-            mElementalVariableNames_axis.push_back(varName);
-        }
-    }
-    
-    // elemental variables only on axis
-    mElementalVariableValues_axis = RDMatXX::Zero(mElementalVariableCoords_axis.size(), 
-        mElementalVariableNames_axis.size());
-    for (int iname = 0; iname < mElementalVariableNames_axis.size(); iname++) {
-        std::string varName = mElementalVariableNames_axis[iname];
-        if (std::find(mElementalVariableNames_all.begin(), mElementalVariableNames_all.end(), varName + "_0") 
-        != mElementalVariableNames_all.end()) {
-            // nodal dependent
-            std::array<RDColX, 4> buffer;
-            for (int inode = 0; inode < 4; inode++) {
-                std::stringstream ss;
-                ss << varName << "_" << inode;
-                std::string varNameToRead = ss.str();
-                int index = std::find(mElementalVariableNames_all.begin(), 
-                    mElementalVariableNames_all.end(), varNameToRead) - 
-                    mElementalVariableNames_all.begin() + 1;
-                ss.str("");
-                ss << "vals_elem_var" << index << "eb1";
-                reader.read1D(ss.str(), buffer[inode]);
-            }
-            for (int idep = 0; idep < coords.size(); idep++) {
-                mElementalVariableValues_axis(idep, iname) = 
-                    buffer[quad_nodes[idep].second](quad_nodes[idep].first);
-            }
-        } else {
-            // nodal independent
-            RDColX buffer;
-            std::stringstream ss;
-            int index = std::find(mElementalVariableNames_all.begin(), 
-                mElementalVariableNames_all.end(), varName) - 
-                mElementalVariableNames_all.begin() + 1;
-            ss << "vals_elem_var" << index << "eb1";
-            reader.read1D(ss.str(), buffer);
-            for (int idep = 0; idep < coords.size(); idep++) {
-                mElementalVariableValues_axis(idep, iname) = 
-                    buffer(quad_nodes[idep].first);
-            }
-        }
-    }            
-    
-    // element-wise
-    mElementalVariableNames_elem.push_back("element_type");
-    mElementalVariableValues_elem = RDMatXX::Zero(getNumQuads(), 
-        mElementalVariableNames_elem.size());
-    for (int i = 0; i < mElementalVariableNames_elem.size(); i++) {
-        RDColX buffer;
-        std::stringstream ss;
-        int index = std::find(mElementalVariableNames_all.begin(), 
-            mElementalVariableNames_all.end(), mElementalVariableNames_elem[i]) - 
-            mElementalVariableNames_all.begin() + 1;
-        ss << "vals_elem_var" << index << "eb1";
-        reader.read1D(ss.str(), buffer);
-        mElementalVariableValues_elem.col(i) = buffer;
-    }  
     // close file
     reader.close();
 }
@@ -254,14 +127,9 @@ void ExodusModel::bcastRawData() {
     XMPI::bcastEigen(mConnectivity);
     XMPI::bcastEigen(mNodalS);
     XMPI::bcastEigen(mNodalZ);
-    XMPI::bcast(mDistTolerance);
     
-    XMPI::bcast(mElementalVariableNames_all);
-    XMPI::bcast(mElementalVariableNames_elem);
-    XMPI::bcast(mElementalVariableNames_axis);
-    XMPI::bcastEigen(mElementalVariableValues_elem);
-    XMPI::bcastEigen(mElementalVariableValues_axis);
-    XMPI::bcastEigen(mElementalVariableCoords_axis);
+    XMPI::bcast(mElementalVariableNames);
+    XMPI::bcastEigen(mElementalVariableValues);
     
     XMPI::bcast(mSideSetNames);
     XMPI::bcastEigen(mSideSetValues);
@@ -291,13 +159,9 @@ void ExodusModel::formStructured() {
     }
     
     // elemental variables
-    for (int i = 0; i < mElementalVariableNames_axis.size(); i++) {
-        mElementalVariables_axis.insert(std::pair<std::string, RDColX>(mElementalVariableNames_axis[i], 
-            mElementalVariableValues_axis.col(i)));
-    }
-    for (int i = 0; i < mElementalVariableNames_elem.size(); i++) {
-        mElementalVariables_elem.insert(std::pair<std::string, RDColX>(mElementalVariableNames_elem[i], 
-            mElementalVariableValues_elem.col(i)));
+    for (int i = 0; i < mElementalVariableNames.size(); i++) {
+        mElementalVariables.insert(std::pair<std::string, RDColX>(mElementalVariableNames[i], 
+            mElementalVariableValues.col(i)));
     }
     
     // side sets
@@ -329,6 +193,30 @@ void ExodusModel::formStructured() {
 }
 
 void ExodusModel::formAuxiliary() {
+    MultilevelTimer::begin("Process Exodus DistTol", 2);
+    // distance tolerance
+    double distTol = DBL_MAX;
+    for (int i = 0; i < getNumQuads(); i++) {
+        if (i % XMPI::nproc() != XMPI::rank()) {
+            continue;
+        }
+        double s0 = mNodalS(mConnectivity(i, 0));
+        double z0 = mNodalZ(mConnectivity(i, 0));
+        double s1 = mNodalS(mConnectivity(i, 1));
+        double z1 = mNodalZ(mConnectivity(i, 1));
+        double s2 = mNodalS(mConnectivity(i, 2));
+        double z2 = mNodalZ(mConnectivity(i, 2));
+        double s3 = mNodalS(mConnectivity(i, 3));
+        double z3 = mNodalZ(mConnectivity(i, 3));
+        double dist0 = sqrt((s0 - s1) * (s0 - s1) + (z0 - z1) * (z0 - z1)) / 1000.;
+        double dist1 = sqrt((s1 - s2) * (s1 - s2) + (z1 - z2) * (z1 - z2)) / 1000.;
+        double dist2 = sqrt((s2 - s3) * (s2 - s3) + (z2 - z3) * (z2 - z3)) / 1000.;
+        double dist3 = sqrt((s3 - s0) * (s3 - s0) + (z3 - z0) * (z3 - z0)) / 1000.;
+        distTol = std::min({dist0, dist1, dist2, dist3, distTol});
+    }
+    mDistTolerance = XMPI::min(distTol);
+    MultilevelTimer::end("Process Exodus DistTol", 2);
+    
     // average gll spacing
     MultilevelTimer::begin("Process Exodus GLL-Spacing", 2);
     std::vector<std::vector<int>> refElem(getNumNodes(), std::vector<int>());
@@ -378,6 +266,24 @@ void ExodusModel::formAuxiliary() {
             mConnectivity(axialQuad, j) = con(Mapping::period0123(j + axialSide - 3));
         }
         
+        
+        // elemental fields
+        for (auto it = mElementalVariables.begin(); it != mElementalVariables.end(); it++) {
+            std::string vname = it->first;
+            if (vname.substr(vname.length() - 2, 2) == std::string("_0")) {
+                vname = vname.substr(0, vname.length() - 2);
+                RDRow4 v_old;
+                v_old(0) = mElementalVariables.at(vname + "_0")(axialQuad);
+                v_old(1) = mElementalVariables.at(vname + "_1")(axialQuad);
+                v_old(2) = mElementalVariables.at(vname + "_2")(axialQuad);
+                v_old(3) = mElementalVariables.at(vname + "_3")(axialQuad);
+                mElementalVariables.at(vname + "_0")(axialQuad) = v_old(Mapping::period0123(0 + axialSide - 3));
+                mElementalVariables.at(vname + "_1")(axialQuad) = v_old(Mapping::period0123(1 + axialSide - 3));
+                mElementalVariables.at(vname + "_2")(axialQuad) = v_old(Mapping::period0123(2 + axialSide - 3));
+                mElementalVariables.at(vname + "_3")(axialQuad) = v_old(Mapping::period0123(3 + axialSide - 3));
+            }
+        }
+        
         // side sets
         for (auto it = mSideSets.begin(); it != mSideSets.end(); it++) {
             if (it->second(axialQuad) != -1) {
@@ -416,6 +322,44 @@ void ExodusModel::formAuxiliary() {
         }
     }
     MultilevelTimer::end("Process Exodus Vicinal", 2);
+    
+    // check if ocean presents in mesh
+    MultilevelTimer::begin("Process Exodus Check Ocean", 2);
+    std::string strVs = isIsotropic() ? "VS_0" : "VSV_0";
+    for (int iQuad = 0; iQuad < getNumQuads(); iQuad++) {
+        if (iQuad % XMPI::nproc() != XMPI::rank()) {
+            continue;
+        }
+        if (getSideSurface(iQuad) == -1) {
+            continue;
+        }
+        double vs = mElementalVariables.at(strVs)(iQuad);
+        if (vs < tinyDouble) {
+            throw std::runtime_error("ExodusModel::finishReading || "
+                "Ocean is detected in mesh. By far, realistic ocean is not implemented in AxiSEM3D. ||"
+                "Use non-ocean models in the Mesher and add ocean load in inparam.basic.");
+        }
+    }
+    MultilevelTimer::end("Process Exodus Check Ocean", 2);
+    
+    // CMB and ICB
+    // MultilevelTimer::begin("Process Exodus CMB & ICB", 2);
+    // mR_CMB = DBL_MIN;
+    // mR_ICB = DBL_MAX;
+    // for (int i = 0; i < getNumQuads(); i++) {
+    //     bool isFluid = getElementalVariables("fluid", i) > .5;
+    //     bool isAxis = getSideAxis(i) >= 0;
+    //     if (isFluid && isAxis) {
+    //         for (int j = 0; j < 4; j++) {
+    //             double s = mNodalS(mConnectivity(i, j));
+    //             double z = mNodalZ(mConnectivity(i, j));
+    //             double r = std::sqrt(s * s + z * z);
+    //             mR_CMB = std::max(mR_CMB, r);
+    //             mR_ICB = std::min(mR_ICB, r);
+    //         }
+    //     }
+    // }
+    // MultilevelTimer::end("Process Exodus CMB & ICB", 2);
 }
 
 std::string ExodusModel::verbose() const {
@@ -458,29 +402,16 @@ std::string ExodusModel::verbose() const {
     ss<< "    " << std::setw(width) << "..." << std::endl;
     ss << "    " << std::setw(width) << getNumNodes() - 1 << ": ";
     ss << std::setw(13) << mNodalS(getNumNodes() - 1) << std::setw(13) << mNodalZ(getNumNodes() - 1) << std::endl;
-    
     ss << "  Elemental Variables_______________________________________" << std::endl;
     widthname = -1;
-    for (auto it = mElementalVariables_elem.begin(); it != mElementalVariables_elem.end(); it++) {
+    for (auto it = mElementalVariables.begin(); it != mElementalVariables.end(); it++) {
         widthname = std::max(widthname, (int)(it->first.length()));
     }
-    for (auto it = mElementalVariables_elem.begin(); it != mElementalVariables_elem.end(); it++) {
+    for (auto it = mElementalVariables.begin(); it != mElementalVariables.end(); it++) {
         ss << "    " << std::setw(widthname) << it->first << ": ";
         ss << std::setw(13) << it->second(0) << ", ..., ";
         ss << std::setw(13) << it->second(getNumQuads() - 1) << std::endl;        
     }
-    
-    ss << "  Depth-dependent Elemental Variables_______________________" << std::endl;
-    widthname = -1;
-    for (auto it = mElementalVariables_axis.begin(); it != mElementalVariables_axis.end(); it++) {
-        widthname = std::max(widthname, (int)(it->first.length()));
-    }
-    for (auto it = mElementalVariables_axis.begin(); it != mElementalVariables_axis.end(); it++) {
-        ss << "    " << std::setw(widthname) << it->first << ": ";
-        ss << std::setw(13) << it->second(0) << ", ..., ";
-        ss << std::setw(13) << it->second(mElementalVariableCoords_axis.size() - 1) << std::endl;        
-    }
-    
     ss << "  Side Sets_________________________________________________" << std::endl;
     widthname = -1;
     for (auto it = mSideSets.begin(); it != mSideSets.end(); it++) {
@@ -558,69 +489,4 @@ void ExodusModel::buildInparam(ExodusModel *&exModel, const Parameters &par,
         Geodesy::setup(exModel->getROuter(), 1. / inv_f, exModel->mEllipKnots, exModel->mEllipCoeffs);
     }
 }
-
-bool ExodusModel::isIsotropic() const {
-    return std::find(mElementalVariableNames_all.begin(), 
-        mElementalVariableNames_all.end(), "VP_0") != mElementalVariableNames_all.end();
-}
-
-double ExodusModel::getElementalVariables(const std::string &varName, int quadTag) const {
-    if (varName == "element_type") {
-        return mElementalVariables_elem.at(varName)(quadTag);
-    }
-    
-    if (varName.substr(varName.length() - 2, 1) == std::string("_")) {
-        // nodal dependent
-        std::string vname = varName.substr(0, varName.length() - 2);
-        int inode = boost::lexical_cast<int>(varName.substr(varName.length() - 1, 1));
-        double coord = 0.;
-        double coord_cen = 0.;
-        if (isCartesian()) {
-            coord = mNodalZ(mConnectivity(quadTag, inode));
-            coord_cen += mNodalZ(mConnectivity(quadTag, 0));
-            coord_cen += mNodalZ(mConnectivity(quadTag, 1));
-            coord_cen += mNodalZ(mConnectivity(quadTag, 2));
-            coord_cen += mNodalZ(mConnectivity(quadTag, 3));
-        } else {
-            coord = sqrt(pow(mNodalS(mConnectivity(quadTag, inode)), 2) + pow(mNodalZ(mConnectivity(quadTag, inode)), 2));
-            coord_cen += sqrt(pow(mNodalS(mConnectivity(quadTag, 0)), 2) + pow(mNodalZ(mConnectivity(quadTag, 0)), 2));
-            coord_cen += sqrt(pow(mNodalS(mConnectivity(quadTag, 1)), 2) + pow(mNodalZ(mConnectivity(quadTag, 1)), 2));
-            coord_cen += sqrt(pow(mNodalS(mConnectivity(quadTag, 2)), 2) + pow(mNodalZ(mConnectivity(quadTag, 2)), 2));
-            coord_cen += sqrt(pow(mNodalS(mConnectivity(quadTag, 3)), 2) + pow(mNodalZ(mConnectivity(quadTag, 3)), 2));
-        }
-        coord_cen /= 4.;
-        // move coord slightly to center
-        if (coord < coord_cen) {
-            coord += mDistTolerance;
-        } else {
-            coord -= mDistTolerance;
-        }
-        RDColX diff = (mElementalVariableCoords_axis.array() - coord).array().abs();
-        int minIndex = 0;
-        double min = diff.minCoeff(&minIndex);
-        return mElementalVariables_axis.at(vname)(minIndex);
-    } else {
-        // nodal independent
-        double coord_cen = 0.;
-        if (isCartesian()) {
-            coord_cen += mNodalZ(mConnectivity(quadTag, 0));
-            coord_cen += mNodalZ(mConnectivity(quadTag, 1));
-            coord_cen += mNodalZ(mConnectivity(quadTag, 2));
-            coord_cen += mNodalZ(mConnectivity(quadTag, 3));
-        } else {
-            coord_cen += sqrt(pow(mNodalS(mConnectivity(quadTag, 0)), 2) + pow(mNodalZ(mConnectivity(quadTag, 0)), 2));
-            coord_cen += sqrt(pow(mNodalS(mConnectivity(quadTag, 1)), 2) + pow(mNodalZ(mConnectivity(quadTag, 1)), 2));
-            coord_cen += sqrt(pow(mNodalS(mConnectivity(quadTag, 2)), 2) + pow(mNodalZ(mConnectivity(quadTag, 2)), 2));
-            coord_cen += sqrt(pow(mNodalS(mConnectivity(quadTag, 3)), 2) + pow(mNodalZ(mConnectivity(quadTag, 3)), 2));
-        }
-        coord_cen /= 4.;
-        RDColX diff = (mElementalVariableCoords_axis.array() - coord_cen).array().abs();
-        int minIndex = 0;
-        double min = diff.minCoeff(&minIndex);
-        return mElementalVariables_axis.at(varName)(minIndex);
-    }
-};
-
-
-
 

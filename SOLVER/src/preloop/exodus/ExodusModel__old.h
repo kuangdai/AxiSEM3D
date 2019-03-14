@@ -22,7 +22,7 @@ public:
     void initialize();
     
     // general
-    bool isIsotropic() const;
+    bool isIsotropic() const {return mElementalVariables.find("VP_0") != mElementalVariables.end();};
     bool hasAttenuation() const {return mGlobalVariables.find("nr_lin_solids") != mGlobalVariables.end();};
     int getNumQuads() const {return mConnectivity.rows();};
     int getNumNodes() const {return mNodalS.rows();};
@@ -36,7 +36,9 @@ public:
     double getAveGLLSpacing(int nodeTag) const {return mAveGLLSpacing(nodeTag);};
     
     // Quad-wise
-    double getElementalVariables(const std::string &varName, int quadTag) const;
+    double getElementalVariables(const std::string &varName, int quadTag) const {
+        return mElementalVariables.at(varName)(quadTag);
+    };
     int getSideAxis(int quadTag) const {return mSideSets.at(mSSNameAxis)(quadTag);};
     int getSideSurface(int quadTag) const {return mSideSets.at(mSSNameSurface)(quadTag);};
     int getSideSolidFluid(int quadTag) const {
@@ -81,14 +83,8 @@ private:
     RDColX mNodalS, mNodalZ;
     
     // elemental variables
-    std::vector<std::string> mElementalVariableNames_all;
-    // non-compact
-    std::vector<std::string> mElementalVariableNames_elem;
-    RDMatXX mElementalVariableValues_elem;
-    // compact
-    std::vector<std::string> mElementalVariableNames_axis;
-    RDMatXX mElementalVariableValues_axis;
-    RDColX mElementalVariableCoords_axis;
+    std::vector<std::string> mElementalVariableNames;
+    RDMatXX mElementalVariableValues;
     
     // side sets
     std::vector<std::string> mSideSetNames;
@@ -104,10 +100,7 @@ private:
     std::map<std::string, std::string> mGlobalRecords;
     
     // elemental variables
-    // non-compact
-    std::map<std::string, RDColX> mElementalVariables_elem;
-    // compact
-    std::map<std::string, RDColX> mElementalVariables_axis;
+    std::map<std::string, RDColX> mElementalVariables;
     
     // side sets
     std::map<std::string, IColX> mSideSets;
