@@ -79,6 +79,16 @@ bool Receiver::locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const
                 XMath::interpLagrange(srcXiEta(1), nPntEdge, 
                     SpectralConstants::getP_GLL().data(), interpEta.data());
                 interpFact = interpXi * interpEta.transpose();
+                if (quad->isFluid()) {
+                    const RDRowN &intgFact = quad->getIntegralFactor();
+                    for (int ipol = 0; ipol <= nPol; ipol++) {
+                        for (int jpol = 0; jpol <= nPol; jpol++) {
+                            int ipnt = ipol * nPntEdge + jpol;
+                            interpFact(ipol, jpol) /= intgFact(ipnt);    
+                        }
+                    }
+                    // std::cout << "STATION in FLUID" << std::endl;
+                }
                 return true;
             }
         }

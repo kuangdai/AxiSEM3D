@@ -161,8 +161,57 @@ void FluidElement::test() const {
 }
 
 void FluidElement::computeGroundMotion(Real phi, const RMatPP &weights, RRow3 &u_spz) const {
-    throw std::runtime_error("FluidElement::computeGroundMotion || "
-        "Not implemented."); 
+    // setup static
+    sResponse.setNr(mMaxNr);
+    
+    // get displ from points
+    int ipnt = 0;
+    for (int ipol = 0; ipol <= nPol; ipol++) {
+        for (int jpol = 0; jpol <= nPol; jpol++) {
+            mPoints[ipnt++]->scatterDisplToElement(sResponse.mDispl, ipol, jpol, mMaxNu);
+        }
+    }
+    
+    mGradient->computeGrad(sResponse.mDispl, sResponse.mStrain, sResponse.mNu, sResponse.mNyquist);
+    if (mInTIso) {
+        mCrdTransTIso->transformSPZ_RTZ(sResponse.mStrain, sResponse.mNu);
+    }
+    if (mElem3D) {
+        FieldFFT::transformF2P(sResponse.mStrain, sResponse.mNr);
+    }
+    if (mHasPRT) {
+        mPRT->sphericalToUndulated(sResponse);
+    }    
+    mAcoustic->strainToStress(sResponse);
+    if (mHasPRT) {
+        mPRT->undulatedToSpherical(sResponse);
+    }
+    if (mElem3D) {
+        FieldFFT::transformP2F(sResponse.mStress, sResponse.mNr);
+    }
+    if (mInTIso) {
+        mCrdTransTIso->transformRTZ_SPZ(sResponse.mStress, sResponse.mNu);
+    }
+    
+    // compute ground motion pointwise
+    u_spz.setZero();
+    for (int ipol = 0; ipol <= nPol; ipol++) {
+        for (int jpol = 0; jpol <= nPol; jpol++) {
+            // if (std::abs(weights(ipol, jpol)) < tinyDouble) continue;
+            Real up0 = sResponse.mStress[0][0](ipol, jpol).real();
+            Real up1 = sResponse.mStress[0][1](ipol, jpol).real();
+            Real up2 = sResponse.mStress[0][2](ipol, jpol).real();
+            for (int alpha = 1; alpha <= mMaxNu - (int)(mMaxNr % 2 == 0); alpha++) {
+                Complex expval = two * exp((Real)alpha * phi * ii);
+                up0 += (expval * sResponse.mStress[alpha][0](ipol, jpol)).real();
+                up1 += (expval * sResponse.mStress[alpha][1](ipol, jpol)).real();
+                up2 += (expval * sResponse.mStress[alpha][2](ipol, jpol)).real();
+            }
+            u_spz(0) += weights(ipol, jpol) * up0;
+            u_spz(1) += weights(ipol, jpol) * up1;
+            u_spz(2) += weights(ipol, jpol) * up2;
+        }
+    }
 }
 
 void FluidElement::computeStrain(Real phi, const RMatPP &weights, RRow6 &strain) const {
