@@ -97,6 +97,24 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
     // file
     mNetCDF = new NetCDF_Writer();
     #ifndef _USE_PARALLEL_NETCDF
+        if (!mAssemble) {
+            std::vector<std::string> myRecKeys;
+            for (int irec = 0; irec < numRec; irec++) {
+                myRecKeys.push_back((*mReceivers)[irec].mNetwork + "." + (*mReceivers)[irec].mName);
+            }
+            std::vector<std::vector<std::string>> allRecKeys;
+            XMPI::gather(myRecKeys, allRecKeys, false);
+            if (XMPI::root()) {
+                std::fstream fout(Parameters::sOutputDirectory + "/stations/rank_station.txt", std::fstream::out);
+                fout << "# MPI_RANK NETWORK.NAME\n";
+                for (int rank = 0; rank < XMPI::nproc(); rank++) {
+                    for (int irec = 0; irec < allRecKeys[rank].size(); irec++) {
+                        fout << rank << " " << allRecKeys[rank][irec] << "\n";
+                    }
+                }
+            }
+        }
+    
         // open file on all ranks with receivers
         if (numRec == 0) {
             return;
@@ -233,26 +251,6 @@ void PointwiseIONetCDF::finalize() {
     #endif
     
     if (!mAssemble) {
-        int numRec = mVarNamesDisp.size();
-        std::vector<std::string> myRecKeys;
-        for (int irec = 0; irec < numRec; irec++) {
-            myRecKeys.push_back((*mReceivers)[irec].mNetwork + "." + (*mReceivers)[irec].mName);
-        }
-        std::vector<std::vector<std::string>> allRecKeys;
-        XMPI::gather(myRecKeys, allRecKeys, false);
-        if (XMPI::root()) {
-            std::fstream fout(Parameters::sOutputDirectory + "/stations/station_rank.txt", std::fstream::out);
-            fout << "# MPI_RANK NETWORK.NAME\n";
-            for (int rank = 0; rank < XMPI::nproc(); rank++) {
-                if (allRecKeys[rank].size() > 0) {
-                    // fout << "RANK " << rank << ":\n";
-                    for (int irec = 0; irec < allRecKeys[rank].size(); irec++) {
-                        fout << rank << " " << allRecKeys[rank][irec] << "\n";
-                    }
-                    // fout << "\n";    
-                }
-            }
-        }
         return;
     }
     
