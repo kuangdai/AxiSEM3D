@@ -102,8 +102,80 @@ void Connectivity::decompose(const DecomposeOption &option,
     DualGraph::decompose(mConnectivity, option, elemToProc);
     MultilevelTimer::end("Metis Partition", 3);
     
-    // global-to-local element map and local mask
+    // global element-gll mapping
+    // neighbourhood with ncommon = 1 (NOT 2)
+    // NOTE: Though we decompose with ncommon = 2, metis may still (but rarely) yields 
+    //       a decomposition where two processors only share one single point. 
+    //       This could happen when a large nproc is used on a relatively small mesh.
+    MultilevelTimer::begin("Global Element-Gll", 3);
     int nElemGlobal = size();
+    int nGllGlobal = 0;
+    std::vector<IMatPP> elemToGllGlobal;
+    std::vector<IColX> neighboursGlobal;
+    formElemToGLL(nGllGlobal, elemToGllGlobal, neighboursGlobal, 1);
+    MultilevelTimer::end("Global Element-Gll", 3);
+    
+    // map of to-be-communicated global gll points 
+    MultilevelTimer::begin("To-be-communicated Global", 3);
+    // key: proc_id
+    // value: map<global_gll, array_of_3(elem_id, ipol, jpol)>
+    std::map<int, std::map<int, std::array<int, 3>>> gllCommGlb;
+    for (int ielem = 0; ielem < nElemGlobal; ielem++) {
+        if (elemToProc(ielem) != XMPI::rank()) {
+            continue;
+        }
+        for (int in = 0; in < neighboursGlobal[ielem].rows(); in++) {
+            int ineighbour = neighboursGlobal[ielem](in);
+            // within the same proc
+            if (elemToProc(ineighbour) == XMPI::rank()) {
+                continue;
+            }
+            // add proc 
+            int rankOther = elemToProc(ineighbour);
+            gllCommGlb.insert(std::pair<int, std::map<int, std::array<int, 3>>>
+                (rankOther, std::map<int, std::array<int, 3>>()));
+                
+            // create temp vector of neighbour gll's for fast search
+            std::vector<int> gllOther;
+            for (int ipol = 0; ipol <= nPol; ipol++) {
+                for (int jpol = 0; jpol <= nPol; jpol++) {
+                    if (onEdge(ipol, jpol)) {
+                        gllOther.push_back(elemToGllGlobal[ineighbour](ipol, jpol));
+                    }
+                }
+            }
+                
+            // find common gll
+            int nfound = 0;
+            for (int ipol = 0; ipol <= nPol; ipol++) {
+                for (int jpol = 0; jpol <= nPol; jpol++) {
+                    if (!onEdge(ipol, jpol)) {
+                        continue;
+                    }
+                    int targetGll = elemToGllGlobal[ielem](ipol, jpol);
+                    if (std::find(gllOther.begin(), gllOther.end(), targetGll) != gllOther.end()) {
+                        std::array<int, 3> ielem_ipol_jpol;
+                        ielem_ipol_jpol[0] = ielem;
+                        ielem_ipol_jpol[1] = ipol;
+                        ielem_ipol_jpol[2] = jpol;
+                        // NOTE: the components are inherently sorted by global gll-point tags
+                        //       we do not care how they are sorted by std::map since all processors
+                        //       should use the same sorting rule 
+                        gllCommGlb.at(rankOther).insert(std::pair<int, std::array<int, 3>>
+                            (targetGll, ielem_ipol_jpol));
+                        nfound++;
+                    }
+                }
+            }
+            // either a common edge or a common point
+            if (nfound != nPntEdge && nfound != 1) {
+                throw std::runtime_error("Connectivity::decompose || Domain decomposition failed.");
+            }
+        }
+    }
+    MultilevelTimer::end("To-be-communicated Global", 3);
+    
+    // global-to-local element map and local mask
     MultilevelTimer::begin("Global-to-local Element", 3);
     IColX elemGlbToLoc = IColX::Constant(nElemGlobal, -1);
     procMask = IColX::Zero(nElemGlobal);
@@ -122,185 +194,30 @@ void Connectivity::decompose(const DecomposeOption &option,
     Connectivity(*this, procMask).formElemToGLL(nGllLocal, elemToGllLocal, neighboursLocal, 1);
     MultilevelTimer::end("Local Element-Gll", 3);
     
-    
-    // global element-gll mapping
-    // neighbourhood with ncommon = 1 (NOT 2)
-    // NOTE: Though we decompose with ncommon = 2, metis may still (but rarely) yields 
-    //       a decomposition where two processors only share one single point. 
-    //       This could happen when a large nproc is used on a relatively small mesh.
-    
-    
-    IMatXX elemToGllGlobalMatSend;
-    IColX neighboursGlobalCountSend;
-    IColX neighboursGlobalVecNBSend;
-    int sizeNB;
-    if (XMPI::root()) {
-        // gll
-        MultilevelTimer::begin("Global Element-Gll", 3);
-        int nGllGlobal = 0;
-        std::vector<IMatPP> elemToGllGlobal;
-        std::vector<IColX> neighboursGlobal;
-        formElemToGLL(nGllGlobal, elemToGllGlobal, neighboursGlobal, 1);
-        MultilevelTimer::end("Global Element-Gll", 3);
-        // fill send
-        elemToGllGlobalMatSend = IMatXX(nElemGlobal, nPE);
-        neighboursGlobalCountSend = IColX(nElemGlobal);
-        for (int ielem = 0; ielem < nElemGlobal; ielem++) {
-            for (int ipol = 0; ipol <= nPol; ipol++) {
-                for (int jpol = 0; jpol <= nPol; jpol++) {
-                    int ipnt = ipol * nPntEdge + jpol;
-                    elemToGllGlobalMatSend(ielem, ipnt) = elemToGllGlobal[ielem](ipol, jpol);
-                }
-            }
-            neighboursGlobalCountSend(ielem) = neighboursGlobal[ielem].rows();
+    // form local messaging
+    MultilevelTimer::begin("Local Messaging", 3);
+    msgInfo.mIProcComm.clear();
+    msgInfo.mNLocalPoints.clear();
+    msgInfo.mILocalPoints.clear();
+    for (auto it_proc = gllCommGlb.begin(); it_proc != gllCommGlb.end(); it_proc++) {
+        msgInfo.mIProcComm.push_back(it_proc->first);
+        std::vector<int> gll_loc;
+        for (auto it_gll = it_proc->second.begin(); it_gll != it_proc->second.end(); it_gll++) {
+            std::array<int, 3> ielem_ipol_jpol = it_gll->second;
+            int ielem_glb = ielem_ipol_jpol[0];
+            int ipol = ielem_ipol_jpol[1];
+            int jpol = ielem_ipol_jpol[2];
+            int ielem_loc = elemGlbToLoc(ielem_glb);
+            gll_loc.push_back(elemToGllLocal[ielem_loc](ipol, jpol));
         }
-        sizeNB = neighboursGlobalCountSend.sum();
-        neighboursGlobalVecNBSend.resize(sizeNB);
-        int posNB = 0;
-        for (int ielem = 0; ielem < nElemGlobal; ielem++) {
-            for (int ib = 0; ib < neighboursGlobalCountSend(ielem); ib++) {
-                neighboursGlobalVecNBSend(posNB++) = neighboursGlobal[ielem](ib);
-            }
-        }
+        msgInfo.mNLocalPoints.push_back(gll_loc.size());
+        msgInfo.mILocalPoints.push_back(gll_loc);
     }
-    XMPI::bcast(sizeNB);
-    
-    IMatXX elemToGllGlobalMatRecv;
-    IColX neighboursGlobalCountRecv;
-    IColX neighboursGlobalVecNBRecv;
-    for (int IRANK = 0; IRANK < XMPI::nproc(); IRANK++) {
-        if (XMPI::root() || XMPI::rank() == IRANK) {
-            if (IRANK == 0) {
-                elemToGllGlobalMatRecv = elemToGllGlobalMatSend;
-                neighboursGlobalCountRecv = neighboursGlobalCountSend;
-                neighboursGlobalVecNBRecv = neighboursGlobalVecNBSend;
-            } else {
-                if (XMPI::root()) {
-                    XMPI::sendInt(IRANK, elemToGllGlobalMatSend, 1);
-                    XMPI::sendInt(IRANK, neighboursGlobalCountSend, 2);
-                    XMPI::sendInt(IRANK, neighboursGlobalVecNBSend, 3);
-                } else {
-                    elemToGllGlobalMatRecv = IMatXX(nElemGlobal, nPE);
-                    neighboursGlobalCountRecv = IColX(nElemGlobal);
-                    neighboursGlobalVecNBRecv = IColX(sizeNB);
-                    XMPI::recvInt(0, elemToGllGlobalMatRecv, 1);
-                    XMPI::recvInt(0, neighboursGlobalCountRecv, 2);
-                    XMPI::recvInt(0, neighboursGlobalVecNBRecv, 3);
-                }
-            }
-            
-            if (XMPI::rank() == IRANK) {
-                std::vector<IMatPP> elemToGllGlobal;
-                std::vector<IColX> neighboursGlobal;
-                int posvec = 0;
-                for (int ielem = 0; ielem < nElemGlobal; ielem++) {
-                    IMatPP x;
-                    for (int ipol = 0; ipol <= nPol; ipol++) {
-                        for (int jpol = 0; jpol <= nPol; jpol++) {
-                            int ipnt = ipol * nPntEdge + jpol;
-                            x(ipol, jpol) = elemToGllGlobalMatRecv(ielem, ipnt);
-                        }
-                    }
-                    elemToGllGlobal.push_back(x);
-                    IColX nb(neighboursGlobalCountRecv[ielem]);
-                    for (int ib = 0; ib < neighboursGlobalCountRecv[ielem]; ib++) {
-                        nb(ib) = neighboursGlobalVecNBRecv[posvec++];
-                    }
-                    neighboursGlobal.push_back(nb);
-                }
-                // free large space
-                elemToGllGlobalMatRecv.resize(0, 0);
-                neighboursGlobalCountRecv.resize(0);
-                neighboursGlobalVecNBRecv.resize(0);
-            
-                // map of to-be-communicated global gll points 
-                MultilevelTimer::begin("To-be-communicated Global", 3);
-                // key: proc_id
-                // value: map<global_gll, array_of_3(elem_id, ipol, jpol)>
-                std::map<int, std::map<int, std::array<int, 3>>> gllCommGlb;
-                for (int ielem = 0; ielem < nElemGlobal; ielem++) {
-                    if (elemToProc(ielem) != XMPI::rank()) {
-                        continue;
-                    }
-                    for (int in = 0; in < neighboursGlobal[ielem].rows(); in++) {
-                        int ineighbour = neighboursGlobal[ielem](in);
-                        // within the same proc
-                        if (elemToProc(ineighbour) == XMPI::rank()) {
-                            continue;
-                        }
-                        // add proc 
-                        int rankOther = elemToProc(ineighbour);
-                        gllCommGlb.insert(std::pair<int, std::map<int, std::array<int, 3>>>
-                            (rankOther, std::map<int, std::array<int, 3>>()));
-            
-                        // create temp vector of neighbour gll's for fast search
-                        std::vector<int> gllOther;
-                        for (int ipol = 0; ipol <= nPol; ipol++) {
-                            for (int jpol = 0; jpol <= nPol; jpol++) {
-                                if (onEdge(ipol, jpol)) {
-                                    gllOther.push_back(elemToGllGlobal[ineighbour](ipol, jpol));
-                                }
-                            }
-                        }
-            
-                        // find common gll
-                        int nfound = 0;
-                        for (int ipol = 0; ipol <= nPol; ipol++) {
-                            for (int jpol = 0; jpol <= nPol; jpol++) {
-                                if (!onEdge(ipol, jpol)) {
-                                    continue;
-                                }
-                                int targetGll = elemToGllGlobal[ielem](ipol, jpol);
-                                if (std::find(gllOther.begin(), gllOther.end(), targetGll) != gllOther.end()) {
-                                    std::array<int, 3> ielem_ipol_jpol;
-                                    ielem_ipol_jpol[0] = ielem;
-                                    ielem_ipol_jpol[1] = ipol;
-                                    ielem_ipol_jpol[2] = jpol;
-                                    // NOTE: the components are inherently sorted by global gll-point tags
-                                    //       we do not care how they are sorted by std::map since all processors
-                                    //       should use the same sorting rule 
-                                    gllCommGlb.at(rankOther).insert(std::pair<int, std::array<int, 3>>
-                                        (targetGll, ielem_ipol_jpol));
-                                    nfound++;
-                                }
-                            }
-                        }
-                        // either a common edge or a common point
-                        if (nfound != nPntEdge && nfound != 1) {
-                            throw std::runtime_error("Connectivity::decompose || Domain decomposition failed.");
-                        }
-                    }
-                }
-                MultilevelTimer::end("To-be-communicated Global", 3);
-            
-                // form local messaging
-                MultilevelTimer::begin("Local Messaging", 3);
-                msgInfo.mIProcComm.clear();
-                msgInfo.mNLocalPoints.clear();
-                msgInfo.mILocalPoints.clear();
-                for (auto it_proc = gllCommGlb.begin(); it_proc != gllCommGlb.end(); it_proc++) {
-                    msgInfo.mIProcComm.push_back(it_proc->first);
-                    std::vector<int> gll_loc;
-                    for (auto it_gll = it_proc->second.begin(); it_gll != it_proc->second.end(); it_gll++) {
-                        std::array<int, 3> ielem_ipol_jpol = it_gll->second;
-                        int ielem_glb = ielem_ipol_jpol[0];
-                        int ipol = ielem_ipol_jpol[1];
-                        int jpol = ielem_ipol_jpol[2];
-                        int ielem_loc = elemGlbToLoc(ielem_glb);
-                        gll_loc.push_back(elemToGllLocal[ielem_loc](ipol, jpol));
-                    }
-                    msgInfo.mNLocalPoints.push_back(gll_loc.size());
-                    msgInfo.mILocalPoints.push_back(gll_loc);
-                }
-                msgInfo.mNProcComm = msgInfo.mIProcComm.size();
-                MPI_Request req;
-                msgInfo.mReqSend = std::vector<MPI_Request>(msgInfo.mNProcComm, req);
-                msgInfo.mReqRecv = std::vector<MPI_Request>(msgInfo.mNProcComm, req);
-                MultilevelTimer::end("Local Messaging", 3);
-            }
-        }
-        XMPI::barrier();
-    }
+    msgInfo.mNProcComm = msgInfo.mIProcComm.size();
+    MPI_Request req;
+    msgInfo.mReqSend = std::vector<MPI_Request>(msgInfo.mNProcComm, req);
+    msgInfo.mReqRecv = std::vector<MPI_Request>(msgInfo.mNProcComm, req);
+    MultilevelTimer::end("Local Messaging", 3);
 }
 
 void Connectivity::get_shared_DOF_quad(const IRow4 &connectivity1, const IRow4 &connectivity2, 

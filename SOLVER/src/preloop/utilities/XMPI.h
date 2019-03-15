@@ -117,26 +117,6 @@ public:
     // special case
     static void bcast(std::vector<std::string> &buffer, int src = 0);
     
-    ////////////////////////////// send/recv ////////////////////////////// 
-    // send, only for Eigen::Matrix
-    template<typename EigenMat>
-    static void sendInt(int dest, const EigenMat &buffer, int tag) {
-        #ifndef _SERIAL_BUILD
-            MPI_Send(buffer.data(), buffer.size(), 
-                MPI_INT, dest, tag, MPI_COMM_WORLD);
-        #endif
-    };
-    
-    // recv, only for Eigen::Matrix
-    template<typename EigenMat>
-    static void recvInt(int source, EigenMat &buffer, int tag) {
-        #ifndef _SERIAL_BUILD
-            MPI_Recv(buffer.data(), buffer.size(), 
-                MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        #endif
-    };
-    
-    
     ////////////////////////////// isend/irecv ////////////////////////////// 
     // isend, only for Eigen::Matrix
     template<typename EigenMat>

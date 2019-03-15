@@ -29,7 +29,7 @@ public:
     static void initialize(const std::string &fileName, int nLevels);
     static void finalize();
     static void begin(const std::string &procName, int level, bool barrier = false);
-    static void end(const std::string &procName, int level, bool barrier = false);
+    static void end(const std::string &procName, int level, bool barrier = true);
     static void pause(int level);
     static void resume(int level);
     
