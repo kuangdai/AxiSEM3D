@@ -8,12 +8,12 @@
 #include "XMPI.h"
 
 SurfaceRecorder::SurfaceRecorder(int totalRecordSteps, int recordInterval, 
-    int bufferSize, double srcLat, double srcLon, double srcDep): 
+    int bufferSize, double srcLat, double srcLon, double srcDep, bool assemble): 
 mTotalRecordSteps(totalRecordSteps),
 mRecordInterval(recordInterval), mBufferSize(bufferSize),
 mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
     mBufferLine = 0;
-    mIO = new SurfaceIO();
+    mIO = new SurfaceIO(assemble);
 }
 
 SurfaceRecorder::~SurfaceRecorder() {

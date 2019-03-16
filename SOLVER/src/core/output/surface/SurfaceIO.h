@@ -11,6 +11,10 @@ class SurfaceInfo;
 
 class SurfaceIO {
 public:
+    SurfaceIO(bool assemble): mAssemble(assemble) {
+        // nothing
+    }
+    
     // before time loop
     void initialize(int totalRecordSteps, int bufferSize,
         const std::vector<SurfaceInfo> &surfaceInfo,
@@ -39,5 +43,8 @@ private:
     
     // source location
     double mSrcLat, mSrcLon, mSrcDep;
+    
+    // assemble or not
+    bool mAssemble = true;
 };
 

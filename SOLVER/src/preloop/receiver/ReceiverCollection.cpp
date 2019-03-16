@@ -169,7 +169,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     if (mSaveWholeSurface) {
         SurfaceRecorder *recorderSF = new SurfaceRecorder(mTotalRecordSteps, 
             mRecordInterval, mBufferSize, 
-            mSrcLat, mSrcLon, mSrcDep);
+            mSrcLat, mSrcLon, mSrcDep, mAssemble);
         for (int iloc = 0; iloc < mesh.getNumQuads(); iloc++) {
             const Quad *quad = mesh.getQuad(iloc);
             if (quad->onSurface()) {
@@ -305,6 +305,7 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
     }
     if (netcdf_no_assemble) {
         rec->mPointwiseIO.push_back(new PointwiseIONetCDF(false));
+        rec->mAssemble = false;
     }
     
     if (verbose) {

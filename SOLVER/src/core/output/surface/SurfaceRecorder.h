@@ -13,7 +13,7 @@ class Element;
 class SurfaceRecorder {
 public:
     SurfaceRecorder(int totalRecordSteps, int recordInterval, int bufferSize,
-        double srcLat, double srcLon, double srcDep);
+        double srcLat, double srcLon, double srcDep, bool assemble);
     ~SurfaceRecorder();
 
     // add a surface element

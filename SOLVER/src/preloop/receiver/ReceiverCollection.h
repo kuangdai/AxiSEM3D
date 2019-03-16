@@ -51,6 +51,7 @@ private:
     
     // surface wavefield
     bool mSaveWholeSurface;
+    bool mAssemble = true;
     
     // source location
     double mSrcLat, mSrcLon, mSrcDep;

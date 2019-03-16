@@ -13,6 +13,7 @@
 #include "eigenp.h"
 #include "Geodesy.h"
 #include "SpectralConstants.h"
+#include <fstream>
 
 void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
     const std::vector<SurfaceInfo> &surfaceInfo,
@@ -74,6 +75,20 @@ void SurfaceIO::initialize(int totalRecordSteps, int bufferSize,
     // file
     mNetCDF = new NetCDF_Writer();
     #ifndef _USE_PARALLEL_NETCDF
+        if (!mAssemble) {
+            std::vector<std::vector<std::string>> allRecKeys;
+            XMPI::gather(mVarNames, allRecKeys, false);
+            if (XMPI::root()) {
+                std::fstream fout(Parameters::sOutputDirectory + "/stations/rank_edge.txt", std::fstream::out);
+                fout << "# MPI_RANK EDGE_TAG\n";
+                for (int rank = 0; rank < XMPI::nproc(); rank++) {
+                    for (int irec = 0; irec < allRecKeys[rank].size(); irec++) {
+                        fout << rank << " " << allRecKeys[rank][irec] << "\n";
+                    }
+                }
+            }
+        }
+    
         // open file on all ranks with elements
         if (numEle == 0) {
             return;
@@ -192,6 +207,10 @@ void SurfaceIO::finalize() {
     #ifdef _USE_PARALLEL_NETCDF
         return;
     #endif
+    
+    if (!mAssemble) {
+        return;
+    }
     
     // file name
     int numEle = mVarNames.size();
