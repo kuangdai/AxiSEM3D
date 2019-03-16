@@ -360,6 +360,9 @@ for it, istep in enumerate(steps):
         if it > args.max_step:
             continue  
     
+    if args.verbose:
+        clock0s = time.clock()
+        
     # output        
     if args.norm:
         disp_norm = np.zeros(nstation)
@@ -367,11 +370,12 @@ for it, istep in enumerate(steps):
         disp = np.zeros((nstation, 3))
         
     eleTag_last = -1
-    fourier_last = None
+    fmat_last = None
     for istation, dist in enumerate(dists):
         etag = eleTags[istation]
         if etag == eleTag_last:
-            fourier = fourier_last
+            fmat = fmat_last
+            nu_p_1 = fmat.shape[-1]
         else:
             if (edge_nc is None):
                 nc = nc_surf
@@ -380,15 +384,11 @@ for it, istep in enumerate(steps):
             fourier_r = nc.variables['edge_' + str(etag) + 'r'][istep, :]
             fourier_i = nc.variables['edge_' + str(etag) + 'i'][istep, :]
             fourier = fourier_r[:] + fourier_i[:] * 1j
-            fourier_last = fourier
+            nu_p_1 = int(len(fourier) / nPntEdge / 3)
+            fmat = fourier.reshape(3, nPntEdge, nu_p_1)
+            fmat_last = fmat
             eleTag_last = etag
-        nu_p_1 = int(len(fourier) / nPntEdge / 3)
-        wdotf = np.zeros((3, nu_p_1), dtype=fourier.dtype)
-        for idim in np.arange(0, 3):
-            start = idim * nPntEdge * nu_p_1
-            end = idim * nPntEdge * nu_p_1 + nPntEdge * nu_p_1
-            fmat = fourier[start:end].reshape(nPntEdge, nu_p_1)
-            wdotf[idim] = weights[istation].dot(fmat)
+        wdotf = np.tensordot(weights[istation], fmat, ([0], [1]))
         exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * azims[istation])
         exparray[0] = 1.
         spz = wdotf.dot(exparray).real
@@ -408,10 +408,12 @@ for it, istep in enumerate(steps):
             'surface animation')
     vtk.tofile(args.out_vtk + '/surface_vtk.' + str(it) + '.vtk', 'binary')
     if args.verbose:
-        print('    Done with snapshot t = %f s; tstep = %d / %d' \
-            % (var_time[istep], it + 1, len(steps)))
+        if args.verbose:
+            elapsed = time.clock() - clock0s
+        print('    Done with snapshot t = %f s; tstep = %d / %d, elapsed = %f' \
+            % (var_time[istep], it + 1, len(steps), elapsed))
 
-if args.verbose and iproc == 0:
+if args.verbose:
     elapsed = time.clock() - clock0
     print('Generating snapshots done, ' + 
           '%f sec elapsed.' % (elapsed))
