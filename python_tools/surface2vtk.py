@@ -30,6 +30,10 @@ parser.add_argument('-i', '--input', dest='in_surface_nc',
                     action='store', type=str, required=True,
                     help='NetCDF database of surface wavefield\n' + 
                          'created by AxiSEM3D <required>')
+parser.add_argument('-m', '--multi_file', dest='multi_file', action='store_true', 
+                    help='NetCDF database consists of multiple\n' +
+                         'files (using netcdf_no_assemble);\n' +
+                         'default = False')
 parser.add_argument('-o', '--output', dest='out_vtk', 
                     action='store', type=str, required=True,
                     help='directory to store the vtk files\n' +
@@ -38,29 +42,26 @@ parser.add_argument('-s', '--spatial_sampling', dest='spatial_sampling',
                     action='store', type=float, required=True,
                     help='spatial sampling on surface (km)\n' +
                          '<required>') 
-parser.add_argument('-m', '--min_dist', dest='min_dist', 
+parser.add_argument('-md', '--min_dist', dest='min_dist', 
                     action='store', type=float, default=0.,
                     help='minimum distance (deg); default = 0')
-parser.add_argument('-M', '--max_dist', dest='max_dist', 
+parser.add_argument('-Md', '--max_dist', dest='max_dist', 
                     action='store', type=float, default=180.,
                     help='maximum distance (deg); default = 180')                          
-parser.add_argument('-t', '--tstart', dest='tstart', 
+parser.add_argument('-t0', '--tstart', dest='tstart', 
                     action='store', type=float, required=True,
                     help='start time of animation (sec)\n' +
                          '<required>') 
-parser.add_argument('-d', '--time_interval', dest='time_interval', 
+parser.add_argument('-dt', '--time_interval', dest='time_interval', 
                     action='store', type=float, required=True,
                     help='time interval between snapshots (sec)\n' +
                          '<required>') 
-parser.add_argument('-n', '--nsnapshots', dest='nsnapshots',
+parser.add_argument('-nt', '--nsnapshots', dest='nsnapshots',
                     action='store', type=int, required=True,
                     help='number of snapshots <required>')
 parser.add_argument('-N', '--norm', dest='norm', action='store_true', 
                     help='only dump displacement norm;\n' +
                          'default = False (dump 3D vector)')
-parser.add_argument('-p', '--nproc', dest='nproc', action='store', 
-                    type=int, default=1, 
-                    help='number of processors; default = 1')
 parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', 
                     help='verbose mode')        
 # hidden options
@@ -187,10 +188,38 @@ def SpherifiedCube(divisions, zmin, zmax, zsort=True):
 
 
 ###### read surface database
+if args.multi_file:
+    # read index file
+    rank_edge = np.loadtxt(args.in_surface_nc + '/rank_edge.txt', skiprows=1, dtype=str)
+    ranks = rank_edge[:, 0].astype(int)
+    edges = np.core.defchararray.replace(rank_edge[:, 1], 'edge_', '').astype(int)
+    ranks_unique = np.unique(ranks)
+    # open
+    nc_surfs = []
+    for irank in ranks_unique:
+        fname = args.in_surface_nc + '/axisem3d_surface.nc.rank' + str(irank)
+        nc = Dataset(fname, 'r')
+        nc_surfs.append(nc)
+        if args.verbose:
+            print('Done opening nc file %s' % (fname))
+    nc_surf = nc_surfs[0]
+    # map
+    edge_nc = {}
+    for i in np.arange(len(edges)):
+        edge_nc[edges[i]] = ranks_unique.tolist().index(ranks[i])
+else:
+    nc_surf = Dataset(args.in_surface_nc, 'r')
+    if args.verbose:
+        print('Done opening nc file %s' % (args.in_surface_nc))
+    nc_surfs = [nc_surf]
+    edge_nc = None
+
+
+###### read surface database
 if args.verbose:
+    print()
     clock0 = time.clock()
     print('Reading global parameters...')
-nc_surf = Dataset(args.in_surface_nc, 'r')
 # global attribute
 srclat = nc_surf.source_latitude
 srclon = nc_surf.source_longitude
@@ -316,92 +345,74 @@ if args.verbose:
     print('Preparing timesteps done, ' + 
           '%f sec elapsed.\n' % (elapsed))
 
-# close serial input    
-nc_surf.close()
-def write_vtk(iproc):
-    if args.nproc == 1:
-        nc_surf_local = Dataset(args.in_surface_nc, 'r')
-        iproc = 0
-    else:
-        # copy netcdf file for parallel access
-        tempnc = args.out_vtk + '/surface_temp.nc' + str(iproc)
-        shutil.copy(args.in_surface_nc, tempnc)
-        nc_surf_local = Dataset(tempnc, 'r')
 
-    # write vtk
-    if args.verbose and iproc == 0:
-        clock0 = time.clock()
-        print('Generating snapshot...')
-    for it, istep in enumerate(steps):
-        if it % args.nproc != iproc: 
+# write vtk
+if args.verbose:
+    clock0 = time.clock()
+    print('Generating snapshot...')
+    
+for it, istep in enumerate(steps):
+    # min/max step
+    if args.min_step is not None:
+        if it < args.min_step:
             continue
-        if args.min_step is not None:
-            if it < args.min_step:
-                continue
-        if args.max_step is not None:
-            if it > args.max_step:
-                continue  
-        if args.norm:
-            disp_norm = np.zeros(nstation)
-        else:
-            disp = np.zeros((nstation, 3))
-        eleTag_last = -1
-        fourier_last = None
-        for istation, dist in enumerate(dists):
-            if eleTags[istation] == eleTag_last:
-                fourier = fourier_last
-            else:
-                fourier_r = nc_surf_local.variables['edge_' + str(eleTags[istation]) + 'r'][istep, :]
-                fourier_i = nc_surf_local.variables['edge_' + str(eleTags[istation]) + 'i'][istep, :]
-                fourier = fourier_r[:] + fourier_i[:] * 1j
-                fourier_last = fourier
-                eleTag_last = eleTags[istation]
-            nu_p_1 = int(len(fourier) / nPntEdge / 3)
-            wdotf = np.zeros((3, nu_p_1), dtype=fourier.dtype)
-            for idim in np.arange(0, 3):
-                start = idim * nPntEdge * nu_p_1
-                end = idim * nPntEdge * nu_p_1 + nPntEdge * nu_p_1
-                fmat = fourier[start:end].reshape(nPntEdge, nu_p_1)
-                wdotf[idim] = weights[istation].dot(fmat)
-            exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * azims[istation])
-            exparray[0] = 1.
-            spz = wdotf.dot(exparray).real
-            if args.norm:
-                disp_norm[istation] = np.linalg.norm(spz)
-            else:
-                disp[istation, 0] = spz[0] * np.cos(dist) - spz[2] * np.sin(dist)
-                disp[istation, 1] = spz[1]
-                disp[istation, 2] = spz[0] * np.sin(dist) + spz[2] * np.cos(dist)
-        if args.norm:
-            vtk = pyvtk.VtkData(vtk_points,
-                pyvtk.PointData(pyvtk.Scalars(disp_norm, name='disp_norm')), 
-                'surface animation')
-        else:
-            vtk = pyvtk.VtkData(vtk_points,
-                pyvtk.PointData(pyvtk.Vectors(disp, name='disp_RTZ')),
-                'surface animation')
-        vtk.tofile(args.out_vtk + '/surface_vtk.' + str(it) + '.vtk', 'binary')
-        if args.verbose:
-            print('    Done with snapshot t = %f s; tstep = %d / %d; iproc = %d' \
-                % (var_time[istep], it + 1, len(steps), iproc))
-    # close
-    nc_surf_local.close()
+    if args.max_step is not None:
+        if it > args.max_step:
+            continue  
     
-    # remove temp nc
-    if args.nproc > 1:
-        os.remove(tempnc)
-    
-    if args.verbose and iproc == 0:
-        elapsed = time.clock() - clock0
-        print('Generating snapshots done, ' + 
-              '%f sec elapsed.' % (elapsed))
-
-# write_vtk in parallel
-args.nproc = max(args.nproc, 1)
-if args.nproc == 1:
-    write_vtk(0)
-else:
-    with Pool(args.nproc) as p:
-        p.map(write_vtk, range(0, args.nproc))
+    # output        
+    if args.norm:
+        disp_norm = np.zeros(nstation)
+    else:
+        disp = np.zeros((nstation, 3))
         
+    eleTag_last = -1
+    fourier_last = None
+    for istation, dist in enumerate(dists):
+        etag = eleTags[istation]
+        if etag == eleTag_last:
+            fourier = fourier_last
+        else:
+            if (edge_nc is None):
+                nc = nc_surf
+            else:
+                nc = nc_surfs[edge_nc[etag]]
+            fourier_r = nc.variables['edge_' + str(etag) + 'r'][istep, :]
+            fourier_i = nc.variables['edge_' + str(etag) + 'i'][istep, :]
+            fourier = fourier_r[:] + fourier_i[:] * 1j
+            fourier_last = fourier
+            eleTag_last = etag
+        nu_p_1 = int(len(fourier) / nPntEdge / 3)
+        wdotf = np.zeros((3, nu_p_1), dtype=fourier.dtype)
+        for idim in np.arange(0, 3):
+            start = idim * nPntEdge * nu_p_1
+            end = idim * nPntEdge * nu_p_1 + nPntEdge * nu_p_1
+            fmat = fourier[start:end].reshape(nPntEdge, nu_p_1)
+            wdotf[idim] = weights[istation].dot(fmat)
+        exparray = 2. * np.exp(np.arange(0, nu_p_1) * 1j * azims[istation])
+        exparray[0] = 1.
+        spz = wdotf.dot(exparray).real
+        if args.norm:
+            disp_norm[istation] = np.linalg.norm(spz)
+        else:
+            disp[istation, 0] = spz[0] * np.cos(dist) - spz[2] * np.sin(dist)
+            disp[istation, 1] = spz[1]
+            disp[istation, 2] = spz[0] * np.sin(dist) + spz[2] * np.cos(dist)
+    if args.norm:
+        vtk = pyvtk.VtkData(vtk_points,
+            pyvtk.PointData(pyvtk.Scalars(disp_norm, name='disp_norm')), 
+            'surface animation')
+    else:
+        vtk = pyvtk.VtkData(vtk_points,
+            pyvtk.PointData(pyvtk.Vectors(disp, name='disp_RTZ')),
+            'surface animation')
+    vtk.tofile(args.out_vtk + '/surface_vtk.' + str(it) + '.vtk', 'binary')
+    if args.verbose:
+        print('    Done with snapshot t = %f s; tstep = %d / %d' \
+            % (var_time[istep], it + 1, len(steps)))
+
+if args.verbose and iproc == 0:
+    elapsed = time.clock() - clock0
+    print('Generating snapshots done, ' + 
+          '%f sec elapsed.' % (elapsed))
 

@@ -229,6 +229,7 @@ void ExodusModel::readRawData() {
     
     // element-wise
     mElementalVariableNames_elem.push_back("element_type");
+    mElementalVariableNames_elem.push_back("dt");
     mElementalVariableValues_elem = RDMatXX::Zero(getNumQuads(), 
         mElementalVariableNames_elem.size());
     for (int i = 0; i < mElementalVariableNames_elem.size(); i++) {
@@ -576,7 +577,7 @@ bool ExodusModel::isIsotropic() const {
 }
 
 double ExodusModel::getElementalVariables(const std::string &varName, int quadTag) const {
-    if (varName == "element_type") {
+    if (varName == "element_type" || varName == "dt") {
         return mElementalVariables_elem.at(varName)(quadTag);
     }
     
