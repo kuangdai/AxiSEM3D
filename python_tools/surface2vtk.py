@@ -62,6 +62,8 @@ parser.add_argument('-nt', '--nsnapshots', dest='nsnapshots',
 parser.add_argument('-N', '--norm', dest='norm', action='store_true', 
                     help='only dump displacement norm;\n' +
                          'default = False (dump 3D vector)')
+parser.add_argument('-p', '--using_mpi', dest='using_mpi', action='store_true', 
+                    help='parallel mode with MPI')                           
 parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', 
                     help='verbose mode')        
 # hidden options
@@ -83,6 +85,15 @@ from netCDF4 import Dataset
 import pyvtk
 import os
 import time
+
+# mpi
+if args.using_mpi:
+    from mpi4py import MPI
+    mpi_size = MPI.COMM_WORLD.Get_size()
+    mpi_rank = MPI.COMM_WORLD.Get_rank()
+else:
+    mpi_size = 1
+    mpi_rank = 0
 
 # slightly increase the radius for plot
 r_plot = 1.0001
@@ -200,7 +211,7 @@ if args.multi_file:
         fname = args.in_surface_nc + '/axisem3d_surface.nc.rank' + str(irank)
         nc = Dataset(fname, 'r')
         nc_surfs.append(nc)
-        if args.verbose:
+        if args.verbose and mpi_rank == 0:
             print('Done opening nc file %s' % (fname))
     nc_surf = nc_surfs[0]
     # map
@@ -209,14 +220,14 @@ if args.multi_file:
         edge_nc[edges[i]] = ranks_unique.tolist().index(ranks[i])
 else:
     nc_surf = Dataset(args.in_surface_nc, 'r')
-    if args.verbose:
+    if args.verbose and mpi_rank == 0:
         print('Done opening nc file %s' % (args.in_surface_nc))
     nc_surfs = [nc_surf]
     edge_nc = None
 
 
 ###### read surface database
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     print()
     clock0 = time.clock()
     print('Reading global parameters...')
@@ -239,7 +250,7 @@ nele = len(var_theta)
 var_GLL = nc_surf.variables['GLL'][:]
 var_GLJ = nc_surf.variables['GLJ'][:]
 nPntEdge = len(var_GLL)
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     elapsed = time.clock() - clock0
     print('Reading global parameters done, ' + 
           '%f sec elapsed.\n' % (elapsed))
@@ -251,7 +262,7 @@ except OSError:
     pass
           
 ###### surface sampling
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     clock0 = time.clock()
     print('Sampling surface...')
 divisions = int(0.5 * np.pi * r_outer / (args.spatial_sampling * 1e3)) + 1
@@ -260,7 +271,7 @@ zmax = np.cos(np.radians(args.min_dist))
 xyz, connect = SpherifiedCube(divisions, zmin, zmax)
 nstation = len(xyz)
 ncell = len(connect)
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     elapsed = time.clock() - clock0
     print('    Number of sampling points: %d' % (nstation))
     print('    Number of quad cells: %d' % (ncell))
@@ -268,23 +279,23 @@ if args.verbose:
           '%f sec elapsed.\n' % (elapsed))
           
 ###### generate mesh vtk
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     clock0 = time.clock()
     print('Generating vtk mesh...')
 vtk_points = pyvtk.UnstructuredGrid(list(zip(xyz[:,0], xyz[:,1], xyz[:,2])), quad=connect)
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     elapsed = time.clock() - clock0
     print('Generating vtk mesh done, ' + 
           '%f sec elapsed.\n' % (elapsed))
     
 ###### dist, azim
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     clock0 = time.clock()
     print('Computing (distances, azimuths) of points...')    
 # dists
 dists = np.arccos(xyz[:, 2] / r_plot)
 azims = np.arctan2(xyz[:, 1], xyz[:, 0])    
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     elapsed = time.clock() - clock0
     print('Computing (distances, azimuths) of points done, ' + 
           '%f sec elapsed.\n' % (elapsed))
@@ -301,7 +312,7 @@ def interpLagrange(target, lbases):
                           np.prod(lbases_dgr - lbases_sub, axis=1)
     return results
 
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     clock0 = time.clock()
     print('Locating points in distance...')
 # locate element
@@ -315,13 +326,13 @@ for ist in np.arange(nstation):
 theta_bounds = var_theta[eleTags, :]
 etas = (dists - theta_bounds[:, 0]) / (theta_bounds[:, 1] - theta_bounds[:, 0]) * 2. - 1.
 weights = interpLagrange(etas, lbases)
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     elapsed = time.clock() - clock0
     print('Locating points in distance done, ' + 
           '%f sec elapsed.\n' % (elapsed))    
 
 ###### prepare time steps
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     clock0 = time.clock()
     print('Preparing timesteps...')
 if nstep == 1:
@@ -339,7 +350,7 @@ else:
     else:
         steps = steps[steps>0]
     dt = var_time[1] - t0    
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     elapsed = time.clock() - clock0
     print('    Number of snapshots: %d' % (len(steps)))
     print('Preparing timesteps done, ' + 
@@ -347,7 +358,7 @@ if args.verbose:
 
 
 # write vtk
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     clock0 = time.clock()
     print('Generating snapshot...')
     
@@ -359,6 +370,8 @@ for it, istep in enumerate(steps):
     if args.max_step is not None:
         if it > args.max_step:
             continue  
+    if it % mpi_size != mpi_rank:
+        continue         
     
     if args.verbose:
         clock0s = time.clock()
@@ -408,12 +421,11 @@ for it, istep in enumerate(steps):
             'surface animation')
     vtk.tofile(args.out_vtk + '/surface_vtk.' + str(it) + '.vtk', 'binary')
     if args.verbose:
-        if args.verbose:
-            elapsed = time.clock() - clock0s
-        print('    Done with snapshot t = %f s; tstep = %d / %d, elapsed = %f' \
-            % (var_time[istep], it + 1, len(steps), elapsed))
+        elapsed = time.clock() - clock0s
+        print('    Done with snapshot t = %f s; tstep = %d / %d, rank = %d, elapsed = %f' \
+            % (var_time[istep], it + 1, len(steps), mpi_rank, elapsed))
 
-if args.verbose:
+if args.verbose and mpi_rank == 0:
     elapsed = time.clock() - clock0
     print('Generating snapshots done, ' + 
           '%f sec elapsed.' % (elapsed))
