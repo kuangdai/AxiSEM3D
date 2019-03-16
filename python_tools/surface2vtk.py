@@ -201,7 +201,7 @@ def SpherifiedCube(divisions, zmin, zmax, zsort=True):
 ###### read surface database
 if args.multi_file:
     # read index file
-    rank_edge = np.loadtxt(args.in_surface_nc + '/rank_edge.txt', skiprows=1, dtype=str)
+    rank_edge = np.genfromtxt(args.in_surface_nc + '/rank_edge.txt', skip_header=1, dtype=str)
     ranks = rank_edge[:, 0].astype(int)
     edges = np.core.defchararray.replace(rank_edge[:, 1], 'edge_', '').astype(int)
     ranks_unique = np.unique(ranks)
