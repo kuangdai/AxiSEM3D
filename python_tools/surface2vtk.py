@@ -80,8 +80,8 @@ args = parser.parse_args()
 
 import numpy as np
 from netCDF4 import Dataset
-import pyvtk, os, shutil
-from multiprocessing import Pool
+import pyvtk
+import os
 import time
 
 # slightly increase the radius for plot
