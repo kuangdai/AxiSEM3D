@@ -39,7 +39,7 @@ private:
     std::vector<int> mCurlIndex;
     
     // file ID
-    NetCDF_Writer *mNetCDF = 0;
+    std::vector<NetCDF_Writer *> mNetCDFs;
     
     // location in nc 
     int mCurrentRow = 0;
@@ -52,5 +52,8 @@ private:
     
     // assemble or not
     bool mAssemble = true;
+    
+    // maximum number of stations per file
+    const int mMaxNumRecPerFile = 10000;
 };
 
