@@ -182,14 +182,14 @@ void Material::addVolumetric3D(const std::vector<Volumetric3D *> &m3D,
                             initAniso();
                         }
                         
-                        // check
-                        if (mFullAniso) {
-                            if (propertiesTIso[iprop] <= Volumetric3D::MaterialProperty::ANIS_ETA) {
-                                throw std::runtime_error("Material::addVolumetric3D || " 
-                                    "Velocity, density and eta can no longer be changed once "
-                                    "full anisotropy has been activated.");
-                            }
-                        } 
+                        // // check
+                        // if (mFullAniso) {
+                        //     if (propertiesTIso[iprop] <= Volumetric3D::MaterialProperty::ANIS_ETA) {
+                        //         throw std::runtime_error("Material::addVolumetric3D || " 
+                        //             "Velocity, density and eta can no longer be changed once "
+                        //             "full anisotropy has been activated.");
+                        //     }
+                        // } 
                         
                         RDRow4 &row1D = *prop1DPtr[propertiesTIso[iprop]];
                         RDMatXN &mat3D = *prop3DPtr[propertiesTIso[iprop]];
