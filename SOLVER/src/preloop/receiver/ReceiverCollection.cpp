@@ -86,30 +86,29 @@ mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
     // create receivers
     mWidthName = -1;
     mWidthNetwork = -1;
-    std::vector<std::string> recKeys;
     for (int i = 0; i < name.size(); i++) {
         // check duplicated
-        std::string key = network[i] + "." + name[i];
-        if (std::find(recKeys.begin(), recKeys.end(), key) != recKeys.end()) {
-            if (duplicated == 0) {
-                // ignore
-                continue;
-            } else if (duplicated == 1) {
-                // rename
-                int append = 0;
-                std::string nameOriginal = name[i];
-                while (std::find(recKeys.begin(), recKeys.end(), key) != recKeys.end()) {
-                    name[i] = nameOriginal + "__DUPLICATED" + boost::lexical_cast<std::string>(++append);
-                    key = network[i] + "." + name[i];
+        if (duplicated != 0) {
+            std::vector<std::string> recKeys;
+            std::string key = network[i] + "." + name[i];
+            if (std::find(recKeys.begin(), recKeys.end(), key) != recKeys.end()) {
+                if (duplicated == 1) {
+                    // rename
+                    int append = 0;
+                    std::string nameOriginal = name[i];
+                    while (std::find(recKeys.begin(), recKeys.end(), key) != recKeys.end()) {
+                        name[i] = nameOriginal + "__DUPLICATED" + boost::lexical_cast<std::string>(++append);
+                        key = network[i] + "." + name[i];
+                    }
+                } else {
+                    // error
+                    throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
+                        "Duplicated station keys (network_name) found in station data file " + mInputFile + " || "
+                        "Name = " + name[i] + "; Network = " + network[i]);
                 }
-            } else {
-                // error
-                throw std::runtime_error("ReceiverCollection::ReceiverCollection || "
-                    "Duplicated station keys (network_name) found in station data file " + mInputFile + " || "
-                    "Name = " + name[i] + "; Network = " + network[i]);
             }
+            recKeys.push_back(key);
         }
-        recKeys.push_back(key);
         // add receiver
         mReceivers.push_back(new Receiver(name[i], network[i], 
             theta[i], phi[i], geographic, depth[i], (bool)dumpStrain[i], (bool)dumpCurl[i], 
