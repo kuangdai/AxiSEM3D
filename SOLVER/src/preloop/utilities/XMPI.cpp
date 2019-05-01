@@ -202,6 +202,12 @@ void XMPI::bcast(std::vector<std::string> &buffer, int src) {
     #endif
 }
 
+void XMPI::min(const std::vector<int> &value, std::vector<int> &minimum) {
+    #ifndef _SERIAL_BUILD
+        MPI_Allreduce(value.data(), minimum.data(), value.size(), MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    #endif
+}
+
 int XMPI::min(const int &value) {
     #ifndef _SERIAL_BUILD
         int minimum;

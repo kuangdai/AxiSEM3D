@@ -129,9 +129,10 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     MultilevelTimer::begin("Locate Receivers", 2);
     std::vector<int> recRank(mReceivers.size(), XMPI::nproc());
     std::vector<int> recETag(mReceivers.size(), -1);
-    std::vector<RDMatPP> recInterpFact(mReceivers.size(), RDMatPP::Zero());
+    std::vector<int> recQTag(mReceivers.size(), -1);
+    // std::vector<RDMatPP> recInterpFact(mReceivers.size(), RDMatPP::Zero());
     for (int irec = 0; irec < mReceivers.size(); irec++) {
-        bool found = mReceivers[irec]->locate(mesh, recETag[irec], recInterpFact[irec]);
+        bool found = mReceivers[irec]->locate(mesh, recETag[irec], recQTag[irec]);
         if (found) {
             recRank[irec] = XMPI::rank();
         }
@@ -143,18 +144,28 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     PointwiseRecorder *recorderPW = new PointwiseRecorder(
         mTotalRecordSteps, mRecordInterval, mBufferSize, mComponents,
         mSrcLat, mSrcLon, mSrcDep);
+    
+    MultilevelTimer::begin("Find Min Rank", 3);    
+    std::vector<int> recRankMinG(recRank);
+    XMPI::min(recRank, recRankMinG);    
+    MultilevelTimer::end("Find Min Rank", 3);
+    
+    MultilevelTimer::begin("Release receivers", 3);
     for (int irec = 0; irec < mReceivers.size(); irec++) {
-        int recRankMin = XMPI::min(recRank[irec]);
+        int recRankMin = recRankMinG[irec];
         if (recRankMin == XMPI::nproc()) {
             throw std::runtime_error("ReceiverCollection::release || Error locating receiver || " 
                 "Name = " + mReceivers[irec]->getName() + "; "
                 "Network = " + mReceivers[irec]->getNetwork());
         }
         if (recRankMin == XMPI::rank()) {
+            RDMatPP interpFact;
+            mReceivers[irec]->computeInterpFact(mesh, recQTag[irec], interpFact);
             mReceivers[irec]->release(*recorderPW, 
-                domain, recETag[irec], recInterpFact[irec]);
+                domain, recETag[irec], interpFact);
         }
     }
+    MultilevelTimer::end("Release receivers", 3);
     
     // IO
     for (const auto &io: mPointwiseIO) {
@@ -166,6 +177,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     
     // whole surface
     if (mSaveWholeSurface) {
+        MultilevelTimer::begin("Whole Surface", 3);
         SurfaceRecorder *recorderSF = new SurfaceRecorder(mTotalRecordSteps, 
             mRecordInterval, mBufferSize, 
             mSrcLat, mSrcLon, mSrcDep, mAssemble);
@@ -177,6 +189,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
             }
         }
         domain.setSurfaceRecorder(recorderSF);
+        MultilevelTimer::end("Whole Surface", 3);
     }
     MultilevelTimer::end("Release to Domain", 2);
 }

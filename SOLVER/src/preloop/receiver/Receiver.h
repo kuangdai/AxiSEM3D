@@ -21,7 +21,9 @@ public:
     void release(PointwiseRecorder &recorderPW, const Domain &domain, 
         int elemTag, const RDMatPP &interpFact);     
     
-    bool locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const;
+    // bool locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const;
+    bool locate(const Mesh &mesh, int &elemTag, int &quadTag) const;
+    void computeInterpFact(const Mesh &mesh, int quadTag, RDMatPP &interpFact) const;
     
     std::string verbose(bool geographic, int wname, int wnet) const;
     

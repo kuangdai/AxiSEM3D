@@ -53,7 +53,7 @@ void Receiver::release(PointwiseRecorder &recorderPW, const Domain &domain,
         mLat, mLon, mDepth, mDumpStrain, mDumpCurl);
 }
 
-bool Receiver::locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const {
+bool Receiver::locate(const Mesh &mesh, int &elemTag, int &quadTag) const {
     RDCol2 recCrds, srcXiEta;
     double r = mesh.computeRadiusRef(mDepth, mLat, mLon);
     recCrds(0) = r * sin(mTheta);
@@ -72,28 +72,38 @@ bool Receiver::locate(const Mesh &mesh, int &elemTag, RDMatPP &interpFact) const
         if (quad->invMapping(recCrds, srcXiEta)) {
             if (std::abs(srcXiEta(0)) <= 1.000001 && std::abs(srcXiEta(1)) <= 1.000001) {
                 elemTag = quad->getElementTag();
-                RDColP interpXi, interpEta;
-                XMath::interpLagrange(srcXiEta(0), nPntEdge, 
-                    quad->isAxial() ? SpectralConstants::getP_GLJ().data(): 
-                    SpectralConstants::getP_GLL().data(), interpXi.data());
-                XMath::interpLagrange(srcXiEta(1), nPntEdge, 
-                    SpectralConstants::getP_GLL().data(), interpEta.data());
-                interpFact = interpXi * interpEta.transpose();
-                if (quad->isFluid()) {
-                    const RDRowN &intgFact = quad->getIntegralFactor();
-                    for (int ipol = 0; ipol <= nPol; ipol++) {
-                        for (int jpol = 0; jpol <= nPol; jpol++) {
-                            int ipnt = ipol * nPntEdge + jpol;
-                            interpFact(ipol, jpol) /= intgFact(ipnt);    
-                        }
-                    }
-                    // std::cout << "STATION in FLUID" << std::endl;
-                }
+                quadTag = iloc;
                 return true;
             }
         }
     }
     return false;
+}
+
+void Receiver::computeInterpFact(const Mesh &mesh, int quadTag, RDMatPP &interpFact) const {
+    RDCol2 recCrds, srcXiEta;
+    double r = mesh.computeRadiusRef(mDepth, mLat, mLon);
+    recCrds(0) = r * sin(mTheta);
+    recCrds(1) = r * cos(mTheta);
+    const Quad *quad = mesh.getQuad(quadTag);
+    quad->invMapping(recCrds, srcXiEta);
+    RDColP interpXi, interpEta;
+    XMath::interpLagrange(srcXiEta(0), nPntEdge, 
+        quad->isAxial() ? SpectralConstants::getP_GLJ().data(): 
+        SpectralConstants::getP_GLL().data(), interpXi.data());
+    XMath::interpLagrange(srcXiEta(1), nPntEdge, 
+        SpectralConstants::getP_GLL().data(), interpEta.data());
+    interpFact = interpXi * interpEta.transpose();
+    if (quad->isFluid()) {
+        const RDRowN &intgFact = quad->getIntegralFactor();
+        for (int ipol = 0; ipol <= nPol; ipol++) {
+            for (int jpol = 0; jpol <= nPol; jpol++) {
+                int ipnt = ipol * nPntEdge + jpol;
+                interpFact(ipol, jpol) /= intgFact(ipnt);    
+            }
+        }
+        // std::cout << "STATION in FLUID" << std::endl;
+    }
 }
 
 std::string Receiver::verbose(bool geographic, int wname, int wnet) const {

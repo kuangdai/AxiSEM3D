@@ -180,6 +180,8 @@ public:
     static int sum(const int &value);
     static double sum(const double &value);
     
+    static void min(const std::vector<int> &value, std::vector<int> &minimum);
+    
     // sum std::vector
     static void sumVector(std::vector<double> &value);
     
