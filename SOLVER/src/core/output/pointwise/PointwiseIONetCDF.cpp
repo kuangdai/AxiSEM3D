@@ -142,47 +142,36 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
             // define time
             mNetCDFs[ifile]->defineVariable<double>("time_points", dimsTime);
             // define seismograms
+            int istrain = 0, icurl = 0;
             for (int irec = 0; irec < numRec; irec++) {
                 if (irec / mMaxNumRecPerFile == ifile) {
                     mNetCDFs[ifile]->defineVariable<Real>(mVarNamesDisp[irec], dimsSeis);
                     mNetCDFs[ifile]->addAttribute(mVarNamesDisp[irec], "latitude", mylats[irec]);
                     mNetCDFs[ifile]->addAttribute(mVarNamesDisp[irec], "longitude", mylons[irec]);
                     mNetCDFs[ifile]->addAttribute(mVarNamesDisp[irec], "depth", mydeps[irec]);
-                }
-            }
-            for (int irec = 0; irec < numStrainRec; irec++) {
-                if (irec / mMaxNumRecPerFile == ifile) {
-                    mNetCDFs[ifile]->defineVariable<Real>(mVarNamesStrain[irec], dimsStrain);
-                    mNetCDFs[ifile]->addAttribute(mVarNamesStrain[irec], "latitude", mylats[mStrainIndex[irec]]);
-                    mNetCDFs[ifile]->addAttribute(mVarNamesStrain[irec], "longitude", mylons[mStrainIndex[irec]]);
-                    mNetCDFs[ifile]->addAttribute(mVarNamesStrain[irec], "depth", mydeps[mStrainIndex[irec]]);
-                }
-            }
-            for (int irec = 0; irec < numCurlRec; irec++) {
-                if (irec / mMaxNumRecPerFile == ifile) {
-                    mNetCDFs[ifile]->defineVariable<Real>(mVarNamesCurl[irec], dimsCurl);
-                    mNetCDFs[ifile]->addAttribute(mVarNamesCurl[irec], "latitude", mylats[mCurlIndex[irec]]);
-                    mNetCDFs[ifile]->addAttribute(mVarNamesCurl[irec], "longitude", mylons[mCurlIndex[irec]]);
-                    mNetCDFs[ifile]->addAttribute(mVarNamesCurl[irec], "depth", mydeps[mCurlIndex[irec]]);
+                    if ((*mReceivers)[irec].mDumpStrain) {
+                        mNetCDFs[ifile]->defineVariable<Real>(mVarNamesStrain[istrain++], dimsStrain);
+                    }
+                    if ((*mReceivers)[irec].mDumpCurl) {
+                        mNetCDFs[ifile]->defineVariable<Real>(mVarNamesCurl[icurl++], dimsCurl);
+                    }
                 }
             }
             mNetCDFs[ifile]->defModeOff();
             // fill time with err values
             mNetCDFs[ifile]->fillConstant("time_points", dimsTime, NC_ERR_VALUE);
             // fill seismograms with err values
+            istrain = 0;
+            icurl = 0;
             for (int irec = 0; irec < numRec; irec++) {
                 if (irec / mMaxNumRecPerFile == ifile) {
                     mNetCDFs[ifile]->fillConstant(mVarNamesDisp[irec], dimsSeis, (Real)NC_ERR_VALUE);
-                }
-            }
-            for (int irec = 0; irec < numStrainRec; irec++) {
-                if (irec / mMaxNumRecPerFile == ifile) {
-                    mNetCDFs[ifile]->fillConstant(mVarNamesStrain[irec], dimsStrain, (Real)NC_ERR_VALUE);
-                }
-            }
-            for (int irec = 0; irec < numCurlRec; irec++) {
-                if (irec / mMaxNumRecPerFile == ifile) {
-                    mNetCDFs[ifile]->fillConstant(mVarNamesCurl[irec], dimsCurl, (Real)NC_ERR_VALUE);
+                    if ((*mReceivers)[irec].mDumpStrain) {
+                        mNetCDFs[ifile]->fillConstant(mVarNamesStrain[istrain++], dimsStrain, (Real)NC_ERR_VALUE);
+                    }
+                    if ((*mReceivers)[irec].mDumpCurl) {
+                        mNetCDFs[ifile]->fillConstant(mVarNamesCurl[icurl++], dimsCurl, (Real)NC_ERR_VALUE);
+                    }
                 }
             }
             // source location
@@ -450,23 +439,22 @@ void PointwiseIONetCDF::dumpToFile(const RMatXX_RM &bufferDisp,
     countDisp.push_back(3);
     countStrain.push_back(6);
     countCurl.push_back(3);
+    int istrain = 0, icurl = 0;
     for (int irec = 0; irec < numRec; irec++) {
         int ifile = irec / mMaxNumRecPerFile;
         mNetCDFs[ifile]->writeVariableChunk(mVarNamesDisp[irec], 
             bufferDisp.block(0, irec * 3, bufferLine, 3).eval(), 
             start, countDisp);
-    }
-    for (int irec = 0; irec < numStrainRec; irec++) {
-        int ifile = irec / mMaxNumRecPerFile;
-        mNetCDFs[ifile]->writeVariableChunk(mVarNamesStrain[irec], 
-            bufferStrain.block(0, irec * 6, bufferLine, 6).eval(), 
-            start, countStrain);
-    }
-    for (int irec = 0; irec < numCurlRec; irec++) {
-        int ifile = irec / mMaxNumRecPerFile;
-        mNetCDFs[ifile]->writeVariableChunk(mVarNamesCurl[irec], 
-            bufferCurl.block(0, irec * 3, bufferLine, 3).eval(), 
-            start, countCurl);
+        if ((*mReceivers)[irec].mDumpStrain) {
+            mNetCDFs[ifile]->writeVariableChunk(mVarNamesStrain[istrain++], 
+                bufferStrain.block(0, irec * 6, bufferLine, 6).eval(), 
+                start, countStrain);
+        }
+        if ((*mReceivers)[irec].mDumpCurl) {
+            mNetCDFs[ifile]->writeVariableChunk(mVarNamesCurl[icurl++], 
+                bufferCurl.block(0, irec * 3, bufferLine, 3).eval(), 
+                start, countCurl);
+        }
     }
     #ifndef NDEBUG
         Eigen::internal::set_is_malloc_allowed(false);
