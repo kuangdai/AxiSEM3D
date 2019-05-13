@@ -212,6 +212,7 @@ void Volumetric3D_crust1::initialize(const std::vector<std::string> &params) {
         Parameters::castValue(mIncludeIce, params.at(ipar++), source);
         Parameters::castValue(mGeographic, params.at(ipar++), source);
         Parameters::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
+        Parameters::castValue(mRMoho, params.at(ipar++), source); mRSurf *= 1e3;
     } catch (std::out_of_range) {
         // nothing
     }
