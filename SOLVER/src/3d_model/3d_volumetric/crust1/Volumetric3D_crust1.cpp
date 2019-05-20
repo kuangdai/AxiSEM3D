@@ -225,6 +225,14 @@ void Volumetric3D_crust1::initialize(const std::vector<std::string> &params) {
         }
     }
     
+    // delete element boundaries out of crust
+    for (int i = mElementBoundaries.size() - 1; i >= 0; i--) {
+        if (mElementBoundaries[i] > mRSurf + 1.) {
+            mElementBoundaries.erase(mElementBoundaries.begin(), mElementBoundaries.begin() + i);
+            break;
+        }
+    }
+    
     // check boundaries
     if (mElementBoundaries.size() < 2) {
         throw std::runtime_error("Volumetric3D_crust1::setupExodusModel || No element layer found in crust.");
