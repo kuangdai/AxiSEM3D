@@ -200,9 +200,9 @@ mQuadTag(quadTag) {
         // if (mIsFluid) {
         //     throw std::runtime_error("Quad::Quad || Fluid element on surface. Not implemented.");
         // }
-        if (mOnSFBoundary) {
-            throw std::runtime_error("Quad::Quad || Element on both surface and solid-fluid boundary.");
-        }
+        // if (mOnSFBoundary) {
+        //     throw std::runtime_error("Quad::Quad || Element on both surface and solid-fluid boundary.");
+        // }
     }
     
     // nr field 
