@@ -197,9 +197,9 @@ mQuadTag(quadTag) {
                 throw std::runtime_error("Quad::Quad || Conflict in surface setting.");
             }
         }
-        if (mIsFluid) {
-            throw std::runtime_error("Quad::Quad || Fluid element on surface. Not implemented.");
-        }
+        // if (mIsFluid) {
+        //     throw std::runtime_error("Quad::Quad || Fluid element on surface. Not implemented.");
+        // }
         if (mOnSFBoundary) {
             throw std::runtime_error("Quad::Quad || Element on both surface and solid-fluid boundary.");
         }
