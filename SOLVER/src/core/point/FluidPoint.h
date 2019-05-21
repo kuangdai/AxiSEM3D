@@ -11,7 +11,7 @@ class FluidPoint: public Point {
     friend class SolidFluidPoint;
 
 public:    
-    FluidPoint(int nr, bool axial, const RDCol2 &crds, Mass *mass);
+    FluidPoint(int nr, bool axial, const RDCol2 &crds, Mass *mass, bool fluidSurf);
     ~FluidPoint();
 
     // update in time domain by Newmark
@@ -70,6 +70,8 @@ private:
     
     // mass
     Mass *mMass;
+    
+    bool mFluidSurf = false;
     
     // wisdom
     Real mMaxDisplWisdom = -1.;

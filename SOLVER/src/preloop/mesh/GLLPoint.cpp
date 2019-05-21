@@ -91,7 +91,7 @@ int GLLPoint::release(Domain &domain) const {
             const RDColX &invMass = mMassFluid.array().pow(-1.).matrix(); 
             mass = new Mass3D(invMass.cast<Real>());
         }
-        fluid = new FluidPoint(mNr, mIsAxial, mCoords, mass);
+        fluid = new FluidPoint(mNr, mIsAxial, mCoords, mass, mOnSurface);
     }
     
     // released as different point classes
