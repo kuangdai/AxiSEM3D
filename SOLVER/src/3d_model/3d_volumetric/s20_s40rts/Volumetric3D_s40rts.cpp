@@ -82,6 +82,7 @@ void Volumetric3D_s40rts::initialize(const std::vector<std::string> &params) {
         Parameters::castValue(mScaleRho, params.at(ipar++), source);
         Parameters::castValue(mRCMB, params.at(ipar++), source); mRCMB *= 1e3;
         Parameters::castValue(mRMoho, params.at(ipar++), source); mRMoho *= 1e3;
+        Parameters::castValue(mRSurf, params.at(ipar++), source); mRSurf *= 1e3;
     } catch (std::out_of_range) {
         // nothing
     }
