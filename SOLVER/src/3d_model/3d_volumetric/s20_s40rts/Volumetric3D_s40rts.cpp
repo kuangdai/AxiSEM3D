@@ -86,7 +86,7 @@ void Volumetric3D_s40rts::initialize(const std::vector<std::string> &params) {
     } catch (std::out_of_range) {
         // nothing
     }
-    mRSurf = Geodesy::getROuter();
+    // mRSurf = Geodesy::getROuter();
     initialize();
 }
 
