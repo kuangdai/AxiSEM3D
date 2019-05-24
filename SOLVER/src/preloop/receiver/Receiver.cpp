@@ -53,9 +53,14 @@ void Receiver::release(PointwiseRecorder &recorderPW, const Domain &domain,
         mLat, mLon, mDepth, mDumpStrain, mDumpCurl);
 }
 
-bool Receiver::locate(const Mesh &mesh, int &elemTag, int &quadTag) const {
+bool Receiver::locate(const Mesh &mesh, int &elemTag, int &quadTag, bool depthInRef) const {
     RDCol2 recCrds, srcXiEta;
-    double r = mesh.computeRadiusRef(mDepth, mLat, mLon);
+    double r = 0.;
+    if (depthInRef) {
+        r = mesh.computeRadiusRef(mDepth, mLat, mLon);
+    } else {
+        r = Geodesy::getROuter() - mDepth;
+    }
     recCrds(0) = r * sin(mTheta);
     recCrds(1) = r * cos(mTheta);
     if (recCrds(0) > mesh.sMax() + tinySingle || recCrds(0) < mesh.sMin() - tinySingle) {
@@ -80,9 +85,14 @@ bool Receiver::locate(const Mesh &mesh, int &elemTag, int &quadTag) const {
     return false;
 }
 
-void Receiver::computeInterpFact(const Mesh &mesh, int quadTag, RDMatPP &interpFact) const {
+void Receiver::computeInterpFact(const Mesh &mesh, int quadTag, RDMatPP &interpFact, bool depthInRef) const {
     RDCol2 recCrds, srcXiEta;
-    double r = mesh.computeRadiusRef(mDepth, mLat, mLon);
+    double r = 0.;
+    if (depthInRef) {
+        r = mesh.computeRadiusRef(mDepth, mLat, mLon);
+    } else {
+        r = Geodesy::getROuter() - mDepth;
+    }
     recCrds(0) = r * sin(mTheta);
     recCrds(1) = r * cos(mTheta);
     const Quad *quad = mesh.getQuad(quadTag);

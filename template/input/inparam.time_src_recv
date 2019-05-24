@@ -126,3 +126,8 @@ OUT_STATIONS_DUMP_INTERVAL                  1000
 #         still apply to this option.
 OUT_STATIONS_WHOLE_SURFACE                  false
 
+# WHAT: buried depth measured in reference spherical model
+# TYPE: bool
+# NOTE: false -- buried depth measured in physical undulated model
+#       true  -- buried depth measured in reference spherical model
+OUT_STATIONS_DEPTH_REF                      false

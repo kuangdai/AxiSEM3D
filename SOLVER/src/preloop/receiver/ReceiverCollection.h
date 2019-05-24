@@ -20,7 +20,7 @@ public:
         bool saveSurf);
     ~ReceiverCollection();
     
-    void release(Domain &domain, const Mesh &mesh); 
+    void release(Domain &domain, const Mesh &mesh, bool depthInRef); 
     
     std::string verbose() const;
     

@@ -124,7 +124,7 @@ ReceiverCollection::~ReceiverCollection() {
     }
 }
 
-void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
+void ReceiverCollection::release(Domain &domain, const Mesh &mesh, bool depthInRef) {
     // locate receivers
     MultilevelTimer::begin("Locate Receivers", 2);
     std::vector<int> recRank(mReceivers.size(), XMPI::nproc());
@@ -132,7 +132,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
     std::vector<int> recQTag(mReceivers.size(), -1);
     // std::vector<RDMatPP> recInterpFact(mReceivers.size(), RDMatPP::Zero());
     for (int irec = 0; irec < mReceivers.size(); irec++) {
-        bool found = mReceivers[irec]->locate(mesh, recETag[irec], recQTag[irec]);
+        bool found = mReceivers[irec]->locate(mesh, recETag[irec], recQTag[irec], depthInRef);
         if (found) {
             recRank[irec] = XMPI::rank();
         }
@@ -160,7 +160,7 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh) {
         }
         if (recRankMin == XMPI::rank()) {
             RDMatPP interpFact;
-            mReceivers[irec]->computeInterpFact(mesh, recQTag[irec], interpFact);
+            mReceivers[irec]->computeInterpFact(mesh, recQTag[irec], interpFact, depthInRef);
             mReceivers[irec]->release(*recorderPW, 
                 domain, recETag[irec], interpFact);
         }
