@@ -33,6 +33,8 @@ struct SolidResponse {
 };
 
 class SolidElement : public Element {
+    friend class FluidElement;
+    
 public:
     
     SolidElement(Gradient *grad, PRT *prt, const std::array<Point *, nPntElem> &points, 
