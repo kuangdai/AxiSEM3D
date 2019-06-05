@@ -155,6 +155,13 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
                     if ((*mReceivers)[irec].mDumpCurl) {
                         mNetCDFs[ifile]->defineVariable<Real>(mVarNamesCurl[icurl++], dimsCurl);
                     }
+                } else {
+                    if ((*mReceivers)[irec].mDumpStrain) {
+                        istrain++;
+                    }
+                    if ((*mReceivers)[irec].mDumpCurl) {
+                        icurl++;
+                    }
                 }
             }
             mNetCDFs[ifile]->defModeOff();
