@@ -179,6 +179,13 @@ void PointwiseIONetCDF::initialize(int totalRecordSteps, int bufferSize,
                     if ((*mReceivers)[irec].mDumpCurl) {
                         mNetCDFs[ifile]->fillConstant(mVarNamesCurl[icurl++], dimsCurl, (Real)NC_ERR_VALUE);
                     }
+                } else {
+                    if ((*mReceivers)[irec].mDumpStrain) {
+                        istrain++;
+                    }
+                    if ((*mReceivers)[irec].mDumpCurl) {
+                        icurl++;
+                    }
                 }
             }
             // source location
