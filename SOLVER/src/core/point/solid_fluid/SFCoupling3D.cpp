@@ -9,47 +9,49 @@
 void SFCoupling3D::coupleFluidToSolid(const CColX &fluidStiff, CMatX3 &solidStiff) const {
     // constants
     int Nr = mNormal_assembled_invMassFluid.rows();
-
+    int Nc = Nr / 2 + 1;
+    
     // copy
-    CColX &stiffFluidC = SolverFFTW_1::getC2R_CMat(Nr);
-    stiffFluidC = fluidStiff;
+    CColX &stiffFluidC = SolverFFTW_1::getC2R_CMat();
+    stiffFluidC.topRows(Nc) = fluidStiff;
     
     // FFT forward    
     SolverFFTW_1::computeC2R(Nr);
-    RColX &stiffFluidR = SolverFFTW_1::getC2R_RMat(Nr);
-    RMatX3 &stiffSolidR = SolverFFTW_3::getR2C_RMat(Nr);
+    RColX &stiffFluidR = SolverFFTW_1::getC2R_RMat();
+    RMatX3 &stiffSolidR = SolverFFTW_3::getR2C_RMat();
     
     // fluid => solid
-    stiffSolidR.col(0) = mNormal_assembled_invMassFluid.col(0).schur(stiffFluidR);
-    stiffSolidR.col(1) = mNormal_assembled_invMassFluid.col(1).schur(stiffFluidR);
-    stiffSolidR.col(2) = mNormal_assembled_invMassFluid.col(2).schur(stiffFluidR);
+    stiffSolidR.block(0, 0, Nr, 1) = mNormal_assembled_invMassFluid.col(0).schur(stiffFluidR.topRows(Nr));
+    stiffSolidR.block(0, 1, Nr, 1) = mNormal_assembled_invMassFluid.col(1).schur(stiffFluidR.topRows(Nr));
+    stiffSolidR.block(0, 2, Nr, 1) = mNormal_assembled_invMassFluid.col(2).schur(stiffFluidR.topRows(Nr));
     
     // FFT backward
     SolverFFTW_3::computeR2C(Nr);
-    solidStiff -= SolverFFTW_3::getR2C_CMat(Nr);
+    solidStiff -= SolverFFTW_3::getR2C_CMat().topRows(Nc);
 }
 
 void SFCoupling3D::coupleSolidToFluid(const CMatX3 &solidDispl, CColX &fluidStiff) const {
     // constants
     int Nr = mNormal_unassembled.rows();
+    int Nc = Nr / 2 + 1;
 
     // copy
-    CMatX3 &displSolidC = SolverFFTW_3::getC2R_CMat(Nr);
-    displSolidC = solidDispl;
+    CMatX3 &displSolidC = SolverFFTW_3::getC2R_CMat();
+    displSolidC.topRows(Nc) = solidDispl;
     
     // FFT forward    
     SolverFFTW_3::computeC2R(Nr);
-    RMatX3 &displSolidR = SolverFFTW_3::getC2R_RMat(Nr);
-    RColX &stiffFluidR = SolverFFTW_1::getR2C_RMat(Nr);
+    RMatX3 &displSolidR = SolverFFTW_3::getC2R_RMat();
+    RColX &stiffFluidR = SolverFFTW_1::getR2C_RMat();
     
     // solid => fluid
-    stiffFluidR = mNormal_unassembled.col(0).schur(displSolidR.col(0))
-                + mNormal_unassembled.col(1).schur(displSolidR.col(1))
-                + mNormal_unassembled.col(2).schur(displSolidR.col(2));
+    stiffFluidR.topRows(Nr) = mNormal_unassembled.col(0).schur(displSolidR.block(0, 0, Nr, 1))
+                            + mNormal_unassembled.col(1).schur(displSolidR.block(0, 1, Nr, 1))
+                            + mNormal_unassembled.col(2).schur(displSolidR.block(0, 2, Nr, 1));
     
     // FFT backward
     SolverFFTW_1::computeR2C(Nr);
-    fluidStiff += SolverFFTW_1::getR2C_CMat(Nr);
+    fluidStiff += SolverFFTW_1::getR2C_CMat().topRows(Nc);
 }
 
 

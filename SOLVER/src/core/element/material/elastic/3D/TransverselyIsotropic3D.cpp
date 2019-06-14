@@ -10,8 +10,8 @@
 void TransverselyIsotropic3D::strainToStress(SolidResponse &response) const {
     int Nr = response.mNr;
     // to avoid dynamic allocation, use stressTIsoR.block(0, 3&4 * nPE, Nr, nPE) as temp memory
-    const RMatXN6 &strainTIsoR = SolverFFTW_N6::getC2R_RMat(Nr);
-    RMatXN6 &stressTIsoR = SolverFFTW_N6::getR2C_RMat(Nr);
+    const RMatXN6 &strainTIsoR = SolverFFTW_N6::getC2R_RMat();
+    RMatXN6 &stressTIsoR = SolverFFTW_N6::getR2C_RMat();
     stressTIsoR.block(0, 3 * nPE, Nr, nPE) = strainTIsoR.block(0, 0 * nPE, Nr, nPE) + strainTIsoR.block(0, 1 * nPE, Nr, nPE);
     stressTIsoR.block(0, 4 * nPE, Nr, nPE) = mA.schur(stressTIsoR.block(0, 3 * nPE, Nr, nPE)) + mF.schur(strainTIsoR.block(0, 2 * nPE, Nr, nPE));
     

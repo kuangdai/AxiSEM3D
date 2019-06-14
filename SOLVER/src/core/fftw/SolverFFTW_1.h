@@ -14,10 +14,10 @@ public:
     static void finalize();
     
     // get input and output
-    static RColX &getR2C_RMat(int nr) {return sR2C_RMats[nr - 1];};
-    static CColX &getR2C_CMat(int nr) {return sR2C_CMats[nr - 1];};
-    static RColX &getC2R_RMat(int nr) {return sC2R_RMats[nr - 1];};    
-    static CColX &getC2R_CMat(int nr) {return sC2R_CMats[nr - 1];};
+    static RColX &getR2C_RMat() {return sR2C_RMat;};
+    static CColX &getR2C_CMat() {return sR2C_CMat;};
+    static RColX &getC2R_RMat() {return sC2R_RMat;};    
+    static CColX &getC2R_CMat() {return sC2R_CMat;};
      
     // forward, real => complex
     static void computeR2C(int nr);
@@ -25,12 +25,11 @@ public:
     static void computeC2R(int nr);
         
 private:
-    
     static int sNmax;
     static std::vector<PlanFFTW> sR2CPlans;
     static std::vector<PlanFFTW> sC2RPlans;
-    static std::vector<RColX> sR2C_RMats;
-    static std::vector<CColX> sR2C_CMats;
-    static std::vector<RColX> sC2R_RMats;
-    static std::vector<CColX> sC2R_CMats;
+    static RColX sR2C_RMat;
+    static CColX sR2C_CMat;
+    static RColX sC2R_RMat;
+    static CColX sC2R_CMat;
 };

@@ -236,7 +236,8 @@ void SolidElement::computeStrain(Real phi, const RMatPP &weights, RRow6 &strain)
             // OUT: SolverFFTW_N9::getC2R_RMat
             mPRT->sphericalToUndulated(sResponse);
             // OUT: SolverFFTW_N6::getC2R_RMat
-            SolverFFTW_N6::getR2C_RMat(sResponse.mNr) = SolverFFTW_N6::getC2R_RMat(sResponse.mNr);
+            SolverFFTW_N6::getR2C_RMat().topRows(sResponse.mNr) = 
+            SolverFFTW_N6::getC2R_RMat().topRows(sResponse.mNr);
             // OUT: SolverFFTW_N6::getR2C_RMat
             FieldFFT::transformP2F(sResponse.mStrain6, sResponse.mNr);
         } else {
@@ -298,7 +299,8 @@ void SolidElement::computeCurl(Real phi, const RMatPP &weights, RRow3 &curl) con
             // OUT: SolverFFTW_N9::getC2R_RMat
             mPRT->sphericalToUndulated9(sResponse);
             // OUT: SolverFFTW_N9::getC2R_RMat
-            SolverFFTW_N9::getR2C_RMat(sResponse.mNr) = SolverFFTW_N9::getC2R_RMat(sResponse.mNr);
+            SolverFFTW_N9::getR2C_RMat().topRows(sResponse.mNr) = 
+            SolverFFTW_N9::getC2R_RMat().topRows(sResponse.mNr);
             // OUT: SolverFFTW_N9::getR2C_RMat
             FieldFFT::transformP2F(sResponse.mStrain9, sResponse.mNr);
         } else {

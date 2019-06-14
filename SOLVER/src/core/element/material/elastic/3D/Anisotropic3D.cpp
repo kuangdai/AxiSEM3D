@@ -9,8 +9,8 @@
 
 void Anisotropic3D::strainToStress(SolidResponse &response) const {
     int Nr = response.mNr;
-    const RMatXN6 &strainTIsoR = SolverFFTW_N6::getC2R_RMat(Nr);
-    RMatXN6 &stressTIsoR = SolverFFTW_N6::getR2C_RMat(Nr);
+    const RMatXN6 &strainTIsoR = SolverFFTW_N6::getC2R_RMat();
+    RMatXN6 &stressTIsoR = SolverFFTW_N6::getR2C_RMat();
     stressTIsoR.block(0, 0 * nPE, Nr, nPE) = mC11.schur(strainTIsoR.block(0, 0 * nPE, Nr, nPE))
                                            + mC12.schur(strainTIsoR.block(0, 1 * nPE, Nr, nPE))
                                            + mC13.schur(strainTIsoR.block(0, 2 * nPE, Nr, nPE))

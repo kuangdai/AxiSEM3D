@@ -8,8 +8,8 @@
 
 void Acoustic3D::strainToStress(FluidResponse &response) const {
     int Nr = response.mNr;
-    const RMatXN3 &strain = SolverFFTW_N3::getC2R_RMat(Nr);
-    RMatXN3 &stress = SolverFFTW_N3::getR2C_RMat(Nr);
+    const RMatXN3 &strain = SolverFFTW_N3::getC2R_RMat();
+    RMatXN3 &stress = SolverFFTW_N3::getR2C_RMat();
     stress.block(0, 0 * nPE, Nr, nPE) = mKFlat.schur(strain.block(0, 0 * nPE, Nr, nPE));
     stress.block(0, 1 * nPE, Nr, nPE) = mKFlat.schur(strain.block(0, 1 * nPE, Nr, nPE)); 
     stress.block(0, 2 * nPE, Nr, nPE) = mKFlat.schur(strain.block(0, 2 * nPE, Nr, nPE));

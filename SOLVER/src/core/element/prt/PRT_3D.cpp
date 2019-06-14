@@ -20,7 +20,7 @@ PRT_3D::PRT_3D(const RMatXN4 &X) {
 
 void PRT_3D::sphericalToUndulated(FluidResponse &response) const {
     int Nr = response.mNr;
-    RMatXN3 &strain = SolverFFTW_N3::getC2R_RMat(Nr);
+    RMatXN3 &strain = SolverFFTW_N3::getC2R_RMat();
     strain.block(0, 0 * nPE, Nr, nPE) = mXFlat0.schur(strain.block(0, 0 * nPE, Nr, nPE)) 
                                       + mXFlat1.schur(strain.block(0, 2 * nPE, Nr, nPE));
     strain.block(0, 1 * nPE, Nr, nPE) = mXFlat0.schur(strain.block(0, 1 * nPE, Nr, nPE)) 
@@ -30,7 +30,7 @@ void PRT_3D::sphericalToUndulated(FluidResponse &response) const {
 
 void PRT_3D::undulatedToSpherical(FluidResponse &response) const {
     int Nr = response.mNr;
-    RMatXN3 &stress = SolverFFTW_N3::getR2C_RMat(Nr);
+    RMatXN3 &stress = SolverFFTW_N3::getR2C_RMat();
     stress.block(0, 2 * nPE, Nr, nPE) = mXFlat1.schur(stress.block(0, 0 * nPE, Nr, nPE))
                                       + mXFlat2.schur(stress.block(0, 1 * nPE, Nr, nPE))
                                       + mXFlat3.schur(stress.block(0, 2 * nPE, Nr, nPE));
@@ -40,8 +40,8 @@ void PRT_3D::undulatedToSpherical(FluidResponse &response) const {
 
 void PRT_3D::sphericalToUndulated(SolidResponse &response) const {
     int Nr = response.mNr;
-    const RMatXN9 &sph = SolverFFTW_N9::getC2R_RMat(Nr);
-    RMatXN6 &und = SolverFFTW_N6::getC2R_RMat(Nr);
+    const RMatXN9 &sph = SolverFFTW_N9::getC2R_RMat();
+    RMatXN6 &und = SolverFFTW_N6::getC2R_RMat();
     und.block(0, nPE * 0, Nr, nPE) = mXFlat0.schur(sph.block(0, nPE * 0, Nr, nPE))
                                    + mXFlat1.schur(sph.block(0, nPE * 2, Nr, nPE));
     und.block(0, nPE * 1, Nr, nPE) = mXFlat0.schur(sph.block(0, nPE * 4, Nr, nPE))
@@ -61,8 +61,8 @@ void PRT_3D::sphericalToUndulated(SolidResponse &response) const {
 
 void PRT_3D::undulatedToSpherical(SolidResponse &response) const{
     int Nr = response.mNr;
-    const RMatXN6 &und = SolverFFTW_N6::getR2C_RMat(Nr);
-    RMatXN9 &sph = SolverFFTW_N9::getR2C_RMat(Nr);
+    const RMatXN6 &und = SolverFFTW_N6::getR2C_RMat();
+    RMatXN9 &sph = SolverFFTW_N9::getR2C_RMat();
     sph.block(0, nPE * 0, Nr, nPE) = mXFlat0.schur(und.block(0, nPE * 0, Nr, nPE));
     sph.block(0, nPE * 1, Nr, nPE) = mXFlat0.schur(und.block(0, nPE * 5, Nr, nPE));
     sph.block(0, nPE * 2, Nr, nPE) = mXFlat1.schur(und.block(0, nPE * 0, Nr, nPE)) 
@@ -82,8 +82,8 @@ void PRT_3D::undulatedToSpherical(SolidResponse &response) const{
 
 void PRT_3D::sphericalToUndulated9(SolidResponse &response) const {
     int Nr = response.mNr;
-    RMatXN9 &sph = SolverFFTW_N9::getC2R_RMat(Nr);
-    RMatXN9 &und = SolverFFTW_N9::getR2C_RMat(Nr);
+    RMatXN9 &sph = SolverFFTW_N9::getC2R_RMat();
+    RMatXN9 &und = SolverFFTW_N9::getR2C_RMat();
     und.block(0, nPE * 0, Nr, nPE) = mXFlat0.schur(sph.block(0, nPE * 0, Nr, nPE))
                                    + mXFlat1.schur(sph.block(0, nPE * 2, Nr, nPE));
     und.block(0, nPE * 1, Nr, nPE) = mXFlat0.schur(sph.block(0, nPE * 3, Nr, nPE))

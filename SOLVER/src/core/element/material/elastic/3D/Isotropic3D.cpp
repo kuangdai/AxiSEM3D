@@ -10,8 +10,8 @@
 void Isotropic3D::strainToStress(SolidResponse &response) const {
     int Nr = response.mNr;
     // to avoid dynamic allocation, use stressR.block(0, 3 * nPE, Nr, nPE) to store Sii
-    const RMatXN6 &strainR = SolverFFTW_N6::getC2R_RMat(Nr);
-    RMatXN6 &stressR = SolverFFTW_N6::getR2C_RMat(Nr);
+    const RMatXN6 &strainR = SolverFFTW_N6::getC2R_RMat();
+    RMatXN6 &stressR = SolverFFTW_N6::getR2C_RMat();
     stressR.block(0, 3 * nPE, Nr, nPE) = mLambda.schur(strainR.block(0, 0 * nPE, Nr, nPE) 
                                                      + strainR.block(0, 1 * nPE, Nr, nPE) 
                                                      + strainR.block(0, 2 * nPE, Nr, nPE));
