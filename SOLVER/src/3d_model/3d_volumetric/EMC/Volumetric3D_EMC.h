@@ -37,6 +37,9 @@ private:
     // one-file-per-depth format
     bool mOneFilePerDepth = false;
     
+    // consider vertical disc or not
+    bool mVerticalDiscontinuities = true;
+    
     // data
     std::vector<RDMatXX> mGridData;
     RDColX mGridDep;

@@ -236,6 +236,7 @@ void Volumetric3D_EMC::initialize(const std::vector<std::string> &params) {
         Parameters::castValue(mFactor, params.at(ipar++), source);
         Parameters::castValue(mGeographic, params.at(ipar++), source);
         Parameters::castValue(mOneFilePerDepth, params.at(ipar++), source);
+        Parameters::castValue(mVerticalDiscontinuities, params.at(ipar++), source);
         Parameters::castValue(mModelFlag, params.at(ipar++), source);
         Parameters::castValue(mModelFlagFactor, params.at(ipar++), source);
     } catch (std::out_of_range) {
@@ -301,10 +302,14 @@ bool Volumetric3D_EMC::get3dProperties(double r, double theta, double phi, doubl
     // interpolation
     int ldep0, llat0, llon0, ldep1, llat1, llon1;
     double wdep0, wlat0, wlon0, wdep1, wlat1, wlon1;
-    // use element center depth to locate layer
-    XMath::interpLinear(dcenter, mGridDep, ldep0, wdep0);
-    // use point depth to determine value
-    wdep0 = 1. - 1. / (mGridDep(ldep0 + 1) - mGridDep(ldep0)) * (dep - mGridDep(ldep0));
+    if (mVerticalDiscontinuities) {
+        // use element center depth to locate layer
+        XMath::interpLinear(dcenter, mGridDep, ldep0, wdep0);
+        // use point depth to determine value
+        wdep0 = 1. - 1. / (mGridDep(ldep0 + 1) - mGridDep(ldep0)) * (dep - mGridDep(ldep0));
+    } else {
+        XMath::interpLinear(dep, mGridDep, ldep0, wdep0);
+    }
     XMath::interpLinear(lat, mGridLat, llat0, wlat0);
     XMath::interpLinear(lon, mGridLon, llon0, wlon0);    
     if (ldep0 < 0 || llat0 < 0 || llon0 < 0) {
