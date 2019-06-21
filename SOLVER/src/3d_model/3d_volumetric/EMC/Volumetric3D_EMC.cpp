@@ -305,6 +305,9 @@ bool Volumetric3D_EMC::get3dProperties(double r, double theta, double phi, doubl
     if (mVerticalDiscontinuities) {
         // use element center depth to locate layer
         XMath::interpLinear(dcenter, mGridDep, ldep0, wdep0);
+        if (ldep0 < 0) {
+            return false;
+        }
         // use point depth to determine value
         wdep0 = 1. - 1. / (mGridDep(ldep0 + 1) - mGridDep(ldep0)) * (dep - mGridDep(ldep0));
     } else {
