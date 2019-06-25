@@ -14,8 +14,9 @@ mDKappa3(three * dkappa), mDMu(dmu), mDMu2(two * dmu), mDoKappa(doKappa) {
 }
 
 void Attenuation3D_Full::applyToStress(RMatXN6 &stress) const {
+    int n = mStressR.rows();
     for (int isls = 0; isls < mNSLS; isls++) {
-        stress -= mMemVar[isls];
+        stress.topRows(n) -= mMemVar[isls];
     } 
 }
 

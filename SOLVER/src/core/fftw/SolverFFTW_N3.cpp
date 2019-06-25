@@ -27,10 +27,10 @@ void SolverFFTW_N3::initialize(int Nmax) {
         int n[] = {NR};
         Real *r2c_r = &(sR2C_RMat(0, 0));
         Complex *r2c_c = &(sR2C_CMat(0, 0));
-        sR2CPlans.push_back(planR2CFFTW(1, n, xx, r2c_r, n, 1, NR, complexFFTW(r2c_c), n, 1, NC, SolverFFTW::mWisdomLearnOption));   
+        sR2CPlans.push_back(planR2CFFTW(1, n, xx, r2c_r, n, 1, Nmax, complexFFTW(r2c_c), n, 1, Nmax / 2 + 1, SolverFFTW::mWisdomLearnOption));   
         Real *c2r_r = &(sC2R_RMat(0, 0));
         Complex *c2r_c = &(sC2R_CMat(0, 0));
-        sC2RPlans.push_back(planC2RFFTW(1, n, xx, complexFFTW(c2r_c), n, 1, NC, c2r_r, n, 1, NR, SolverFFTW::mWisdomLearnOption)); 
+        sC2RPlans.push_back(planC2RFFTW(1, n, xx, complexFFTW(c2r_c), n, 1, Nmax / 2 + 1, c2r_r, n, 1, Nmax, SolverFFTW::mWisdomLearnOption)); 
     }
 }
 

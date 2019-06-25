@@ -14,12 +14,13 @@ mDKappa3(three * dkappa), mDMu(dmu), mDMu2(two * dmu), mDoKappa(doKappa) {
 }
 
 void Attenuation3D_CG4::applyToStress(RMatXN6 &stress) const {
+    int n = mStressR.rows();
     for (int isls = 0; isls < mNSLS; isls++) {
         for (int i = 0; i < 6; i++) {
-            stress.col(nPE * i + nPntEdge * 1 + 1) -= mMemVar[isls].col(nCG * i + 0);
-            stress.col(nPE * i + nPntEdge * 1 + 3) -= mMemVar[isls].col(nCG * i + 1);
-            stress.col(nPE * i + nPntEdge * 3 + 1) -= mMemVar[isls].col(nCG * i + 2);
-            stress.col(nPE * i + nPntEdge * 3 + 3) -= mMemVar[isls].col(nCG * i + 3);
+            stress.block(0, nPE * i + nPntEdge * 1 + 1, n, 1) -= mMemVar[isls].col(nCG * i + 0);
+            stress.block(0, nPE * i + nPntEdge * 1 + 3, n, 1) -= mMemVar[isls].col(nCG * i + 1);
+            stress.block(0, nPE * i + nPntEdge * 3 + 1, n, 1) -= mMemVar[isls].col(nCG * i + 2);
+            stress.block(0, nPE * i + nPntEdge * 3 + 3, n, 1) -= mMemVar[isls].col(nCG * i + 3);
         }
     }
 }
@@ -31,10 +32,10 @@ void Attenuation3D_CG4::updateMemoryVariables(const RMatXN6 &strain) {
     
     int n = mStressR.rows();
     for (int i = 0; i < 6; i++) {
-        mStrain4.col(nCG * i + 0) = strain.col(nPE * i + nPntEdge * 1 + 1);
-        mStrain4.col(nCG * i + 1) = strain.col(nPE * i + nPntEdge * 1 + 3);
-        mStrain4.col(nCG * i + 2) = strain.col(nPE * i + nPntEdge * 3 + 1);
-        mStrain4.col(nCG * i + 3) = strain.col(nPE * i + nPntEdge * 3 + 3);
+        mStrain4.col(nCG * i + 0) = strain.block(0, nPE * i + nPntEdge * 1 + 1, n, 1);
+        mStrain4.col(nCG * i + 1) = strain.block(0, nPE * i + nPntEdge * 1 + 3, n, 1);
+        mStrain4.col(nCG * i + 2) = strain.block(0, nPE * i + nPntEdge * 3 + 1, n, 1);
+        mStrain4.col(nCG * i + 3) = strain.block(0, nPE * i + nPntEdge * 3 + 3, n, 1);
     }
     
     // to avoid dynamic allocation, use mStressR.block(0, nCG * 3, n, nCG) to store Eii / 3    
