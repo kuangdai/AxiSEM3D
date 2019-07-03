@@ -10,6 +10,8 @@ public:
     NullSource(): Source() {};
     std::string verbose() const;
     
+    void release(Domain &domain, const Mesh &mesh) const {return;};
+    
 protected:    
     void computeSourceFourier(const Quad &myQuad, const RDColP &interpFactZ,
         arPP_CMatX3 &fouriers) const;
