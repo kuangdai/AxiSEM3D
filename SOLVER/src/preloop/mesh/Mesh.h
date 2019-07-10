@@ -69,6 +69,10 @@ public:
     // get max. Nr to initialize solver
     int getMaxNr() const;
     
+    const ExodusModel *getExodusModel() const {
+        return mExModel;
+    };
+    
 private:
     
     // build local

@@ -743,3 +743,30 @@ bool Quad::nearMe(double s, double z) const {
     return true;
 }
 
+#include <iostream>
+int Quad::edgeAtRadius(double radius, double distTol, bool upper) const {
+    double r0 = mNodalCoords.col(0).norm();
+    double r1 = mNodalCoords.col(1).norm();
+    double r2 = mNodalCoords.col(2).norm();
+    double r3 = mNodalCoords.col(3).norm();
+    double rc = (r0 + r1 + r2 + r3) / 4;
+    if (upper != (rc > radius)) {
+        return -1;
+    }
+    
+    if (std::abs(r0 - radius) < distTol && std::abs(r1 - radius) < distTol) {
+        return 0;
+    }
+    if (std::abs(r1 - radius) < distTol && std::abs(r2 - radius) < distTol) {
+        return 1;
+    }
+    if (std::abs(r2 - radius) < distTol && std::abs(r3 - radius) < distTol) {
+        return 2;
+    }
+    if (std::abs(r3 - radius) < distTol && std::abs(r0 - radius) < distTol) {
+        return 3;
+    }
+    return -1;
+}
+
+

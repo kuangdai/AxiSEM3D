@@ -100,6 +100,8 @@ public:
     // get spatial range
     void getSpatialRange(double &s_max, double &s_min, double &z_max, double &z_min) const;
     bool nearMe(double s, double z) const;
+    
+    int edgeAtRadius(double radius, double distTol, bool upper) const;
         
 protected:
         

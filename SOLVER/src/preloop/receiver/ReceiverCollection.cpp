@@ -20,10 +20,15 @@
 #include "Mesh.h"
 #include "Quad.h"
 
+#include "ExodusModel.h"
+#include "Geodesy.h"
+
 ReceiverCollection::ReceiverCollection(const std::string &fileRec, bool geographic, 
-    double srcLat, double srcLon, double srcDep, int duplicated, bool saveSurf):
-mInputFile(fileRec), mGeographic(geographic), mSaveWholeSurface(saveSurf),
-mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep) {
+    double srcLat, double srcLon, double srcDep, int duplicated, 
+    double saveSurfRadius, bool saveSurfUpper):
+mInputFile(fileRec), mGeographic(geographic), 
+mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep),
+mSaveSurfaceAtRadius(saveSurfRadius), mSaveSurfaceFromUpper(saveSurfUpper) {
     std::vector<std::string> name, network;
     std::vector<double> theta, phi, depth;
     std::vector<int> dumpStrain;
@@ -176,18 +181,26 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh, bool depthInR
     domain.setPointwiseRecorder(recorderPW);
     
     // whole surface
-    if (mSaveWholeSurface) {
+    if (mSaveSurfaceAtRadius > 0.) {
         MultilevelTimer::begin("Whole Surface", 3);
         SurfaceRecorder *recorderSF = new SurfaceRecorder(mTotalRecordSteps, 
             mRecordInterval, mBufferSize, 
             mSrcLat, mSrcLon, mSrcDep, mAssemble);
+        int nEdge  = 0;
         for (int iloc = 0; iloc < mesh.getNumQuads(); iloc++) {
             const Quad *quad = mesh.getQuad(iloc);
-            if (quad->onSurface()) {
+            if (quad->isFluid()) {
+                continue;
+            }
+            int edge = quad->edgeAtRadius(mSaveSurfaceAtRadius, 
+                mesh.getExodusModel()->getDistTolerance(), mSaveSurfaceFromUpper);
+            if (edge >= 0) {
                 Element *ele = domain.getElement(quad->getElementTag());
-                recorderSF->addElement(ele, quad->getSurfSide());
+                recorderSF->addElement(ele, edge);
+                nEdge++;
             }
         }
+        std::cout <<"Number of edges for surface output: "<<nEdge<<std::endl;
         domain.setSurfaceRecorder(recorderSF);
         MultilevelTimer::end("Whole Surface", 3);
     }
@@ -207,8 +220,10 @@ std::string ReceiverCollection::verbose() const {
         ss << "    " << std::setw(mWidthName) << "..." << std::endl;
         ss << "    " << mReceivers[mReceivers.size() - 1]->verbose(mGeographic, mWidthName, mWidthNetwork) << std::endl;
     }
-    if (mSaveWholeSurface) {
+    if (mSaveSurfaceAtRadius > 0.) {
         ss << "  * Wavefield on the whole surface will be saved." << std::endl;
+        ss << "  * Radius / m = " << mSaveSurfaceAtRadius << std::endl;
+        ss << "  * From Upper = " << (mSaveSurfaceFromUpper ? "YES" : "NO") << std::endl;
     }
     ss << "========================= Receivers ========================\n" << std::endl;
     return ss.str();
@@ -244,9 +259,28 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
         throw std::runtime_error("ReceiverCollection::buildInparam || "
             "Invalid parameter, keyword = OUT_STATIONS_DUPLICATED.");
     }
-    bool saveSurf = par.getValue<bool>("OUT_STATIONS_WHOLE_SURFACE");
-    rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep, 
-        duplicated, saveSurf); 
+    
+    bool saveSurf = par.getValue<bool>("OUT_STATIONS_WHOLE_SURFACE", 0);
+    if (saveSurf) {
+        int size = par.getSize("OUT_STATIONS_WHOLE_SURFACE");
+        double r = 0;
+        bool upper = false;
+        if (size == 1) {
+            r = Geodesy::getROuter();
+            upper = false;
+        } else if (size == 2) {
+            r = par.getValue<double>("OUT_STATIONS_WHOLE_SURFACE", 1);
+            upper = false;
+        } else {
+            r = par.getValue<double>("OUT_STATIONS_WHOLE_SURFACE", 1);
+            upper = par.getValue<bool>("OUT_STATIONS_WHOLE_SURFACE", 2);
+        }
+        rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep, 
+            duplicated, r, upper); 
+    } else {
+        rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep, 
+            duplicated, -1, false); 
+    }
     
     // options 
     rec->mRecordInterval = par.getValue<int>("OUT_STATIONS_RECORD_INTERVAL");
