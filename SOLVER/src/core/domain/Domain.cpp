@@ -348,13 +348,12 @@ std::string Domain::verbose() const {
 
 std::string Domain::reportCost() const {
     #ifdef _MEASURE_TIMELOOP
-        const double sec2h = 1. / 3600.;
         std::stringstream ss;
-        double costE = mTimerElemts->elapsed() * sec2h;
-        double costP = mTimerPoints->elapsed() * sec2h;
-        double costA = mTimerAssemb->elapsed() * sec2h;
-        double costW = mTimerAsWait->elapsed() * sec2h;
-        double costO = mTimerOthers->elapsed() * sec2h;
+        double costE = mTimerElemts->elapsed();
+        double costP = mTimerPoints->elapsed();
+        double costA = mTimerAssemb->elapsed();
+        double costW = mTimerAsWait->elapsed();
+        double costO = mTimerOthers->elapsed();
         double costT = costE + costP + costA + costO;
         ss.precision(4);
         ss << std::setw(10) << std::left << XMPI::rank() << "   ";
