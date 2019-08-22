@@ -25,10 +25,13 @@
 
 ReceiverCollection::ReceiverCollection(const std::string &fileRec, bool geographic, 
     double srcLat, double srcLon, double srcDep, int duplicated, 
-    double saveSurfRadius, bool saveSurfUpper):
+    double saveSurfRadius, double saveSurfDistMin, double saveSurfDistMax, 
+    bool saveSurfUpper):
 mInputFile(fileRec), mGeographic(geographic), 
 mSrcLat(srcLat), mSrcLon(srcLon), mSrcDep(srcDep),
-mSaveSurfaceAtRadius(saveSurfRadius), mSaveSurfaceFromUpper(saveSurfUpper) {
+mSaveSurfaceAtRadius(saveSurfRadius), 
+mSaveSurfaceDistMin(saveSurfDistMin), mSaveSurfaceDistMax(saveSurfDistMax),
+mSaveSurfaceFromUpper(saveSurfUpper) {
     std::vector<std::string> name, network;
     std::vector<double> theta, phi, depth;
     std::vector<int> dumpStrain;
@@ -192,8 +195,21 @@ void ReceiverCollection::release(Domain &domain, const Mesh &mesh, bool depthInR
             if (quad->isFluid()) {
                 continue;
             }
+            
+            // dist
+            RDMat24 sz = quad->getNodalCoords() / 4;
+            double s = sz(0, 0) + sz(0, 1) + sz(0, 2) + sz(0, 3);
+            double z = sz(1, 0) + sz(1, 1) + sz(1, 2) + sz(1, 3);
+            double r = std::max(tinyDouble, sqrt(s*s+z*z));
+            double dist_deg = acos(z / r) / degree;
+            if (dist_deg < mSaveSurfaceDistMin || dist_deg > mSaveSurfaceDistMax) {
+                continue;
+            }
+            
             int edge = quad->edgeAtRadius(mSaveSurfaceAtRadius, 
                 mesh.getExodusModel()->getDistTolerance(), mSaveSurfaceFromUpper);
+            
+            // edge    
             if (edge >= 0) {
                 Element *ele = domain.getElement(quad->getElementTag());
                 recorderSF->addElement(ele, edge);
@@ -222,8 +238,10 @@ std::string ReceiverCollection::verbose() const {
     }
     if (mSaveSurfaceAtRadius > 0.) {
         ss << "  * Wavefield on the whole surface will be saved." << std::endl;
-        ss << "  * Radius / m = " << mSaveSurfaceAtRadius << std::endl;
-        ss << "  * From Upper = " << (mSaveSurfaceFromUpper ? "YES" : "NO") << std::endl;
+        ss << "  * Radius / km    = " << mSaveSurfaceAtRadius / 1e3 << std::endl;
+        ss << "  * Min Dist / deg = " << mSaveSurfaceDistMin << std::endl;
+        ss << "  * Max Dist / deg = " << mSaveSurfaceDistMax << std::endl;
+        ss << "  * From Upper     = " << (mSaveSurfaceFromUpper ? "YES" : "NO") << std::endl;
     }
     ss << "========================= Receivers ========================\n" << std::endl;
     return ss.str();
@@ -263,23 +281,33 @@ void ReceiverCollection::buildInparam(ReceiverCollection *&rec, const Parameters
     bool saveSurf = par.getValue<bool>("OUT_STATIONS_WHOLE_SURFACE", 0);
     if (saveSurf) {
         int size = par.getSize("OUT_STATIONS_WHOLE_SURFACE");
-        double r = 0;
+        double r = 0.;
+        double dist_min = 0.;
+        double dist_max = 180.;
         bool upper = false;
         if (size == 1) {
             r = Geodesy::getROuter();
-            upper = false;
         } else if (size == 2) {
-            r = par.getValue<double>("OUT_STATIONS_WHOLE_SURFACE", 1);
-            upper = false;
+            r = par.getValue<double>("OUT_STATIONS_WHOLE_SURFACE", 1) * 1e3;
+        } else if (size == 4) {
+            r = par.getValue<double>("OUT_STATIONS_WHOLE_SURFACE", 1) * 1e3;
+            dist_min = par.getValue<double>("OUT_STATIONS_WHOLE_SURFACE", 2);
+            dist_max = par.getValue<double>("OUT_STATIONS_WHOLE_SURFACE", 3);
+        } else if (size == 5) {
+            r = par.getValue<double>("OUT_STATIONS_WHOLE_SURFACE", 1) * 1e3;
+            dist_min = par.getValue<double>("OUT_STATIONS_WHOLE_SURFACE", 2);
+            dist_max = par.getValue<double>("OUT_STATIONS_WHOLE_SURFACE", 3);
+            upper = par.getValue<bool>("OUT_STATIONS_WHOLE_SURFACE", 4);
         } else {
-            r = par.getValue<double>("OUT_STATIONS_WHOLE_SURFACE", 1);
-            upper = par.getValue<bool>("OUT_STATIONS_WHOLE_SURFACE", 2);
+            throw std::runtime_error("ReceiverCollection::buildInparam || "
+                "Invalid parameter, keyword = OUT_STATIONS_WHOLE_SURFACE.");
         }
+        
         rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep, 
-            duplicated, r, upper); 
+            duplicated, r, dist_min, dist_max, upper); 
     } else {
         rec = new ReceiverCollection(recFile, geographic, srcLat, srcLon, srcDep, 
-            duplicated, -1, false); 
+            duplicated, -1, -1., -1., false); 
     }
     
     // options 
