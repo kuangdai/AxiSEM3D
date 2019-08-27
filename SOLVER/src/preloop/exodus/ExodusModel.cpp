@@ -556,6 +556,7 @@ void ExodusModel::buildInparam(ExodusModel *&exModel, const Parameters &par,
     
     // ellipticity
     if (exModel->isCartesian()) {
+        Geodesy::setup(exModel->getROuter(), 0., RDColX::Zero(0), RDColX::Zero(0));
         return;
     }
     std::string emode = par.getValue<std::string>("MODEL_3D_ELLIPTICITY_MODE");
