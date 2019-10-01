@@ -163,7 +163,7 @@ bool Volumetric3D_cylinder::get3dProperties(double r, double theta, double phi, 
     if (distToTopBot > 0.) {
         // compute Gaussian top-bottom
         stddev = mHWHM_top_bot / sqrt(2. * log(2.));
-        gaussian_topbot = gaussian_lateral * exp(-gaussian_topbot * gaussian_topbot / (stddev * stddev * 2.)); 
+        gaussian_topbot = gaussian_lateral * exp(-distToTopBot * distToTopBot / (stddev * stddev * 2.)); 
     }
     
     // set perturbations    
