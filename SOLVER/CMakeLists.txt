@@ -16,6 +16,11 @@ endif(NOT CMAKE_BUILD_TYPE)
 # Please only try to edit within this block.
 # If something is missing add it.
 
+# CMP0074 issue since CMake 3.12
+if(POLICY CMP0074)
+cmake_policy(SET CMP0074 NEW)
+endif()
+
 # compiler suit
 SET(CMAKE_C_COMPILER           mpicc)
 SET(CMAKE_CXX_COMPILER         mpicxx)
