@@ -817,12 +817,13 @@ void Material::rotateAniso(double srcLat, double srcLon, double srcDep) {
                 double recLon = Geodesy::phi2Lon(rtpG(2));
                 double baz = Geodesy::backAzimuth(srcLat, srcLon, srcDep, recLat, recLon, recDep);
                 
-                // global => source centred (r, theta, phi)
-                const RDMatXX &rtp_Cijkl = bondTransformation(inCijkl, -baz, 0., 0.);
+                // global => source centred RTZ (theta, phi, r)
+                const RDMatXX &outCijkl = bondTransformation(inCijkl, 0., 0., -baz);
                 
-                // (r, theta, phi) => (R, T, Z)
-                const RDMatXX &RTZ_Cijkl_x = bondTransformation(rtp_Cijkl, 0., 0., pi/2.);
-                const RDMatXX &outCijkl = bondTransformation(RTZ_Cijkl_x, pi/2., 0., 0.);
+                // by convention, input is in RTZ 
+                // // (r, theta, phi) => (R, T, Z)
+                // const RDMatXX &RTZ_Cijkl_x = bondTransformation(rtp_Cijkl, 0., 0., pi/2.);
+                // const RDMatXX &outCijkl = bondTransformation(RTZ_Cijkl_x, pi/2., 0., 0.);
                 
                 // copy back
                 mC11_3D(alpha, ipnt) = outCijkl(1 - 1, 1 - 1);
