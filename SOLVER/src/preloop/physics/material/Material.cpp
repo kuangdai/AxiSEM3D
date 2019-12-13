@@ -757,7 +757,6 @@ void Material::rotateAniso(double srcLat, double srcLon, double srcDep) {
     for (int alpha = 0; alpha < mC11_3D.rows(); alpha++) {
         // azimuth of the slice
         double phi = 2. * pi / mC11_3D.rows() * alpha;
-        double recLon = Geodesy::phi2Lon(phi);
         // loop over GLL points
         for (int ipol = 0; ipol <= nPol; ipol++) {
             for (int jpol = 0; jpol <= nPol; jpol++) {
@@ -808,12 +807,24 @@ void Material::rotateAniso(double srcLat, double srcLon, double srcDep) {
                 // compute backazimuth
                 const RDCol2 &xieta = SpectralConstants::getXiEta(ipol, jpol, mMyQuad->isAxial());
                 RDCol2 rtheta = Geodesy::rtheta(mMyQuad->mapping(xieta));
-                double recLat = Geodesy::theta2Lat_r(rtheta(1), rtheta(0));
+                RDCol3 rtpS, rtpG;
+                rtpS(0) = rtheta(0);
+                rtpS(1) = rtheta(1);
+                rtpS(2) = phi;
+                rtpG = Geodesy::rotateSrc2Glob(rtpS, srcLat, srcLon, srcDep);
                 double recDep = Geodesy::getROuter() - rtheta(0);
+                double recLat = Geodesy::theta2Lat_d(rtpG(1), recDep);
+                double recLon = Geodesy::phi2Lon(rtpG(2));
                 double baz = Geodesy::backAzimuth(srcLat, srcLon, srcDep, recLat, recLon, recDep);
-                // Bond Transformation
-                const RDMatXX &outCijkl = bondTransformation(inCijkl, 0., 0., -baz);
-            
+                
+                // global => source centred (r, theta, phi)
+                const RDMatXX &rtp_Cijkl = bondTransformation(inCijkl, -baz, 0., 0.);
+                
+                // (r, theta, phi) => (R, T, Z)
+                const RDMatXX &RTZ_Cijkl_x = bondTransformation(rtp_Cijkl, 0., 0., pi/2.);
+                const RDMatXX &outCijkl = bondTransformation(RTZ_Cijkl_x, pi/2., 0., 0.);
+                
+                // copy back
                 mC11_3D(alpha, ipnt) = outCijkl(1 - 1, 1 - 1);
                 mC12_3D(alpha, ipnt) = outCijkl(1 - 1, 2 - 1);
                 mC13_3D(alpha, ipnt) = outCijkl(1 - 1, 3 - 1);
@@ -843,86 +854,6 @@ void Material::rotateAniso(double srcLat, double srcLon, double srcDep) {
             }
         }
     }
-    
-    // 1D
-    for (int ip = 0; ip < 4; ip++) {
-        inCijkl(1 - 1, 1 - 1) = mC11_1D(ip);
-        inCijkl(1 - 1, 2 - 1) = mC12_1D(ip);
-        inCijkl(1 - 1, 3 - 1) = mC13_1D(ip);
-        inCijkl(1 - 1, 4 - 1) = mC14_1D(ip);
-        inCijkl(1 - 1, 5 - 1) = mC15_1D(ip);
-        inCijkl(1 - 1, 6 - 1) = mC16_1D(ip);
-        
-        inCijkl(2 - 1, 1 - 1) = mC12_1D(ip);
-        inCijkl(2 - 1, 2 - 1) = mC22_1D(ip);
-        inCijkl(2 - 1, 3 - 1) = mC23_1D(ip);
-        inCijkl(2 - 1, 4 - 1) = mC24_1D(ip);
-        inCijkl(2 - 1, 5 - 1) = mC25_1D(ip);
-        inCijkl(2 - 1, 6 - 1) = mC26_1D(ip);
-        
-        inCijkl(3 - 1, 1 - 1) = mC13_1D(ip);
-        inCijkl(3 - 1, 2 - 1) = mC23_1D(ip);
-        inCijkl(3 - 1, 3 - 1) = mC33_1D(ip);
-        inCijkl(3 - 1, 4 - 1) = mC34_1D(ip);
-        inCijkl(3 - 1, 5 - 1) = mC35_1D(ip);
-        inCijkl(3 - 1, 6 - 1) = mC36_1D(ip);
-        
-        inCijkl(4 - 1, 1 - 1) = mC14_1D(ip);
-        inCijkl(4 - 1, 2 - 1) = mC24_1D(ip);
-        inCijkl(4 - 1, 3 - 1) = mC34_1D(ip);
-        inCijkl(4 - 1, 4 - 1) = mC44_1D(ip);
-        inCijkl(4 - 1, 5 - 1) = mC45_1D(ip);
-        inCijkl(4 - 1, 6 - 1) = mC46_1D(ip);
-        
-        inCijkl(5 - 1, 1 - 1) = mC15_1D(ip);
-        inCijkl(5 - 1, 2 - 1) = mC25_1D(ip);
-        inCijkl(5 - 1, 3 - 1) = mC35_1D(ip);
-        inCijkl(5 - 1, 4 - 1) = mC45_1D(ip);
-        inCijkl(5 - 1, 5 - 1) = mC55_1D(ip);
-        inCijkl(5 - 1, 6 - 1) = mC56_1D(ip);
-        
-        inCijkl(6 - 1, 1 - 1) = mC16_1D(ip);
-        inCijkl(6 - 1, 2 - 1) = mC26_1D(ip);
-        inCijkl(6 - 1, 3 - 1) = mC36_1D(ip);
-        inCijkl(6 - 1, 4 - 1) = mC46_1D(ip);
-        inCijkl(6 - 1, 5 - 1) = mC56_1D(ip);
-        inCijkl(6 - 1, 6 - 1) = mC66_1D(ip);
-        
-        // compute backazimuth
-        RDCol2 rtheta = Geodesy::rtheta(mMyQuad->getNodalCoords().col(ip));
-        double recLat = Geodesy::theta2Lat_r(rtheta(1), rtheta(0));
-        double recDep = Geodesy::getROuter() - rtheta(0);
-        double baz = Geodesy::backAzimuth(srcLat, srcLon, srcDep, recLat, 0., recDep);
-        // Bond Transformation
-        const RDMatXX &outCijkl = bondTransformation(inCijkl, 0., 0., -baz);
-        
-        mC11_1D(ip) = outCijkl(1 - 1, 1 - 1);
-        mC12_1D(ip) = outCijkl(1 - 1, 2 - 1);
-        mC13_1D(ip) = outCijkl(1 - 1, 3 - 1);
-        mC14_1D(ip) = outCijkl(1 - 1, 4 - 1);
-        mC15_1D(ip) = outCijkl(1 - 1, 5 - 1);
-        mC16_1D(ip) = outCijkl(1 - 1, 6 - 1);
-        
-        mC22_1D(ip) = outCijkl(2 - 1, 2 - 1);
-        mC23_1D(ip) = outCijkl(2 - 1, 3 - 1);
-        mC24_1D(ip) = outCijkl(2 - 1, 4 - 1);
-        mC25_1D(ip) = outCijkl(2 - 1, 5 - 1);
-        mC26_1D(ip) = outCijkl(2 - 1, 6 - 1);
-        
-        mC33_1D(ip) = outCijkl(3 - 1, 3 - 1);
-        mC34_1D(ip) = outCijkl(3 - 1, 4 - 1);
-        mC35_1D(ip) = outCijkl(3 - 1, 5 - 1);
-        mC36_1D(ip) = outCijkl(3 - 1, 6 - 1);
-        
-        mC44_1D(ip) = outCijkl(4 - 1, 4 - 1);
-        mC45_1D(ip) = outCijkl(4 - 1, 5 - 1);
-        mC46_1D(ip) = outCijkl(4 - 1, 6 - 1);
-        
-        mC55_1D(ip) = outCijkl(5 - 1, 5 - 1);
-        mC56_1D(ip) = outCijkl(5 - 1, 6 - 1);
-        
-        mC66_1D(ip) = outCijkl(6 - 1, 6 - 1);
-    }
 }
 
 RDMatXX Material::bondTransformation(RDMatXX inCijkl, double alpha, double beta, double gamma) {
@@ -930,9 +861,9 @@ RDMatXX Material::bondTransformation(RDMatXX inCijkl, double alpha, double beta,
     R1 << 1., 0., 0.,
           0., cos(alpha), sin(alpha),
           0., -sin(alpha), cos(alpha);
-    R2 << cos(beta), 0., -sin(beta), 
+    R2 << cos(beta), 0., sin(beta), 
           0., 1., 0.,
-          sin(beta), 0, cos(beta);
+          -sin(beta), 0, cos(beta);
     R3 << cos(gamma), sin(gamma), 0., 
           -sin(gamma), cos(gamma), 0.,
           0., 0., 1.;
@@ -964,16 +895,6 @@ RDMatXX Material::bondTransformation(RDMatXX inCijkl, double alpha, double beta,
     K.block(3, 3, 3, 3) = K4;
     
     RDMatXX outCijkl(K * inCijkl * K.transpose());
-
-    // deal with numerical errors
-    double tol = std::abs(outCijkl(4, 4)) * 1e-7;
-    for (int i = 0; i < 6; i++) {
-        for (int j = 0; j < 6; j++) {
-            if (std::abs(outCijkl(i, j)) < tol) {
-                outCijkl(i, j) = 0.;
-            }
-        }
-    }
     return outCijkl;
 }
 
