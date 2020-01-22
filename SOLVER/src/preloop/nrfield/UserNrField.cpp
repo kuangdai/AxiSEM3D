@@ -21,7 +21,7 @@ int UserNrField::getNrAtPoint(const RDCol2 &coords) const {
     double depth = Geodesy::getROuter() - r;
     
     // output: Fourier Expansion order nu
-    int nu = 2;
+    double nu = 2.;
     
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
@@ -30,27 +30,36 @@ int UserNrField::getNrAtPoint(const RDCol2 &coords) const {
     // NOTE: Only edit within this box!
     //       If this is the first time you are looking at this part
     //       of code, the following example implements a Nu field
-    //       that only depends on radius (depth), with a very large Nu
-    //       assigned near the core-mantle boundary
+    //       that depends on depth only. The depth-nu profile is given
+    //       by NU_USER_PARAMETER_LIST as (depth in meters): 
+    //       NU_USER_PARAMETER_LIST   depth0 nu0 depth1 nu1 depth2 nu2 ...
     
-    double rcmb = 3480e3;
-    double r_low_broad = rcmb - 500e3;
-    double r_low_narrow = rcmb - 100e3;
-    double r_upp_narrow = rcmb + 200e3;
-    double r_upp_broad = rcmb + 1000e3;
-    int nu_narrow = 1000;
-    int nu_broad = 100; 
+    // check size
+    int ndepth = mParameters.size() / 2;
+    if (ndepth == 0 || mParameters.size() % 2 == 1) {
+        throw std::runtime_error("UserNrField::getNrAtPoint || "
+        "Using the default UserNrField.cpp, "
+        "the number of the user-defined parameters must be even and positive.");
+    }
     
-    if (r <= r_low_broad) {
-        nu = nu_broad;
-    } else if (r <= r_low_narrow) {
-        nu = (nu_narrow - nu_broad) / (r_low_narrow - r_low_broad) * (r - r_low_broad) + nu_broad;
-    } else if (r <= r_upp_narrow) {
-        nu = nu_narrow;
-    } else if (r <= r_upp_broad) {
-        nu = (nu_narrow - nu_broad) / (r_upp_narrow - r_upp_broad) * (r - r_upp_broad) + nu_broad;
+    if (depth <= mParameters[0]) {
+        // shallower than shallowest
+        nu = mParameters[1];
+    } else if (depth >= mParameters[(ndepth - 1) * 2]) {
+        // deeper than deepest
+        nu = mParameters[(ndepth - 1) * 2 + 1];
     } else {
-        nu = nu_broad;
+        // middle
+        for (int i = 1; i < ndepth; i++) {
+            double depth0 = mParameters[i * 2 - 2];
+            double depth1 = mParameters[i * 2];
+            double nu0 = mParameters[i * 2 - 1];
+            double nu1 = mParameters[i * 2 + 1];
+            if (depth <= depth1) {
+                nu = (nu1 - nu0) / (depth1 - depth0) * (depth - depth0) + nu0;
+                break;
+            }
+        }
     }
     
     // NOTE: Only edit within this box!
