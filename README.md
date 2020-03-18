@@ -22,7 +22,7 @@ name | version | build-from-source instructions
 MPI | --- | Common implementations such as [open-mpi](https://www.open-mpi.org/) or [mpich2](http://www.mpich.org/).
 Boost | 1.60 | Simply [download](https://sourceforge.net/projects/boost/files/boost/1.63.0/boost_1_63_0.tar.bz2) and unzip to your path of treasures. No need to build or install.
 Eigen3 | 3.3-rc1 | Simply [download](http://bitbucket.org/eigen/eigen/get/3.3-rc1.tar.bz2) and unzip to your path of treasures. No need to build or install.
-FFTW | 3.3 | Install both double-precision (without _--enable-float_) and single-precision (with _--enable-float_) versions to the same path. See [here](http://www.fftw.org/fftw2_doc/fftw_6.html).
+FFTW | 3.3 | Install both double-precision (without _--enable-float_) and single-precision (with _--enable-float_) versions to the same path. See [here](http://www.fftw.org/fftw3_doc/Installation-on-Unix.html).
 METIS | 5.1 | [Download](http://glaros.dtc.umn.edu/gkhome/metis/metis/download) and install following `Install.txt`. Skip step 3 in `Install.txt` to use the 32-bit build. 
 NetCDF | 4.4 | Follow instructions [here](https://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html). To avoid compatibility issues, AxiSEM3D does not directly use HDF5, the major dependency of NetCDF4. 
 
