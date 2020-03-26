@@ -56,7 +56,7 @@ void Receiver::release(PointwiseRecorder &recorderPW, const Domain &domain,
 bool Receiver::locate(const Mesh &mesh, int &elemTag, int &quadTag, bool depthInRef) const {
     RDCol2 recCrds, srcXiEta;
     double r = 0.;
-    if (depthInRef) {
+    if (!depthInRef) {
         r = mesh.computeRadiusRef(mDepth, mLat, mLon);
     } else {
         r = Geodesy::getROuter() - mDepth;
@@ -88,7 +88,7 @@ bool Receiver::locate(const Mesh &mesh, int &elemTag, int &quadTag, bool depthIn
 void Receiver::computeInterpFact(const Mesh &mesh, int quadTag, RDMatPP &interpFact, bool depthInRef) const {
     RDCol2 recCrds, srcXiEta;
     double r = 0.;
-    if (depthInRef) {
+    if (!depthInRef) {
         r = mesh.computeRadiusRef(mDepth, mLat, mLon);
     } else {
         r = Geodesy::getROuter() - mDepth;
