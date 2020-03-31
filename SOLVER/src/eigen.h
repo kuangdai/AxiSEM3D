@@ -13,6 +13,8 @@
 // the extra cost is marginal unless one uses nPol=3
 #define EIGEN_MAX_STATIC_ALIGN_BYTES 0
 
+#define EIGEN_INITIALIZE_MATRICES_BY_ZERO
+
 #include <Eigen/Dense>
 
 const Eigen::IOFormat EIGEN_FMT(Eigen::FullPrecision, 0, " ", "\n", " ", "", "", "");
