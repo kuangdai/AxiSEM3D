@@ -109,11 +109,46 @@ void Mesh::buildUnweighted() {
 }
 
 double Mesh::getDeltaT() const {
-    double dt = DBL_MAX;
+    // minimum dt over quads
+    double dtMin = std::numeric_limits<double>::max();
+    double s;
+    double z;
     for (int i = 0; i < getNumQuads(); i++) {
-        dt = std::min(dt, mQuads[i]->getDeltaT());
+        double dt = mQuads[i]->getDeltaT();
+        if (dtMin > dt) {
+            dtMin = dt;
+            const auto &sz = mQuads[i]->getNodalCoords().rowwise().mean();
+            s = sz(0);
+            z = sz(1);
+        }
     }
-    return XMPI::min(dt);
+    
+    // minimum dt over ranks
+    std::vector<double> dtV;
+    std::vector<double> sV;
+    std::vector<double> zV;
+    XMPI::gather(dtMin, dtV, true);
+    XMPI::gather(s, sV, true);
+    XMPI::gather(z, zV, true);
+    
+    // rank with minimum dt
+    Eigen::Index rankDt;
+    dtMin = Eigen::Map<RDColX>(dtV.data(), dtV.size()).minCoeff(&rankDt);
+    s = sV[rankDt];
+    z = zV[rankDt];
+    double r = sqrt(s*s+z*z);
+    double t = acos(z/r);
+    
+    std::stringstream ss;
+    ss << "\n======================= DT =======================" << std::endl;
+    ss << "  Minimum DT   =   " << dtMin << std::endl;
+    ss << "  Location s   =   " << s << std::endl;
+    ss << "  Location z   =   " << z << std::endl;
+    ss << "  Location r   =   " << r << std::endl;
+    ss << "  Location θ   =   " << t << std::endl;
+    ss << "======================= DT =======================\n" << std::endl;
+    XMPI::cout << ss.str() << "\n";
+    return dtMin;
 }
 
 void Mesh::setAttBuilder(const AttBuilder *attBuild) {

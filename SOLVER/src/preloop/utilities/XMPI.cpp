@@ -293,6 +293,23 @@ void XMPI::gather(int buf, std::vector<int> &all_buf, bool all) {
     #endif
 }
 
+void XMPI::gather(double buf, std::vector<double> &all_buf, bool all) {
+    #ifndef _SERIAL_BUILD
+        if (all) {
+            all_buf.resize(XMPI::nproc());
+            MPI_Allgather(&buf, 1, MPI_DOUBLE, all_buf.data(), 1, MPI_DOUBLE, MPI_COMM_WORLD);
+        } else {
+            if (root()) {
+                all_buf.resize(XMPI::nproc());
+            }
+            MPI_Gather(&buf, 1, MPI_DOUBLE, all_buf.data(), 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        }
+    #else
+        all_buf.clear();
+        all_buf.push_back(buf);
+    #endif
+}
+
 void XMPI::gather(const std::string &buf, std::vector<std::string> &all_buf, bool all) {
     #ifndef _SERIAL_BUILD
         // size

@@ -207,6 +207,8 @@ public:
     ////////////////////////////// gather ////////////////////////////// 
     // string
     static void gather(int buf, std::vector<int> &all_buf, bool all);
+    static void gather(double buf, std::vector<double> &all_buf, bool all);
+
     static void gather(const std::string &buf, std::vector<std::string> &all_buf, bool all);
     static void gather(const std::vector<std::string> &buf, 
         std::vector<std::vector<std::string>> &all_buf, bool all);
