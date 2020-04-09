@@ -140,14 +140,14 @@ double Mesh::getDeltaT() const {
     double t = acos(z/r);
     
     std::stringstream ss;
-    ss << "\n======================= DT =======================" << std::endl;
+    ss << "\n============================ DT ============================" << std::endl;
     ss << "  Minimum DT   =   " << dtMin << std::endl;
     ss << "  Location s   =   " << s << std::endl;
     ss << "  Location z   =   " << z << std::endl;
     ss << "  Location r   =   " << r << std::endl;
     ss << "  Location θ   =   " << t << std::endl;
-    ss << "======================= DT =======================\n" << std::endl;
-    XMPI::cout << ss.str() << "\n";
+    ss << "============================ DT ============================\n" << std::endl;
+    XMPI::cout << ss.str();
     return dtMin;
 }
 
