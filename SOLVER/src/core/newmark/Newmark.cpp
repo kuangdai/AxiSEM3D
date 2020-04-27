@@ -27,7 +27,14 @@ void Newmark::solve(int verbose) const {
     double t = 0. - mDomain->getSTF().getShift();
     double dt = mDomain->getSTF().getDeltaT();
     int maxStep = mDomain->getSTF().getSize();
+    #ifndef NDEBUG
+        Eigen::internal::set_is_malloc_allowed(true);
+    #endif
     mDomain->resetZero();
+    #ifndef NDEBUG
+        Eigen::internal::set_is_malloc_allowed(false);
+    #endif
+    
     if (mRandomDispl) {
         mDomain->initDisplTinyRandom();
     }
