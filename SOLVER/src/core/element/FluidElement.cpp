@@ -218,6 +218,7 @@ void FluidElement::computeGroundMotion(Real phi, const RMatPP &weights, RRow3 &u
 void FluidElement::computeStrain(Real phi, const RMatPP &weights, RRow6 &strain) const {
     // setup static
     sResponse.setNr(mMaxNr);
+    SolidElement::sResponse.setNr(mMaxNr);
     
     // get displ from points
     int ipnt = 0;
@@ -250,11 +251,27 @@ void FluidElement::computeStrain(Real phi, const RMatPP &weights, RRow6 &strain)
     
     //////////////////////
     if (mHasPRT) {
-        throw std::runtime_error("FluidElement::computeStrain || "
-            "Not implemented."); 
+        mGradient->computeGrad9(sResponse.mStress, SolidElement::sResponse.mStrain9, 
+            SolidElement::sResponse.mNu, SolidElement::sResponse.mNyquist);
+        mCrdTransTIso->transformSPZ_RTZ(SolidElement::sResponse.mStrain9, 
+            SolidElement::sResponse.mNu);
+        if (mElem3D) {
+            FieldFFT::transformF2P(SolidElement::sResponse.mStrain9, SolidElement::sResponse.mNr);
+            // OUT: SolverFFTW_N9::getC2R_RMat
+            mPRT->sphericalToUndulated(SolidElement::sResponse);
+            // OUT: SolverFFTW_N6::getC2R_RMat
+            SolverFFTW_N6::getR2C_RMat().topRows(SolidElement::sResponse.mNr) = 
+            SolverFFTW_N6::getC2R_RMat().topRows(SolidElement::sResponse.mNr);
+            // OUT: SolverFFTW_N6::getR2C_RMat
+            FieldFFT::transformP2F(SolidElement::sResponse.mStrain6, SolidElement::sResponse.mNr);
+        } else {
+            mPRT->sphericalToUndulated(SolidElement::sResponse);
+        }
     } else {
         mGradient->computeGrad6(sResponse.mStress, SolidElement::sResponse.mStrain6, 
-            sResponse.mNu, sResponse.mNyquist);
+            SolidElement::sResponse.mNu, SolidElement::sResponse.mNyquist);
+        mCrdTransTIso->transformSPZ_RTZ(SolidElement::sResponse.mStrain6, 
+            SolidElement::sResponse.mNu);
     }
     
     //////////////
