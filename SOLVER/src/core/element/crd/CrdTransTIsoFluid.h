@@ -16,10 +16,18 @@ public:
     void transformSPZ_RTZ(vec_ar3_CMatPP &u, int Nu) const;
     void transformRTZ_SPZ(vec_ar3_CMatPP &u, int Nu) const;
     
+    void transformSPZ_RTZ(vec_ar6_CMatPP &u, int Nu) const;
+    void transformRTZ_SPZ(vec_ar6_CMatPP &u, int Nu) const;
+    
+    void transformSPZ_RTZ(vec_ar9_CMatPP &u, int Nu) const;
+    void transformRTZ_SPZ(vec_ar9_CMatPP &u, int Nu) const;
+    
 private:
     
     // t: theta of GLL-points
     RMatPP mSin1t;
     RMatPP mCos1t;
+    RMatPP mSin2t;
+    RMatPP mCos2t;
 };
 

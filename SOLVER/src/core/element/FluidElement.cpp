@@ -215,6 +215,7 @@ void FluidElement::computeGroundMotion(Real phi, const RMatPP &weights, RRow3 &u
 }
 
 #include "SolidElement.h"
+#include "SolverFFTW_N6.h"
 void FluidElement::computeStrain(Real phi, const RMatPP &weights, RRow6 &strain) const {
     // setup static
     sResponse.setNr(mMaxNr);
