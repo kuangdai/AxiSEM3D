@@ -31,7 +31,7 @@ void Source::release(Domain &domain, const Mesh &mesh) const {
     MultilevelTimer::begin("Locate Source", 2);
     // locate local
     int myrank = XMPI::nproc();
-    int locTag;
+    int locTag = -1;
     RDColP interpFactZ;
     if (locate(mesh, locTag, interpFactZ)) {
         myrank = XMPI::rank();

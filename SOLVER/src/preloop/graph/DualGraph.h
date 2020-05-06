@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <eigenp.h>
+#include "eigenp.h"
 
 // domain decomposition option
 struct DecomposeOption {

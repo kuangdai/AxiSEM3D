@@ -111,8 +111,8 @@ void Mesh::buildUnweighted() {
 double Mesh::getDeltaT() const {
     // minimum dt over quads
     double dtMin = std::numeric_limits<double>::max();
-    double s;
-    double z;
+    double s = 0.;
+    double z = 0.;
     for (int i = 0; i < getNumQuads(); i++) {
         double dt = mQuads[i]->getDeltaT();
         if (dtMin > dt) {

@@ -41,7 +41,7 @@ void OffAxisSource::release(Domain &domain, const Mesh &mesh) const {
     MultilevelTimer::begin("Locate Off-axis Source", 2);
     // locate local
     int myrank = XMPI::nproc();
-    int locTag;
+    int locTag = -1;
     RDColP interpFactXii, interpFactEta;
     if (locate(mesh, locTag, interpFactXii, interpFactEta)) {
         myrank = XMPI::rank();
