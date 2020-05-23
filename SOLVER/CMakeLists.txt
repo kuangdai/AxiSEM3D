@@ -100,7 +100,6 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(MPI REQUIRED)
 include_directories(${MPI_INCLUDE_PATH})
 # eigen
-set(ENV{EIGEN3_ROOT} "${EIGEN3_ROOT}")
 find_package(EIGEN3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 # fftw
