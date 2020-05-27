@@ -562,7 +562,7 @@ void Quad::formNrField(const NrField &nrf, double distTol) {
             double spacing = Mapping::interpolate(mNodalAveGLLSpacing, xieta);
             double circ = 2. * pi * crds(0);
             int upper = (int)(circ / spacing);
-            if (upper < 3) upper = 3; // axis
+            if (upper < 3) upper = 5; // axis
             mPointNr(ipol, jpol) = std::min(mPointNr(ipol, jpol), upper);
             
             ////////// deal with even numbers ////////
