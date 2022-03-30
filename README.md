@@ -1,3 +1,17 @@
+# This version has been deprecated. Please use the [new version](https://github.com/kuangdai/AxiSEM-3D) of AxiSEM3D.
+
+#
+
+#
+
+#
+
+#
+
+#
+
+#
+
 # AxiSEM3D - A Quickstart Guide
 
 I look ugly to you? I am a Markdown file. If you do not have a Markdown reader, read me on [github](https://github.com/kuangdai/AxiSEM3D), or paste me [here](http://dillinger.io/).
